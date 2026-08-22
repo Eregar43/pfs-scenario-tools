@@ -1,0 +1,48 @@
+{
+  "id": "pfs-scenario-tools",
+  "title": "PFS Scenario Tools",
+  "description": "Erzeugt aus dem PDF eines Pathfinder-Society-Szenarios Journale, Bilder, Szenen und Kreaturen direkt in der Welt.",
+  "version": "#{VERSION}#",
+  "library": "false",
+  "manifestPlusVersion": "1.2.0",
+  "compatibility": {
+    "minimum": 14,
+    "verified": "14.365"
+  },
+  "authors": [
+    {
+      "name": "Eregar",
+      "url": "https://github.com/Eregar43",
+      "discord": "eregark"
+    }
+  ],
+  "relationships": {
+    "systems": [
+      { "id": "pf2e", "type": "system" }
+    ]
+  },
+  "esmodules": [
+    "dist/pfs-scenario-tools.js"
+  ],
+  "styles": [
+    "styles/module.css",
+    "styles/journal.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "languages/en.json"
+    },
+    {
+      "lang": "de",
+      "name": "Deutsch",
+      "path": "languages/de.json"
+    }
+  ],
+  "url": "#{URL}#",
+  "manifest": "#{MANIFEST}#",
+  "download": "#{DOWNLOAD}#",
+  "license": "LICENSE",
+  "readme": "README.md"
+}

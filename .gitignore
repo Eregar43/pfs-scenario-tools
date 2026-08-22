@@ -1,0 +1,30 @@
+# Persoenliche Claude-Code-Einstellungen dieser Arbeitskopie
+.claude/settings.local.json
+
+# Arbeitsunterlagen des Autors, bewusst nicht versioniert: CLAUDE.md ist die
+# Anleitung fuer den Programmieragenten, TODO.md die Liste der offenen
+# Kuer-Punkte. Beides geht einen Anwender des Moduls nichts an.
+/CLAUDE.md
+/TODO.md
+
+# Node
+node_modules/
+
+# Bauergebnis. Es liegt bewusst im Repo-Ordner statt in einem Zielverzeichnis:
+# der Bind-Mount bildet diesen Ordner auf Foundrys Data/modules/ ab, Foundry
+# sieht den Build also sofort. Versioniert wird er trotzdem nicht — die
+# Release-Pipeline baut selbst.
+dist/
+
+# Release-Artefakt
+module.zip
+
+# Arbeitsmaterial, niemals Teil des Moduls: die Szenario-PDFs sind kommerzielle
+# Paizo-Produkte, und die Referenzjournale bestehen aus deren Text.
+#
+# Die Schraegstriche am Anfang sind noetig: ein Muster ohne ihn greift auf
+# jeder Ebene, `pdf/` haette also auch `src/pdf/` verschluckt.
+/pdf/
+/referenz/
+/out/
+/_reference/

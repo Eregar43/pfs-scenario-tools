@@ -1,0 +1,127 @@
+# Baut beim Veroeffentlichen eines GitHub-Releases das Modul und haengt
+# module.zip + module.json als Release-Dateien an. Foundry installiert direkt
+# von hier — das Repo ist oeffentlich, ein eigener Webspace wird nicht mehr
+# gebraucht.
+#
+# Es sind **keine Secrets noetig**; der eingebaute GITHUB_TOKEN reicht.
+#
+# Ablauf eines Releases:
+#   gh release create v1.0.0 --title "1.0.0" --notes "..."
+# Der Workflow laeuft an, und die Manifest-URL fuer Foundry ist dauerhaft:
+#   https://github.com/<owner>/<repo>/releases/latest/download/module.json
+
+name: Create Module Files For GitHub Release
+
+
+env:
+  project_url: "https://github.com/${{github.repository}}"
+
+  # Foundry sucht Aktualisierungen unter dieser Adresse. `latest` zeigt immer
+  # auf die neueste Veroeffentlichung — sie bleibt darum ueber alle Versionen
+  # hinweg dieselbe und gehoert genau so in die README.
+  manifest_url: "https://github.com/${{github.repository}}/releases/latest/download/module.json"
+
+
+on:
+  release:
+    types: [published]
+
+  # Handstart zum Pruefen des Baus ohne Release; die Version wandert nur ins
+  # Test-Manifest, es entsteht keine Veroeffentlichung.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version string baked into the test manifest (no release is created)"
+        required: false
+        default: "0.0.0-test"
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+
+
+      - name: Install Dependencies
+        run: npm ci
+
+
+      - name: Run Tests
+        run: npm test
+
+
+      # Vite buendelt nach dist/ — samt pdf.worker und den standard_fonts,
+      # ohne die die Schrifterkennung lautlos kippt.
+      - name: Build Module Bundle
+        run: npm run build
+
+
+      # Beim Release kommt die Version aus dem Tag (fuehrendes `v` faellt),
+      # beim Handstart aus der Eingabe. Die fruehere get-version-action
+      # benutzte das abgekuendigte set-output und warnte bei jedem Lauf.
+      - name: Resolve Version
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+            echo "tag=v${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          fi
+
+
+      # Fuellt die Platzhalter #{VERSION}#, #{URL}#, #{MANIFEST}#, #{DOWNLOAD}#
+      # in module.json — nur im Dateisystem des Runners, nie im Repo.
+      - name: Modify Module Manifest With Release-Specific Values
+        uses: cschleiden/replace-tokens@v1
+        with:
+          files: 'module.json'
+        env:
+          VERSION: ${{ steps.ver.outputs.value }}
+          URL: ${{ env.project_url }}
+          MANIFEST: ${{ env.manifest_url }}
+          DOWNLOAD: "https://github.com/${{github.repository}}/releases/download/${{ steps.ver.outputs.tag }}/module.zip"
+
+
+      - name: Create Module Archive
+        run: |
+          zip                                    \
+            --recurse-paths                      \
+             ./module.zip                        \
+            module.json                          \
+            README.md                            \
+            README.en.md                         \
+            LICENSE                              \
+            NOTICE.md                            \
+            dist/                                \
+            styles/                              \
+            languages/                           \
+            --exclude 'dist/*.map'
+
+
+      # Manifest und Archiv ans Release haengen. Das ist keine Beigabe mehr,
+      # sondern der Auslieferungsweg: Foundry holt beides von hier.
+      - name: Update Release With Files
+        if: github.event_name == 'release'
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          name: ${{ github.event.release.name }}
+          draft: ${{ github.event.release.unpublished }}
+          prerelease: ${{ github.event.release.prerelease }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: './module.json, ./module.zip'
+          tag: ${{ github.event.release.tag_name }}
+          body: ${{ github.event.release.body }}

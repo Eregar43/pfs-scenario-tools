@@ -1,0 +1,128 @@
+/*
+ * Gestaltung der erzeugten Journale.
+ *
+ * Jede Regel ist auf `.journal-page-content` eingegrenzt, und das ist kein
+ * Ordnungssinn, sondern noetig: Die Klassennamen stammen aus Foundrys eigenem
+ * Journal-Vokabular und sind entsprechend allgemein. `.sidebar` ist in Foundry
+ * die rechte Seitenleiste der Oberflaeche — eine ungebundene Regel darauf
+ * gestaltete das Programm um, nicht den Text.
+ *
+ * Bewusst flach geschrieben statt verschachtelt: CSS-Verschachtelung koennen
+ * heutige Browser zwar, aber diese Datei soll in jedem laufen, in dem Foundry
+ * laeuft, ohne dass jemand das nachpruefen muss.
+ *
+ * Vorlesekaesten und Statblock-Leisten tragen ihre Gestaltung zusaetzlich
+ * **inline** am Element. Das stammt aus dem Extractor, der ohne Modul auskommen
+ * musste, und bleibt mit Absicht: so sieht ein einmal erzeugtes Journal auch
+ * dann noch richtig aus, wenn dieses Modul spaeter nicht mehr installiert ist.
+ * Was hier steht, ist deshalb vor allem das, wofuer es keine inline-Fassung
+ * gibt.
+ */
+
+/* Kasten mit mittigem Titel — im Heft steht er neben dem Text.
+ *
+ * Ueber die **ganze Breite**, nicht schwebend: `buildPages` sammelt diese
+ * Kaesten ans Seitenende (dort zerschneiden sie keinen Satz, siehe
+ * `pdf/journal.ts`). Am Seitenende hat ein `float: right` aber nichts mehr,
+ * was ihn umfliessen koennte — es blieb nur eine leere Spalte daneben
+ * stehen. Genau so sah es in der Instanz aus.
+ *
+ * Die Klasse `float-right` im HTML stammt aus dem Vokabular des Extractors
+ * und bleibt, damit der Journaltext zeichengleich bleibt; sie sagt seither
+ * nichts mehr ueber die Anordnung. */
+.journal-page-content aside.sidebar {
+  clear: both;
+  width: auto;
+  /* `flow-root` statt `overflow: hidden`: Beides faengt das Bild im Kasten
+     (unten), aber `hidden` schnitte es ab, wenn der Kastentext kuerzer ist
+     als das Bild hoch. */
+  display: flow-root;
+  margin: 1.4em 0;
+  padding: 0.7em 1em;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  background-color: rgba(127, 127, 127, 0.08);
+  background-color: color-mix(in srgb, currentColor 6%, transparent);
+  font-size: 0.95em;
+}
+
+/* Stehen mehrere Kaesten am Seitenende untereinander, brauchen sie Luft
+   dazwischen — sonst wirken sie wie ein Block. */
+.journal-page-content aside.sidebar + aside.sidebar {
+  margin-top: 1.8em;
+}
+
+/* Ein Bild im Kasten (die Golarion-Uebersicht liegt dort) wuerde jetzt, wo
+   der Kasten die volle Breite hat, mitwachsen. Es steht deshalb rechts im
+   Kasten, der Kastentext laeuft daneben — wie im Heft. */
+.journal-page-content aside.sidebar figure {
+  float: right;
+  width: 40%;
+  margin: 0.2em 0 0.6em 1.1em;
+}
+
+/* Auf schmalen Fenstern bleibt neben einem 40-Prozent-Bild kein Text mehr;
+   dann steht es wieder mittig ueber dem Text. */
+@media (max-width: 700px) {
+  .journal-page-content aside.sidebar figure {
+    float: none;
+    width: auto;
+    margin: 0.4em 0;
+  }
+}
+
+/* Aktivitaet im Kasten und Probenergebnisliste. */
+.journal-page-content .action {
+  margin: 0.8em 0;
+}
+
+/* Erfolgsstufen: die Stufe steht vorn, der Text rueckt darunter ein. */
+.journal-page-content p.hanging-indent {
+  padding-left: 1.5em;
+  text-indent: -1.5em;
+  margin: 0.35em 0;
+}
+
+/* Merkmalsplaketten. */
+.journal-page-content ul.traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25em;
+  margin: 0.4em 0;
+  padding: 0;
+  list-style: none;
+}
+
+.journal-page-content li.trait {
+  padding: 0.1em 0.5em;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Kreaturen- und Gefahrenleiste. Die Ueberschrift darin traegt ihre
+   Flex-Gestaltung inline. */
+.journal-page-content .statblock {
+  margin: 1em 0;
+}
+
+/* Bilder samt Unterschrift — ab Etappe 3, wenn die Kommentare im HTML zu
+   richtigen Elementen werden. */
+.journal-page-content figure {
+  margin: 1em 0;
+  text-align: center;
+}
+
+.journal-page-content figure img {
+  max-width: 100%;
+  border: none;
+}
+
+.journal-page-content figcaption {
+  margin-top: 0.3em;
+  font-size: 0.9em;
+  font-style: italic;
+  opacity: 0.85;
+}

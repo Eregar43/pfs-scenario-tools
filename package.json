@@ -1,0 +1,23 @@
+{
+  "name": "pfs-scenario-tools",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "PFS Scenario Tools - Foundry VTT module: PFS scenario PDFs to journals, images, scenes and actors",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "test": "vitest run && node tools/pruefe.mjs",
+    "typecheck": "tsc --noEmit",
+    "pruefe": "node tools/pruefe.mjs"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^4.10.38"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7",
+    "vite-plugin-static-copy": "^2.2.0",
+    "vitest": "2.1.8"
+  }
+}

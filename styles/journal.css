@@ -1,0 +1,302 @@
+/*
+ * Gestaltung fuer das eigene Journal-Blatt (`PfsJournalSheet`) — Entwurf
+ * „Heftseite": das gedruckte Szenario im Fenster. Pergamentgrund, Goldlinie,
+ * und als Akzent die **Hausfarbe des Jahrgangs** — dieselbe, die der
+ * Season-Ordner in der Seitenleiste traegt.
+ *
+ * Die beiden Farbvariablen `--pfs-season` und `--pfs-season-hell` setzt das
+ * Blatt selbst am Fenster (`src/ui/journal-sheet.ts`), weil sie am Dokument
+ * haengen und ein Stylesheet nicht je Journal etwas anderes sagen kann. Die
+ * Werte hier sind nur der Rueckfall fuer Journale ohne unseren Stempel.
+ *
+ * Anleihen bei den Season-Modulen (`pf2e-pfs05…07`, in der Instanz
+ * nachgesehen): waermerer Pergamentton statt Grauweiss, kraeftigeres Gold,
+ * mittige Kapitelueberschrift mit kurzer Doppellinie statt einer Linie ueber
+ * die ganze Breite, und der Vorlesekasten als getoente Flaeche zwischen zwei
+ * Akzentlinien statt mit dickem Balken links. Nicht uebernommen ist ihr
+ * Verzicht auf ein dunkles Thema — bei uns folgen beide der Einstellung.
+ *
+ * Alles ist auf `.pfs-journal` eingegrenzt; Journale mit dem Standard-Blatt
+ * bleiben unberuehrt. Die Grundregeln fuer *alle* Journale (Kasten-Float,
+ * Merkmalsplaketten, Bilder) stehen in `module.css`.
+ *
+ * Das Themenmuster ist aus dem PF2e-System uebernommen
+ * (`_reference/pf2e/src/styles/_colors.scss`): Ein Fenster mit eigenem Thema
+ * traegt `.themed.theme-dark` an sich selbst, sonst gilt das Thema der Welt
+ * ueber `body.theme-dark …:not(.themed)`. Beide Faelle brauchen eine Regel.
+ *
+ * `!important` steht genau dort, wo der Seiteninhalt eine Inline-Gestaltung
+ * traegt (Vorlesekasten, Statblock-Leiste). Die ist mit Absicht da, damit
+ * Journale auch ohne dieses Modul richtig aussehen.
+ */
+
+/* ---------------------------------------------------------------- Farben */
+
+/* Helles Thema — zugleich der Rueckfall ohne Themenklasse. */
+.pfs-journal {
+  --pfs-season: #6b0f1a;
+  --pfs-season-hell: #e8a06a;
+  --pfs-season-dunkel: #2b0a0d;
+
+  --pfs-akzent: var(--pfs-season);
+  --pfs-grund: #f7f1de;
+  --pfs-text: #241d17;
+  --pfs-gedaempft: #6b5f4e;
+  --pfs-linie: #c49b2d;
+  --pfs-flaeche: #f1e6c8;
+  --pfs-rahmen: #d9c898;
+  --pfs-plakette-text: #f8f2e2;
+}
+
+body.theme-dark .pfs-journal:not(.themed),
+.pfs-journal.themed.theme-dark {
+  --pfs-akzent: var(--pfs-season-hell);
+  --pfs-grund: #191410;
+  --pfs-text: #e9dfcd;
+  --pfs-gedaempft: #a2937c;
+  --pfs-linie: #b8913f;
+  --pfs-flaeche: #241c15;
+  --pfs-rahmen: #4a3a26;
+  /* Der Akzent ist hier die aufgehellte Farbe — auf ihr traegt nur
+     dunkle Schrift. */
+  --pfs-plakette-text: #1a1410;
+}
+
+/* ------------------------------------------------------- Fenster und Rumpf */
+
+/*
+ * Die Lesefläche ist **nicht** `.journal-page-content`, sondern
+ * `.journal-entry-content` — der Kern setzt dort `background: var(--background)`.
+ * Wer nur den Seiteninhalt einfaerbt, bekommt eine Pergamentinsel auf grauem
+ * Grund, und genau so sah der erste Versuch aus. Die Klassennamen stammen aus
+ * Foundrys eigenem Stylesheet (`/css/foundry2.css` der laufenden Instanz),
+ * nicht aus dem Gedaechtnis.
+ */
+.pfs-journal .journal-entry-content {
+  background: var(--pfs-grund);
+}
+
+.pfs-journal .journal-page-content {
+  background-color: transparent;
+  color: var(--pfs-text);
+  font-family: 'Vollkorn', Georgia, serif;
+  line-height: 1.65;
+}
+
+/* Verweise (`@UUID`-Plaketten und Links) auf die Akzentfarbe ziehen — sonst
+   leuchtet Foundrys Blau aus dem Pergament heraus. */
+.pfs-journal {
+  --color-text-hyperlink: var(--pfs-akzent);
+}
+
+/* Der Journalname ueber den Seiten steht als Eingabefeld da; auf Pergament
+   wirkt der graue Kasten wie ein Fremdkoerper. Beim Hineinklicken kommt er
+   zurueck, sonst waere das Feld nicht mehr als solches zu erkennen. */
+.pfs-journal .journal-header .title {
+  background: transparent;
+  border-color: transparent;
+  color: var(--pfs-akzent);
+  font-family: 'Eczar', Georgia, serif;
+  font-weight: 700;
+}
+
+.pfs-journal .journal-header .title:hover,
+.pfs-journal .journal-header .title:focus {
+  background: var(--pfs-flaeche);
+  border-color: var(--pfs-rahmen);
+}
+
+/* ------------------------------------------------------- Inhaltsverzeichnis */
+
+/*
+ * Die Seitenleiste bekommt die Jahrgangsfarbe, abgedunkelt bis helle Schrift
+ * darauf sitzt — dieselbe Idee wie in den Season-Modulen, deren Leiste in
+ * der Jahrgangsfarbe liegt. Der Kern setzt hier bereits helle Schrift
+ * (`color: var(--color-light-1)`), es fehlt nur der Grund.
+ */
+.pfs-journal .journal-sidebar {
+  background: var(--pfs-season-dunkel);
+}
+
+.pfs-journal .journal-sidebar .toc li.page {
+  border-bottom: 1px dashed rgb(255 255 255 / 15%);
+}
+
+.pfs-journal .journal-sidebar .toc li.page:last-child {
+  border-bottom: none;
+}
+
+.pfs-journal .journal-sidebar .toc li.page.active {
+  background: rgb(255 255 255 / 10%);
+}
+
+.pfs-journal .journal-sidebar .toc .page-title:hover {
+  color: var(--pfs-linie);
+}
+
+.pfs-journal .journal-sidebar search input {
+  background: rgb(255 255 255 / 10%);
+}
+
+/* --------------------------------------------------------- Ueberschriften */
+
+.pfs-journal .journal-page-content h1,
+.pfs-journal .journal-page-content h2,
+.pfs-journal .journal-page-content h3,
+.pfs-journal .journal-page-content h4 {
+  font-family: 'Eczar', Georgia, serif;
+  color: var(--pfs-akzent);
+  font-weight: 700;
+}
+
+/* Der Seitentitel steht mittig ueber einer kurzen Doppellinie — wie der
+   Kapitelkopf im Heft. Die Linie als `::after`, damit sie mittig sitzt und
+   nicht ueber die ganze Spaltenbreite laeuft. */
+.pfs-journal .journal-page-content h1 {
+  border-bottom: none;
+  text-align: center;
+  letter-spacing: 0.01em;
+  margin-bottom: 0.6em;
+}
+
+.pfs-journal .journal-page-content h1::after {
+  content: '';
+  display: block;
+  width: 8rem;
+  margin: 0.3em auto 0;
+  /* `double` braucht mindestens 3px, sonst zeichnet der Browser eine Linie. */
+  border-top: 3px double var(--pfs-linie);
+}
+
+.pfs-journal .journal-page-content h2 {
+  border-bottom: 1px solid var(--pfs-linie);
+  padding-bottom: 0.12em;
+}
+
+/* ---------------------------------------------------------- Vorlesekasten
+
+   Angesprochen wird die **Klasse**, nicht das Element: Foundry schreibt das
+   Markup beim Speichern um. Geschrieben wird
+
+       <blockquote class="read-aloud"><p>…</p><p>…</p></blockquote>
+
+   in der Welt steht danach
+
+       <p><span class="read-aloud">…</span></p>
+
+   — der Kasten ist weg, die Klasse haengt an je einem `span` je Absatz. Eine
+   Regel auf `blockquote.read-aloud` griff deshalb nie (im laufenden Foundry
+   nachgesehen). Aus demselben Grund steht hier `display: block`: Ein
+   `span` ist von Haus aus inline und nimmt weder Innenabstand noch Rahmen
+   sauber an.
+
+   Ein mehrteiliger Vorlesetext wird damit zu mehreren Kaesten. Damit er
+   trotzdem wie **ein** Block liest, ruecken aufeinanderfolgende zusammen: der
+   zweite verliert seine obere Linie und den Abstand nach oben. */
+
+.pfs-journal .journal-page-content .read-aloud {
+  display: block;
+  border: none !important;
+  border-top: 2px solid var(--pfs-akzent) !important;
+  border-bottom: 2px solid var(--pfs-akzent) !important;
+  background: linear-gradient(
+    var(--pfs-flaeche),
+    var(--pfs-grund) 45%,
+    var(--pfs-flaeche)
+  ) !important;
+  color: var(--pfs-text);
+  padding: 0.8em 1.1em !important;
+  margin: 0 !important;
+  font-style: italic;
+}
+
+/* Der Absatz, in den Foundry den Vorlesetext gewickelt hat, darf keinen
+   eigenen Abstand beisteuern — sonst klafft zwischen den Teilen eine Luecke. */
+.pfs-journal .journal-page-content p:has(> .read-aloud) {
+  margin: 1em 0;
+}
+
+.pfs-journal .journal-page-content p:has(> .read-aloud) + p:has(> .read-aloud) {
+  margin-top: 0;
+}
+
+.pfs-journal .journal-page-content p:has(> .read-aloud) + p:has(> .read-aloud) .read-aloud {
+  border-top: none !important;
+  padding-top: 0 !important;
+}
+
+/* ------------------------------------------------------------ Seitenkasten */
+
+/* Ueber die volle Breite (siehe `module.css`) — deshalb hier etwas mehr
+   Innenabstand, damit der Kasten nicht wie ein breites Band wirkt. */
+.pfs-journal .journal-page-content aside.sidebar {
+  background-color: var(--pfs-flaeche);
+  border: 1px solid var(--pfs-rahmen);
+  border-top: 4px solid var(--pfs-akzent);
+  border-radius: 0;
+  box-shadow: 2px 2px 0 rgb(0 0 0 / 6%);
+  padding: 0.9em 1.3em 1em;
+}
+
+.pfs-journal .journal-page-content aside.sidebar figure img {
+  border-color: var(--pfs-rahmen);
+}
+
+/* Der Kastentitel kommt je nach Fundstelle als h1 oder h3 — beide mittig,
+   ohne Doppellinie und ohne die Kapitellinie des Rumpfes. */
+.pfs-journal .journal-page-content aside.sidebar h1,
+.pfs-journal .journal-page-content aside.sidebar h2,
+.pfs-journal .journal-page-content aside.sidebar h3 {
+  border-bottom: none;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 1.05em;
+  margin-bottom: 0.4em;
+}
+
+.pfs-journal .journal-page-content aside.sidebar h1::after {
+  display: none;
+}
+
+/* -------------------------------------------------------- Statblock-Leiste */
+
+/* Die Flex-Anordnung (Name links, Stufe rechts) steht inline am Element und
+   bleibt; hier wechselt nur die Linie auf die Akzentfarbe. */
+.pfs-journal .journal-page-content .statblock h3 {
+  border-bottom: 2px solid var(--pfs-akzent) !important;
+  font-variant: small-caps;
+}
+
+/* ------------------------------------------------------------- Merkmale */
+
+.pfs-journal .journal-page-content li.trait {
+  background-color: var(--pfs-akzent);
+  border-color: var(--pfs-akzent);
+  color: var(--pfs-plakette-text);
+  border-radius: 0;
+  font-family: 'Roboto Condensed', 'Roboto', sans-serif;
+}
+
+/* -------------------------------------------------------------- Sonstiges */
+
+/* Stufenangaben heben sich vom Fliesstext ab. */
+.pfs-journal .journal-page-content span.low-tier,
+.pfs-journal .journal-page-content span.high-tier {
+  color: var(--pfs-akzent);
+  font-weight: 700;
+}
+
+/* Erfolgsstufen: die Stufe vorn traegt die Akzentfarbe. */
+.pfs-journal .journal-page-content p.hanging-indent strong {
+  color: var(--pfs-akzent);
+}
+
+.pfs-journal .journal-page-content figure img {
+  border: 1px solid var(--pfs-rahmen);
+  border-radius: 2px;
+}
+
+.pfs-journal .journal-page-content figcaption {
+  color: var(--pfs-gedaempft);
+}
