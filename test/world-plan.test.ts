@@ -279,6 +279,59 @@ describe('planeImport — Spielhilfen-Journal', () => {
   });
 });
 
+describe('planeImport — Handout-Journal', () => {
+  const mitHandouts = (): Wunsch =>
+    wunsch({
+      handouts: {
+        journalName: 'Handouts',
+        seiten: [
+          { id: 'hhhhhhhhhhhhhhhh', name: 'Handout 1: The Note', inhalt: '<p>Dear friends,</p>' },
+        ],
+      },
+    });
+
+  it('plant es als Neuanlage, wenn es fehlt', () => {
+    const plan = planeImport(LEER, mitHandouts());
+
+    expect(plan.handouts?.journal).toEqual({ art: 'anlegen', name: 'Handouts' });
+    expect(plan.handouts?.seiten.neu).toEqual(['Handout 1: The Note']);
+  });
+
+  it('bleibt aus, wenn der Wunsch keines enthaelt', () => {
+    expect(planeImport(LEER, wunsch()).handouts).toBeUndefined();
+  });
+
+  it('findet es ueber sein Flag und verwechselt es nicht mit den Spielhilfen', () => {
+    const welt: Weltabbild = {
+      ordner: [],
+      journale: [
+        {
+          id: 'GA',
+          name: 'Game Aids',
+          ordnerId: null,
+          seiten: [],
+          ...flag({ kind: 'anhangJournal', scenario: '08-01', season: 8 }),
+        },
+        {
+          id: 'HO',
+          name: 'Handouts',
+          ordnerId: null,
+          seiten: [
+            { id: 'hhhhhhhhhhhhhhhh', name: 'Handout 1: The Note', inhalt: '<p>Old wording</p>' },
+          ],
+          ...flag({ kind: 'handoutJournal', scenario: '08-01', season: 8 }),
+        },
+      ],
+    };
+
+    const plan = planeImport(welt, mitHandouts());
+
+    expect(plan.handouts?.journal).toMatchObject({ art: 'aktualisieren', id: 'HO' });
+    expect(plan.handouts?.seiten.aktualisiert).toEqual(['Handout 1: The Note']);
+    expect(plan.anhang).toBeUndefined();
+  });
+});
+
 describe('planeImport — Szenen', () => {
   const mitSzenen = (): Wunsch =>
     wunsch({

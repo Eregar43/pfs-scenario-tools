@@ -15,9 +15,9 @@
  * dann gilt die erste Zeile als Titel, und der Text bleibt beisammen, statt
  * geraten getrennt zu werden.
  *
- * Das Abenteuer selbst bleibt aussen vor (`detectSections`): Dort steht
- * „Give the players Handout 1" im Fliesstext, nie als Kastenzeile — aber wer
- * den Bereich kennt, muss sich darauf nicht verlassen.
+ * Das Abenteuer selbst bleibt aussen vor (`detectSections`): Dort nennt das
+ * Heft ein Handout nur im Fliesstext, nie als Kastenzeile — aber wer den
+ * Bereich kennt, muss sich darauf nicht verlassen.
  */
 import { detectSections, escapeHtml, paragraphs } from './journal.ts';
 import { titleCase } from './text.ts';

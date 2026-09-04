@@ -29,6 +29,8 @@ export interface Importergebnis {
   seitenEntfallen: number;
   /** Bildseiten im Spielhilfen-Journal, falls eines geschrieben wurde. */
   anhangSeiten?: number;
+  /** Textseiten im Handout-Journal, falls eines geschrieben wurde. */
+  handoutSeiten?: number;
 }
 
 export interface AusfuehrOptionen {
@@ -71,6 +73,7 @@ export async function fuehreAus(
   szenen: SzeneWunsch[] = [],
   kreaturen: KreaturWunsch[] = [],
   effekte: EffektWunsch[] = [],
+  handoutSeiten: SeitenAbbild[] = [],
 ): Promise<Importergebnis> {
   const gemeinsam = {
     season: optionen.season,
@@ -114,6 +117,7 @@ export async function fuehreAus(
       szenen: szenen.length,
       aktoren: kreaturen.length,
       effekte: effekte.length,
+      handoutSeiten: handoutSeiten.length,
       bilder: optionen.bilder ?? 0,
     },
   });
@@ -144,6 +148,18 @@ export async function fuehreAus(
     );
     anhangJournalId = anhangErgebnis.journalId;
     ergebnis.anhangSeiten = anhangSeiten.length;
+  }
+
+  if (plan.handouts) {
+    await schreibeJournal(
+      plan.handouts.journal,
+      handoutSeiten,
+      zuSeitendaten,
+      szenarioId,
+      stempel({ ...gemeinsam, kind: 'handoutJournal', scenario: optionen.schluessel }),
+      plan.handouts.seiten.aktualisiert.length,
+    );
+    ergebnis.handoutSeiten = handoutSeiten.length;
   }
 
   if (plan.szenen && szenen.length > 0) {
@@ -544,8 +560,8 @@ function mitJournalBlatt(
 }
 
 /**
- * Legt ein Journal an oder gleicht seine Seiten ab — Haupt- und
- * Spielhilfen-Journal laufen durch denselben Weg, nur die Seitenform ist
+ * Legt ein Journal an oder gleicht seine Seiten ab — Haupt-, Spielhilfen-
+ * und Handout-Journal laufen durch denselben Weg, nur die Seitenform ist
  * eine andere (Text gegen Bild).
  */
 async function schreibeJournal(

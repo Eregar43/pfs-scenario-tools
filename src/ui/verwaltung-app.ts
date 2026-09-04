@@ -148,6 +148,8 @@ function teilName(teil: Teil): string {
       return L('Verwaltung.Teil.Journal');
     case 'anhang':
       return L('Verwaltung.Teil.Anhang');
+    case 'handouts':
+      return L('Verwaltung.Teil.Handouts');
     case 'szenen':
       return L('Verwaltung.Teil.Szenen');
     case 'aktoren':

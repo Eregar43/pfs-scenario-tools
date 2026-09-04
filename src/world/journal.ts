@@ -23,6 +23,7 @@ import { journalName, quellenangabe, scenarioFolderName, scenarioKey, seasonFold
 import { baueGefahr, type Schluesselwerke } from './gefahren.ts';
 import { baueNsc, sammleNscs } from './nscs.ts';
 import { sammleEffekte } from '../pdf/effekte.ts';
+import { sammleHandouts } from '../pdf/handouts.ts';
 import { baueEffekt, effektName, fuegeEffektVerweiseEin } from './effekte.ts';
 import {
   planeImport,
@@ -44,6 +45,12 @@ import {
 
 const FIRST_SORT = 500;
 const SORT_STEP = 100;
+/**
+ * Name des Handout-Journals. Bewusst der englische Fachbegriff, wie
+ * „Season" und „Hazard" in der Oberflaeche — und in beiden Sprachen gleich,
+ * damit der zweite Lauf das Journal auch ueber den Namen wiederfindet.
+ */
+const HANDOUT_JOURNAL = 'Handouts';
 
 /** Liest den Weltbestand in die reine Form, mit der `plan.ts` rechnet. */
 export function weltabbild(): Weltabbild {
@@ -358,6 +365,24 @@ export function plane(
         }
       : undefined;
 
+  // Die Handouts des Hefts — Briefe und Notizen fuer die Spieler — bekommen
+  // ein eigenes Journal, damit sich eine Seite davon zeigen laesst, ohne das
+  // Spielleiter-Journal zu oeffnen. Die Kennung haengt am Titel: Ein zweites
+  // Handout im naechsten Lauf verschiebt das erste nicht.
+  const gefundeneHandouts = sammleHandouts(szenario.blocks);
+  const handouts =
+    gefundeneHandouts.length > 0
+      ? {
+          journalName: HANDOUT_JOURNAL,
+          seiten: gefundeneHandouts.map((handout, index) => ({
+            id: foundryId(`${szenario.title}/handout/${handout.titel}`),
+            name: handout.titel,
+            inhalt: handout.html,
+            sort: FIRST_SORT + index * SORT_STEP,
+          })),
+        }
+      : undefined;
+
   // Personen mit Bild, aber ohne Statblock: aus dem Anhang, und erst hier —
   // ihr Rueckverweis zeigt auf die Bildseite, die es ohne den Anhang nicht
   // gibt. Sie stehen bewusst **nach** den Journalverweisen oben: Ein NSC hat
@@ -425,6 +450,7 @@ export function plane(
     journalName: journalName(designation, szenario.title, optionen.schema),
     seiten,
     ...(anhang ? { anhang } : {}),
+    ...(handouts ? { handouts } : {}),
     ...(szenen.length > 0 ? { szenen } : {}),
     ...(kreaturen.length > 0 ? { kreaturen } : {}),
     ...(effekte.length > 0 ? { effekte } : {}),
@@ -462,6 +488,7 @@ export async function schreibe(
     vorhaben.wunsch.szenen ?? [],
     vorhaben.wunsch.kreaturen ?? [],
     vorhaben.wunsch.effekte ?? [],
+    vorhaben.wunsch.handouts?.seiten ?? [],
   );
 }
 
