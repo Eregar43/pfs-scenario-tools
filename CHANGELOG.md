@@ -3,7 +3,7 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
-## Unveröffentlicht
+## 1.1.0 — 2026-09-05
 
 - **Handout-Journal.** Enthält das Heft Handouts — Briefe und Notizen für
   die Spieler im Appendix „Game Aids" —, entsteht neben dem Spielhilfen-Journal
