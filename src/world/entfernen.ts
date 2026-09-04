@@ -1,6 +1,7 @@
 /**
  * Entfernt ein importiertes Szenario aus der Welt — Journal, Spielhilfen,
- * Szenen, Kreaturen, Effekte und die eigenen Szenario-Ordner, in einem Zug.
+ * Handouts, Szenen, Kreaturen, Effekte und die eigenen Szenario-Ordner, in
+ * einem Zug.
  *
  * Geloescht wird ausschliesslich, was im `SzenarioBestand` steht, also am
  * eigenen Flag erkannt wurde. Einzige Ausnahme ist der **Season-Ordner
@@ -24,7 +25,7 @@ export interface Entfernt {
 }
 
 export async function entferneSzenario(bestand: SzenarioBestand): Promise<Entfernt> {
-  const journalIds = [bestand.journal?.id, bestand.anhang?.id].filter(
+  const journalIds = [bestand.journal?.id, bestand.anhang?.id, bestand.handouts?.id].filter(
     (id): id is string => id !== undefined,
   );
 

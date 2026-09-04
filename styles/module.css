@@ -126,3 +126,21 @@
   font-style: italic;
   opacity: 0.85;
 }
+
+/*
+ * Handout: der Wortlaut eines Briefs oder einer Notiz aus dem Heft, als
+ * eigenes Blatt abgesetzt — Rand, Luft, Kursive. Kein Papiermuster: Das
+ * Blatt erbt den Grund des Journals, hell wie dunkel.
+ */
+.journal-page-content .handout {
+  margin: 1em 0;
+  padding: 1.2em 1.6em;
+  border: 1px solid var(--color-border-light-primary, #7a7971);
+  border-radius: 2px;
+  font-style: italic;
+  line-height: 1.55;
+}
+
+.journal-page-content .handout p:last-child {
+  margin-bottom: 0;
+}

@@ -62,8 +62,8 @@ und `game.pfsScenarioTools.willkommen()`.
    Namen des Käufers im Wasserzeichen.
 2. **In die Welt schreiben.** Vorher läuft der Bilderlauf, dann zeigt eine
    **Vorschau**, was passieren würde: Ordner, Journal, Seiten, Verweise,
-   Bilder, Szenen, Kreaturen, Hazards, Spielhilfen — und wo ein Statblock von
-   seiner Kompendium-Vorlage abweicht. Erst der Klick auf
+   Bilder, Szenen, Kreaturen, Hazards, Spielhilfen, Handouts — und wo ein
+   Statblock von seiner Kompendium-Vorlage abweicht. Erst der Klick auf
    **Anlegen**/**Aktualisieren** ändert etwas.
 
 Bei **mehreren Dateien** wird eines nach dem anderen abgearbeitet: lesen,
@@ -97,6 +97,9 @@ Inhalte einsammelt.
   eine Aufzählung von Fertigkeiten bekommt je Fertigkeit eine eigene Probe.
 - **Spielhilfen-Journal** („Game Aids"): je Bild des Appendix eine Bildseite —
   zum Zeigen am Tisch.
+- **Handout-Journal** („Handouts"): je Handout des Hefts — Briefe und Notizen
+  für die Spieler — eine Textseite mit dem Wortlaut, zum Teilen mit den
+  Spielern. Nur, wenn das Heft welche hat.
 - **Bilder** als WebP unterhalb des gewählten Bildordners
   (`<Bildordner>/pfs_s08_01/…`). Figuren mit Bildunterschrift stehen zusätzlich
   im Journaltext, die Golarion-Übersichtskarte in ihrem Kasten.

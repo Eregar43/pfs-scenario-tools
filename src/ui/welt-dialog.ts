@@ -456,6 +456,28 @@ export async function zeigeWeltDialog(
     liste.append(li);
   }
 
+  if (vorhaben.plan.handouts) {
+    const li = document.createElement('li');
+    li.textContent = L(
+      vorhaben.plan.handouts.journal.art === 'anlegen'
+        ? 'Welt.HandoutsAnlegen'
+        : 'Welt.HandoutsAktualisieren',
+      {
+        name:
+          vorhaben.plan.handouts.journal.art === 'anlegen'
+            ? vorhaben.plan.handouts.journal.name
+            : vorhaben.plan.handouts.journal.alterName,
+        seiten: vorhaben.wunsch.handouts?.seiten.length ?? 0,
+      },
+    );
+    liste.append(li);
+    for (const seite of vorhaben.wunsch.handouts?.seiten ?? []) {
+      const zeile = document.createElement('li');
+      zeile.textContent = L('Welt.Handout', { name: seite.name });
+      liste.append(zeile);
+    }
+  }
+
   inhalt.append(liste);
 
   if (vorhaben.plan.journal.art === 'aktualisieren') {

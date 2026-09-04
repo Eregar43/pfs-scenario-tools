@@ -16,6 +16,8 @@ export type Dokumentart =
   | 'journal'
   /** Das Spielhilfen-Journal mit einer Bildseite je Anhang-Bild. */
   | 'anhangJournal'
+  /** Das Handout-Journal mit einer Textseite je Handout des Hefts. */
+  | 'handoutJournal'
   | 'scene'
   | 'actor'
   /** Ein Effekt-Gegenstand aus einer Zusage des Hefts. */
@@ -41,6 +43,8 @@ export interface Bestandszahlen {
   aktoren: number;
   /** Effekt-Gegenstaende; fehlt bei allem, was eine aeltere Fassung anlegte. */
   effekte?: number;
+  /** Seiten des Handout-Journals; fehlt bei allem, was eine aeltere Fassung anlegte. */
+  handoutSeiten?: number;
   /** Hochgeladene Bilddateien; sie liegen ausserhalb der Weltdatenbank. */
   bilder: number;
 }

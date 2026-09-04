@@ -33,6 +33,11 @@ describe('bestandAus', () => {
           ...flag({ kind: 'anhangJournal', scenario: '08-01', season: 8, importedAt: '2026-08-13T11:00:00Z' }),
           seiten: [{ id: 'c'.repeat(16), name: 'Ella', inhalt: 'x.webp' }],
         },
+        {
+          id: 'HO', name: 'Handouts', ordnerId: 'OJ',
+          ...flag({ kind: 'handoutJournal', scenario: '08-01', season: 8, importedAt: '2026-08-13T10:30:00Z' }),
+          seiten: [{ id: 'h'.repeat(16), name: 'Handout 1: The Note', inhalt: '<p>x</p>' }],
+        },
         { id: 'FREMD', name: 'Notizen', ordnerId: null, seiten: [] },
       ],
       szenenOrdner: [
@@ -57,6 +62,7 @@ describe('bestandAus', () => {
     expect(b.schluessel).toBe('08-01');
     expect(b.journal).toEqual({ id: 'J', name: '8-01 Intro', seiten: 2 });
     expect(b.anhang).toEqual({ id: 'GA', name: 'Game Aids', seiten: 1 });
+    expect(b.handouts).toEqual({ id: 'HO', name: 'Handouts', seiten: 1 });
     expect(b.szenen).toEqual([{ id: 'SZ1', name: 'The Laboratory' }]);
     expect(b.aktoren).toEqual([{ id: 'A1', name: 'Poppet Mage' }]);
     // Drei Szenario-Ordner (Journal, Szene, Actor); die Season-Ordner nicht.
@@ -85,7 +91,7 @@ describe('bestandAus', () => {
 describe('befund', () => {
   const bestand = (
     soll: SzenarioBestand['soll'],
-    ist: { seiten?: number; anhang?: number; szenen?: number; aktoren?: number } = {},
+    ist: { seiten?: number; anhang?: number; handouts?: number; szenen?: number; aktoren?: number } = {},
   ): SzenarioBestand => ({
     schluessel: '08-01',
     ...(ist.seiten !== undefined
@@ -93,6 +99,9 @@ describe('befund', () => {
       : {}),
     ...(ist.anhang !== undefined
       ? { anhang: { id: 'GA', name: 'Game Aids', seiten: ist.anhang } }
+      : {}),
+    ...(ist.handouts !== undefined
+      ? { handouts: { id: 'HO', name: 'Handouts', seiten: ist.handouts } }
       : {}),
     szenen: Array.from({ length: ist.szenen ?? 0 }, (_, i) => ({ id: `S${i}`, name: `Szene ${i}` })),
     effekte: [],
@@ -140,6 +149,24 @@ describe('befund', () => {
       soll: 2,
       zustand: 'fehlt',
     });
+  });
+
+  it('zaehlt die Handouts, sobald der Import sie kennt', () => {
+    // Aelterer Import ohne die Zahl: keine Zeile, keine Falschmeldung.
+    const ohne = befund(bestand(VOLL, { seiten: 15, anhang: 4, szenen: 2, aktoren: 7 }), 13);
+    expect(ohne.map((z) => z.teil)).not.toContain('handouts');
+
+    const mit = befund(
+      bestand({ ...VOLL, handoutSeiten: 1 }, { seiten: 15, anhang: 4, szenen: 2, aktoren: 7 }),
+      13,
+    );
+    expect(mit.find((z) => z.teil === 'handouts')).toMatchObject({ ist: 0, soll: 1, zustand: 'fehlt' });
+
+    const da = befund(
+      bestand({ ...VOLL, handoutSeiten: 1 }, { seiten: 15, anhang: 4, handouts: 1, szenen: 2, aktoren: 7 }),
+      13,
+    );
+    expect(da.find((z) => z.teil === 'handouts')?.zustand).toBe('vollstaendig');
   });
 
   it('sagt unbekannt statt zu raten, wenn die Soll-Zahlen fehlen', () => {

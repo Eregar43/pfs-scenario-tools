@@ -16,6 +16,7 @@ export interface SzenarioBestand {
   season?: number;
   journal?: { id: string; name: string; seiten: number };
   anhang?: { id: string; name: string; seiten: number };
+  handouts?: { id: string; name: string; seiten: number };
   szenen: { id: string; name: string }[];
   aktoren: { id: string; name: string }[];
   effekte: { id: string; name: string }[];
@@ -41,7 +42,14 @@ export type Zustand =
   /** Keine Soll-Zahl bekannt — aelter importiert, oder nicht nachsehbar. */
   | 'unbekannt';
 
-export type Teil = 'journal' | 'anhang' | 'szenen' | 'aktoren' | 'effekte' | 'bilder';
+export type Teil =
+  | 'journal'
+  | 'anhang'
+  | 'handouts'
+  | 'szenen'
+  | 'aktoren'
+  | 'effekte'
+  | 'bilder';
 
 export interface Teilbefund {
   teil: Teil;
@@ -78,6 +86,7 @@ export function befund(bestand: SzenarioBestand, bilderIst?: number): Teilbefund
   const zeilen: { teil: Teil; ist: number; soll?: number }[] = [
     { teil: 'journal', ist: bestand.journal?.seiten ?? 0, soll: soll?.seiten },
     { teil: 'anhang', ist: bestand.anhang?.seiten ?? 0, soll: soll?.anhangSeiten },
+    { teil: 'handouts', ist: bestand.handouts?.seiten ?? 0, soll: soll?.handoutSeiten },
     { teil: 'szenen', ist: bestand.szenen.length, soll: soll?.szenen },
     { teil: 'aktoren', ist: bestand.aktoren.length, soll: soll?.aktoren },
     { teil: 'effekte', ist: bestand.effekte.length, soll: soll?.effekte },
@@ -134,6 +143,8 @@ export function bestandAus(welt: Weltabbild): SzenarioBestand[] {
       bestand.journal = { id: journal.id, name: journal.name, seiten: journal.seiten.length };
     } else if (flags.kind === 'anhangJournal') {
       bestand.anhang = { id: journal.id, name: journal.name, seiten: journal.seiten.length };
+    } else if (flags.kind === 'handoutJournal') {
+      bestand.handouts = { id: journal.id, name: journal.name, seiten: journal.seiten.length };
     } else {
       continue;
     }
@@ -254,6 +265,7 @@ export function verwaisteSeasonOrdner(
   for (const bestand of bestaende) {
     if (bestand.journal) weg.add(bestand.journal.id);
     if (bestand.anhang) weg.add(bestand.anhang.id);
+    if (bestand.handouts) weg.add(bestand.handouts.id);
     for (const eintrag of [
       ...bestand.szenen,
       ...bestand.aktoren,

@@ -48,6 +48,9 @@ export async function bestaetigeUndEntferne(bestaende: SzenarioBestand[]): Promi
     if (bestand.anhang) {
       zeile(`${bestand.anhang.name} (${L('Uebersicht.TeilAnhang', { seiten: bestand.anhang.seiten })})`);
     }
+    if (bestand.handouts) {
+      zeile(`${bestand.handouts.name} (${L('Uebersicht.TeilHandouts', { seiten: bestand.handouts.seiten })})`);
+    }
     for (const szene of bestand.szenen) zeile(szene.name);
     for (const aktor of bestand.aktoren) zeile(aktor.name);
     for (const ordner of bestand.ordner) zeile(ordner.name);

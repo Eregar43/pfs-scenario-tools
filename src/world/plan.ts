@@ -1,5 +1,5 @@
 import { defaultColorFor, gleicheFarbe, normalisiereFarbe, officialColorFor } from './colors.ts';
-import { lies, MODULE_ID, type MitFlags } from './flags.ts';
+import { lies, MODULE_ID, type Dokumentart, type MitFlags } from './flags.ts';
 import { passtZuSeason, schluesselAusOrdnername } from './naming.ts';
 import { wandSignaturen, type Wand } from './waende.ts';
 
@@ -191,6 +191,8 @@ export interface Wunsch {
    * Seitenabgleich verwenden wie beim Text.
    */
   anhang?: { journalName: string; seiten: SeitenAbbild[] };
+  /** Das Handout-Journal: eine Textseite je Handout des Hefts. */
+  handouts?: { journalName: string; seiten: SeitenAbbild[] };
   /** Eine Szene je Karte. */
   szenen?: SzeneWunsch[];
   /** Eine Kreatur je Fassung. */
@@ -203,6 +205,14 @@ export type OrdnerAktion =
   | { art: 'anlegen'; name: string; farbe?: string; elternId?: string }
   | { art: 'umfaerben'; id: string; name: string; farbe: string }
   | { art: 'behalten'; id: string; name: string };
+
+/** Plan fuer ein Journal neben dem Hauptjournal — Spielhilfen oder Handouts. */
+export interface Nebenjournalplan {
+  journal:
+    | { art: 'anlegen'; name: string }
+    | { art: 'aktualisieren'; id: string; name: string; alterName: string };
+  seiten: ImportPlan['seiten'];
+}
 
 export interface ImportPlan {
   seasonOrdner: OrdnerAktion;
@@ -217,12 +227,9 @@ export interface ImportPlan {
     entfallen: string[];
   };
   /** Plan fuer das Spielhilfen-Journal, falls der Wunsch eines enthaelt. */
-  anhang?: {
-    journal:
-      | { art: 'anlegen'; name: string }
-      | { art: 'aktualisieren'; id: string; name: string; alterName: string };
-    seiten: ImportPlan['seiten'];
-  };
+  anhang?: Nebenjournalplan;
+  /** Plan fuer das Handout-Journal, falls der Wunsch eines enthaelt. */
+  handouts?: Nebenjournalplan;
   /**
    * Plan fuer die Szenen, falls der Wunsch welche enthaelt. Der Ordnerbaum
    * (Season, Szenario) entsteht ein zweites Mal als Szenen-Ordner — Foundry
@@ -403,7 +410,11 @@ export function planeImport(welt: Weltabbild, wunsch: Wunsch): ImportPlan {
     : ({ art: 'anlegen' as const, name: wunsch.journalName });
 
   const anhang = wunsch.anhang
-    ? planeAnhang(welt, wunsch, wunsch.anhang, vorhandenerSzenarioOrdner?.id)
+    ? planeNebenjournal(welt, wunsch, wunsch.anhang, 'anhangJournal', vorhandenerSzenarioOrdner?.id)
+    : undefined;
+
+  const handouts = wunsch.handouts
+    ? planeNebenjournal(welt, wunsch, wunsch.handouts, 'handoutJournal', vorhandenerSzenarioOrdner?.id)
     : undefined;
 
   const szenen =
@@ -425,6 +436,7 @@ export function planeImport(welt: Weltabbild, wunsch: Wunsch): ImportPlan {
     journal,
     seiten: planeSeiten(vorhandenesJournal?.seiten ?? [], wunsch.seiten),
     ...(anhang ? { anhang } : {}),
+    ...(handouts ? { handouts } : {}),
     ...(szenen ? { szenen } : {}),
     ...(kreaturen ? { kreaturen } : {}),
     ...(effekte ? { effekte } : {}),
@@ -565,16 +577,21 @@ function planeSzenen(
   };
 }
 
-function planeAnhang(
+/**
+ * Plant ein Journal neben dem Hauptjournal — Spielhilfen wie Handouts laufen
+ * durch denselben Weg, sie unterscheiden sich nur in ihrer Dokumentart.
+ */
+function planeNebenjournal(
   welt: Weltabbild,
   wunsch: Wunsch,
-  anhang: NonNullable<Wunsch['anhang']>,
+  anhang: { journalName: string; seiten: SeitenAbbild[] },
+  art: Extract<Dokumentart, 'anhangJournal' | 'handoutJournal'>,
   szenarioOrdnerId: string | undefined,
-): NonNullable<ImportPlan['anhang']> {
+): Nebenjournalplan {
   // Dieselbe Reihenfolge wie beim Hauptjournal: Flag, dann Name im richtigen
   // Ordner, dann neu anlegen.
   const perFlag = welt.journale.find(
-    (j) => lies(j).scenario === wunsch.schluessel && lies(j).kind === 'anhangJournal',
+    (j) => lies(j).scenario === wunsch.schluessel && lies(j).kind === art,
   );
   const vorhanden =
     perFlag ??

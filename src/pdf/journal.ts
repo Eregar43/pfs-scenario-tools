@@ -95,7 +95,8 @@ export function inlineHtml(text: string): string {
     .replace(/\*([^*]+)\*/g, '<em>$1</em>');
 }
 
-function paragraphs(text: string, className?: string): string[] {
+/** Absaetze eines Markdown-Blocks als `<p>`; leere Teile fallen weg. */
+export function paragraphs(text: string, className?: string): string[] {
   const attribute = className ? ` class="${className}"` : '';
   return text
     .split('\n\n')
