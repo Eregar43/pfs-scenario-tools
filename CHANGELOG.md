@@ -3,6 +3,15 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
+## Unveröffentlicht
+
+- **Handout-Journal.** Enthält das Heft Handouts — Briefe und Notizen für
+  die Spieler im Appendix „Game Aids" —, entsteht neben dem Spielhilfen-Journal
+  ein Journal „Handouts" mit einer Textseite je Handout, im Journal-Blatt des
+  Moduls und mit abgesetztem Wortlaut. Vorschau, Übersicht,
+  Vollständigkeitsprobe und Entfernen kennen es. In der Season 8 betrifft das
+  8-01 und 8-04; Hefte ohne Handout bekommen kein leeres Journal.
+
 ## 1.0.0 — 2026-08-22
 
 Erste Ausgabe. Das Modul liest das PDF eines Pathfinder-Society-Szenarios im

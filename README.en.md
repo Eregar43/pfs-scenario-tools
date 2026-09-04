@@ -60,9 +60,9 @@ and `game.pfsScenarioTools.willkommen()`.
    in the watermark.
 2. **Write to the world.** The image pass runs first, then a **preview** shows
    what would happen: folders, journal, pages, links, images, scenes,
-   creatures, hazards, game aids — and where a stat block differs from its
-   compendium template. Only the click on **Create**/**Update** changes
-   anything.
+   creatures, hazards, game aids, handouts — and where a stat block differs
+   from its compendium template. Only the click on **Create**/**Update**
+   changes anything.
 
 With **several files**, they are handled one after another: read, preview,
 decide, write, next. That way only one scenario is ever in memory. The window
@@ -94,6 +94,9 @@ contents.
   list of skills gets one check per skill.
 - **Game aids journal** ("Game Aids"): one image page per appendix image — for
   showing at the table.
+- **Handout journal** ("Handouts"): one text page per handout in the scenario —
+  letters and notes for the players — with the wording, ready to share with
+  the players. Only if the scenario has any.
 - **Images** as WebP below the chosen image folder
   (`<image folder>/pfs_s08_01/…`). Figures with a caption also appear in the
   journal text, the Golarion overview map inside its sidebar.
