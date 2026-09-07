@@ -145,6 +145,7 @@ export async function fuehreAus(
       szenarioId,
       anhangFlags,
       plan.anhang.seiten.aktualisiert.length,
+      NEBENJOURNAL_RECHTE,
     );
     anhangJournalId = anhangErgebnis.journalId;
     ergebnis.anhangSeiten = anhangSeiten.length;
@@ -158,6 +159,7 @@ export async function fuehreAus(
       szenarioId,
       stempel({ ...gemeinsam, kind: 'handoutJournal', scenario: optionen.schluessel }),
       plan.handouts.seiten.aktualisiert.length,
+      NEBENJOURNAL_RECHTE,
     );
     ergebnis.handoutSeiten = handoutSeiten.length;
   }
@@ -559,10 +561,36 @@ function mitJournalBlatt(
   return { ...flags, core: { sheetClass: SHEET_CLASS } };
 }
 
+/** Rechte eines Journals und seiner Seiten, als Stufe fuer `ownership.default`. */
+interface Journalrechte {
+  journal: number;
+  seite: number;
+}
+
+/**
+ * Rechte der Journale neben dem Hauptjournal — Spielhilfen und Handouts.
+ *
+ * Das Journal steht auf „Observer", damit die Spieler es oeffnen koennen;
+ * jede Seite steht auf „None", damit sie erst erscheint, wenn der Spielleiter
+ * sie einzeln freigibt. Foundrys Vorgabe ist die Umkehrung — Journal „None",
+ * Seiten „Inherit" — und damit sehen die Spieler entweder nichts oder, sobald
+ * der Spielleiter das Journal freigibt, alle Seiten auf einmal.
+ *
+ * Die Stufen sind `CONST.DOCUMENT_OWNERSHIP_LEVELS` (v14, nachgelesen in
+ * `foundry-vtt-types`): NONE ist 0, OBSERVER ist 2. Als Zahl, weil der Shim
+ * die Konstante nicht fuehrt und `effekte.ts` es ebenso haelt.
+ */
+const NEBENJOURNAL_RECHTE: Journalrechte = { journal: 2, seite: 0 };
+
 /**
  * Legt ein Journal an oder gleicht seine Seiten ab — Haupt-, Spielhilfen-
  * und Handout-Journal laufen durch denselben Weg, nur die Seitenform ist
  * eine andere (Text gegen Bild).
+ *
+ * Mit `rechte` bekommen Journal und Seiten feste Stufen in `ownership.default`,
+ * auch beim Abgleich eines vorhandenen Journals. Ohne `rechte` bleibt es bei
+ * Foundrys Vorgabe, und ein Abgleich laesst die Rechte unangetastet — das
+ * Hauptjournal gehoert dem Spielleiter, wie bisher.
  */
 async function schreibeJournal(
   aktion:
@@ -573,14 +601,22 @@ async function schreibeJournal(
   ordnerId: string,
   flags: Record<string, Record<string, unknown>>,
   aktualisiertLautPlan: number,
+  rechte?: Journalrechte,
 ): Promise<Importergebnis> {
+  // `ownership` als Teilobjekt: Foundry mischt es beim `update` in den Bestand
+  // ein, Eintraege fuer einzelne Spieler bleiben so stehen.
+  const journalRechte = rechte ? { ownership: { default: rechte.journal } } : {};
+  const seitendaten = (seite: SeitenAbbild): Record<string, unknown> =>
+    rechte ? { ...zuDaten(seite), ownership: { default: rechte.seite } } : zuDaten(seite);
+
   if (aktion.art === 'anlegen') {
     const alleFlags = mitJournalBlatt(flags);
     const angelegt = await JournalEntry.create({
       name: aktion.name,
       folder: ordnerId,
-      pages: seiten.map(zuDaten),
+      pages: seiten.map(seitendaten),
       flags: alleFlags,
+      ...journalRechte,
     });
     if (!angelegt) throw new Error(`Journal „${aktion.name}" liess sich nicht anlegen.`);
 
@@ -600,6 +636,7 @@ async function schreibeJournal(
     name: aktion.name,
     folder: ordnerId,
     flags: mitJournalBlatt(flags, journal.flags?.core),
+    ...journalRechte,
   });
 
   // Seiten ueber ihre Kennung abgleichen. Wer die Kennungen behaelt, behaelt
@@ -609,10 +646,10 @@ async function schreibeJournal(
   const vorhanden = new Set<string>((journal.pages?.contents ?? []).map((seite) => seite.id));
   const gewuenscht = new Set(seiten.map((seite) => seite.id));
 
-  const anzulegen = seiten.filter((seite) => !vorhanden.has(seite.id)).map(zuDaten);
+  const anzulegen = seiten.filter((seite) => !vorhanden.has(seite.id)).map(seitendaten);
   const zuAendern = seiten
     .filter((seite) => vorhanden.has(seite.id))
-    .map((seite) => ({ _id: seite.id, ...zuDaten(seite) }));
+    .map((seite) => ({ _id: seite.id, ...seitendaten(seite) }));
   const zuLoeschen = [...vorhanden].filter((id) => !gewuenscht.has(id));
 
   if (anzulegen.length) {
