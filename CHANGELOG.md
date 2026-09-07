@@ -3,6 +3,17 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
+## Unveröffentlicht
+
+- **Spielhilfen- und Handout-Journal sind für Spieler geöffnet, ihre Seiten
+  nicht.** Beide Journale stehen auf „Observer", jede ihrer Seiten auf „None".
+  Spieler sehen so das Journal, aber keine Seite, bis der Spielleiter sie
+  einzeln freigibt. Bisher standen die Journale auf „None" und die Seiten auf
+  „Inherit" — Spieler sahen nichts oder, nach einer Freigabe des Journals,
+  alle Seiten auf einmal. Ein erneuter Import setzt die Rechte auch bei
+  vorhandenen Journalen; Freigaben an einzelne Spieler bleiben stehen. Das
+  Hauptjournal ist nicht betroffen.
+
 ## 1.1.0 — 2026-09-05
 
 - **Handout-Journal.** Enthält das Heft Handouts — Briefe und Notizen für
