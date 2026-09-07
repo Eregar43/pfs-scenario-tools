@@ -100,6 +100,10 @@ Inhalte einsammelt.
 - **Handout-Journal** („Handouts"): je Handout des Hefts — Briefe und Notizen
   für die Spieler — eine Textseite mit dem Wortlaut, zum Teilen mit den
   Spielern. Nur, wenn das Heft welche hat.
+
+  Beide Journale stehen auf „Observer", ihre Seiten auf „None": Die Spieler
+  sehen das Journal, aber keine Seite, bis der Spielleiter sie einzeln
+  freigibt. Das Hauptjournal bleibt beim Spielleiter.
 - **Bilder** als WebP unterhalb des gewählten Bildordners
   (`<Bildordner>/pfs_s08_01/…`). Figuren mit Bildunterschrift stehen zusätzlich
   im Journaltext, die Golarion-Übersichtskarte in ihrem Kasten.

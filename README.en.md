@@ -97,6 +97,10 @@ contents.
 - **Handout journal** ("Handouts"): one text page per handout in the scenario —
   letters and notes for the players — with the wording, ready to share with
   the players. Only if the scenario has any.
+
+  Both journals are set to "Observer", their pages to "None": players see the
+  journal but no page until the GM reveals pages one by one. The main journal
+  stays with the GM.
 - **Images** as WebP below the chosen image folder
   (`<image folder>/pfs_s08_01/…`). Figures with a caption also appear in the
   journal text, the Golarion overview map inside its sidebar.
