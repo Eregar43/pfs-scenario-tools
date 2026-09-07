@@ -3,7 +3,7 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
-## Unveröffentlicht
+## 1.1.1 — 2026-09-07
 
 - **Spielhilfen- und Handout-Journal sind für Spieler geöffnet, ihre Seiten
   nicht.** Beide Journale stehen auf „Observer", jede ihrer Seiten auf „None".
