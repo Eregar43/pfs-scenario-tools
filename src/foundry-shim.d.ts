@@ -37,7 +37,7 @@ declare global {
       set(namespace: string, key: string, value: unknown): Promise<unknown>;
     };
     modules: {
-      get(id: string): { version?: string; api?: unknown } | undefined;
+      get(id: string): { active?: boolean; version?: string; api?: unknown } | undefined;
     };
     user?: { isGM?: boolean };
     folders?: FoundryCollection<FoundryFolder>;

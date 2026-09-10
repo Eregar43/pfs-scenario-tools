@@ -62,6 +62,7 @@
   "PFSST.Welt.NscZeile": "NPCs ohne Werte: {neu} neu ({namen}), {vorhanden} schon in der Welt",
   "PFSST.Welt.NscZeileOhneNeue": "NPCs ohne Werte: keiner neu, {vorhanden} schon in der Welt",
   "PFSST.Welt.KreaturenOhneVorlage": "Ohne Vorlage im Kompendium, werden nicht angelegt: {namen}",
+  "PFSST.Welt.StarfinderOhneModul": "Vorlage aus einem Starfinder-Buch, aber das Modul „Starfinder Anachronism“ ({modul}) ist nicht aktiv — werden nicht angelegt: {namen}",
   "PFSST.Welt.GefahrenGebaut": "Hazards ohne Vorlage, aus dem Statblock gebaut ({anzahl}): {namen}",
   "PFSST.Welt.GefahrRest": "    Nicht untergebracht — {punkt}",
   "PFSST.Einstellungen.Kreaturverweise.Name": "Kreaturverweise im Journal",

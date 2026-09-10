@@ -319,7 +319,12 @@ describe('sammleKreaturen', () => {
     const { kreaturen, ohneVorlage } = sammleKreaturen(blocks, index);
     expect(kreaturen).toEqual([]);
     expect(ohneVorlage).toEqual([
-      { name: 'Eindeutig Eigenes Wesen', art: 'creature', statblock: expect.anything() },
+      {
+        name: 'Eindeutig Eigenes Wesen',
+        art: 'creature',
+        statblock: expect.anything(),
+        buch: 'Pathfinder Adventure Path #200',
+      },
     ]);
   });
 

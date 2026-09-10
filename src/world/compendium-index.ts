@@ -29,6 +29,23 @@ const CREATURE_PACKS = [
   'pf2e.pathfinder-npc-core',
 ];
 
+/**
+ * Das Modul „Starfinder Anachronism" stellt die Starfinder-2e-Kompendien in
+ * einer pf2e-Welt bereit. Season 8 greift darauf zu: In 8-06 ist der
+ * `Mining Robot` eine Variante des `demolition-class assassin robot` aus
+ * *Starfinder Alien Core*, den kein Pathfinder-Grundwerk fuehrt. Seine
+ * Bestiarien zaehlen mit — **nach** den pf2e-Grundwerken, damit bei gleichem
+ * Namen weiter Pathfinder gewinnt. Fehlt das Modul, findet `packsNach`
+ * nichts; die Vorschau nennt dann den Grund (`welt-dialog.ts`).
+ */
+export const ANACHRONISM_MODUL = 'sf2e-anachronism';
+const ANACHRONISM_BESTIARIES = /^sf2e-anachronism\..*bestiar(y|ies)$/;
+
+/** Ob das Modul „Starfinder Anachronism" in dieser Welt aktiv ist. */
+export function anachronismAktiv(): boolean {
+  return game.modules.get(ANACHRONISM_MODUL)?.active === true;
+}
+
 /** Das systemweite Grundwerk fuer **Gefahren**. */
 const HAZARD_CORE = 'pf2e.hazards';
 
@@ -123,7 +140,7 @@ async function sammleActors(): Promise<ActorEntry[]> {
   // Spielleiter auch nachschlaegt. Bei Gefahren das Grundwerk vor den
   // Jahrgaengen.
   const plan: { collections: string[]; kind: ActorKind }[] = [
-    { collections: CREATURE_PACKS, kind: 'creature' },
+    { collections: [...CREATURE_PACKS, ...packsNach(ANACHRONISM_BESTIARIES)], kind: 'creature' },
     { collections: [HAZARD_CORE, ...packsNach(PFS_BESTIARY)], kind: 'hazard' },
   ];
 
