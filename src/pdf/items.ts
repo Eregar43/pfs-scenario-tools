@@ -207,6 +207,17 @@ const FILLER = new Set([
 /** Kleinster Sinnkern, den ein Klartext-Treffer tragen muss. */
 const MIN_CONTENT_WORDS = 3;
 
+/**
+ * Ein Kompendiumsname mit Klammerzusatz — `Antidote (Moderate)`, `Antiplague
+ * (Lesser)` — ist ein Verbrauchsgut in Stufen. Paizo schreibt die Stufe
+ * davor (`moderate antidote`), und das sind nur zwei Sinnwoerter: zu wenig
+ * fuer die Drei-Wort-Regel, obwohl die Wortfolge in Prosa nie zufaellig
+ * steht. In 8-06 blieben so `moderate antidote` und `moderate antiplague`
+ * der Missionsausruestung ohne Verweis. Fuer solche Namen genuegen zwei.
+ */
+const MIN_CONTENT_WORDS_GRADED = 2;
+const GRADED = /\(/;
+
 function contentWords(words: readonly string[]): number {
   return words.filter((word) => !FILLER.has(word.toLowerCase())).length;
 }
@@ -246,13 +257,14 @@ function enrichPlainSegment(text: string, items: ItemIndex): string {
     const longest = Math.min(MAX_WINDOW, words.length - i);
     for (let candidate = longest; candidate >= MIN_WORDS; candidate--) {
       const slice = words.slice(i, i + candidate);
-      if (contentWords(slice) < MIN_CONTENT_WORDS) continue;
+      if (contentWords(slice) < MIN_CONTENT_WORDS_GRADED) continue;
       const found = items.find(slice.join(' '));
-      if (found && found.before === '' && found.entry.kind === 'equipment') {
-        link = found;
-        span = candidate;
-        break;
-      }
+      if (!found || found.before !== '' || found.entry.kind !== 'equipment') continue;
+      const noetig = GRADED.test(found.entry.name) ? MIN_CONTENT_WORDS_GRADED : MIN_CONTENT_WORDS;
+      if (contentWords(slice) < noetig) continue;
+      link = found;
+      span = candidate;
+      break;
     }
 
     if (link) {
