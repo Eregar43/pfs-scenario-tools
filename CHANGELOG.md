@@ -3,6 +3,26 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
+## Unveröffentlicht
+
+- **Seiten mit kurzem Titel werden wieder zweispaltig gelesen.** In 8-06
+  „Falling Sparks" lag der Titel zusammen mit Autorenzeile und einer
+  Bildunterschrift im Bundsteg, und Seite 3 wurde einspaltig gelesen — die
+  Sidebar „Where on Golarion?" stand zeilenweise im Fließtext verschränkt.
+- **Porträts mit Bildunterschrift auf dem Bild gehen nicht mehr verloren.**
+  Sie galten als Kastenhintergrund. Betroffen waren Dagur Hawksight und
+  Vulri Gearturner in 8-06 und der Giant Fly in 8-05; stattdessen kam in
+  8-06 eine Rost-Textur unter dem Namen „Dagur Hawksight" in den Bildordner.
+- **Karten mit Alphakanal werden als Karte erkannt.** Die Schlachtkarte von
+  8-06 ist im PDF durchsichtig um den Höhlenumriss gesetzt und lief als
+  Figur, es entstand keine Szene. Eine Karte ist jetzt, worauf
+  Kartenbeschriftungen stehen. Die Golarion-Übersicht landet damit auch in
+  8-05 und 8-06 als Einschub in ihrem Kasten.
+- **Verbrauchsgüter in Stufen werden im Klartext verlinkt.** „moderate
+  antidote" und „moderate antiplague" (8-06, Missionsausrüstung) sind nur
+  zwei Sinnwörter; für Kompendiumsnamen mit Stufe im Klammerzusatz genügt
+  das jetzt.
+
 ## 1.1.1 — 2026-09-07
 
 - **Spielhilfen- und Handout-Journal sind für Spieler geöffnet, ihre Seiten
