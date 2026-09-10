@@ -17,6 +17,9 @@ const MIN_GUTTER = 8;
 /** Ab diesem Anteil der Seitenbreite gilt ein Lauf als seitenbreites Banner. */
 const BANNER_WIDTH_RATIO = 0.5;
 
+/** Abstand der Laufmitte zur Seitenmitte, bis zu dem ein Lauf als zentriert gilt. */
+const CENTERED_TOLERANCE = 3;
+
 /** Belegung, unterhalb derer eine Bahn als Zwischenraum zaehlt (Anteil der Spitze). */
 const GUTTER_COVERAGE = 0.06;
 
@@ -75,6 +78,13 @@ export function detectColumns(runs: TextRun[], pageWidth: number): Array<[number
     // zuschuetten. Eine volle Spaltenzeile misst rund 44 % der Seite, deshalb
     // liegt die Grenze darueber.
     if (run.width > width * BANNER_WIDTH_RATIO) continue;
+    // Auf der Seitenmitte zentrierte Laeufe gehoeren ebenso keiner Spalte:
+    // Titel, Autorenzeile, die Unterschrift eines mittig gesetzten Portraets.
+    // In 8-06 ist der Titel `Falling Sparks` kuerzer als die halbe Seite; mit
+    // Autorenzeile und Bildunterschrift lag er zu dritt im Bundsteg, und drei
+    // war genau die Schwelle — Seite 3 wurde einspaltig gelesen, die Sidebar
+    // `WHERE ON GOLARION?` zeilenweise in den Fliesstext verschraenkt.
+    if (Math.abs(run.x + run.width / 2 - pageWidth / 2) <= CENTERED_TOLERANCE) continue;
     const from = Math.max(0, Math.floor(run.x));
     const to = Math.min(width - 1, Math.ceil(run.x + Math.max(run.width, 1)));
     for (let i = from; i <= to; i++) coverage[i]!++;
