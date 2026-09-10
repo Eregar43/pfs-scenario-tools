@@ -57,6 +57,32 @@ describe('detectColumns', () => {
     expect(columns[1]![0]).toBeGreaterThan(300);
   });
 
+  it('laesst zentrierte Laeufe den Bundsteg nicht zuschuetten', () => {
+    // Seite 3 von 8-06: Titel, Autorenzeile und die Unterschrift eines
+    // mittig gesetzten Portraets sind alle kuerzer als die halbe Seite und
+    // liegen zu dritt im Bundsteg — genau die Schwelle bei zwanzig Zeilen je
+    // Spalte. Zentriert auf der Seitenmitte gehoeren sie keiner Spalte.
+    const runs: TextRun[] = [];
+    for (let i = 0; i < 20; i++) {
+      runs.push(run(24, 700 - i * 12, 'x'.repeat(58)));
+      runs.push(run(313, 700 - i * 12, 'x'.repeat(58)));
+    }
+    for (const [y, text] of [
+      [727, 'x'.repeat(50)],
+      [701, 'x'.repeat(26)],
+      [65, 'x'.repeat(24)],
+    ] as const) {
+      const width = text.length * 4.5;
+      runs.push(run(603 / 2 - width / 2, y, text));
+    }
+
+    const columns = detectColumns(runs, 603);
+
+    expect(columns).toHaveLength(2);
+    expect(columns[0]![0]).toBeCloseTo(24, 0);
+    expect(columns[1]![0]).toBeGreaterThan(300);
+  });
+
   it('erkennt eine einspaltige Seite', () => {
     const runs = Array.from({ length: 10 }, (_, i) => run(24, 700 - i * 12, 'x'.repeat(120)));
 

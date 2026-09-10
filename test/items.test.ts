@@ -34,6 +34,8 @@ const ENTRIES: ItemEntry[] = [
   spell('Illusory Disguise', 'hhhhhhhhhhhhhhhh'),
   // Nicht-magische Gegenstaende, wie sie ohne Kursivsetzung im Text stehen.
   equipment('Ghost Charge (Moderate)', 'iiiiiiiiiiiiiiii'),
+  // Zwei Sinnwoerter mit Stufe im Klammerzusatz — 8-06, Missionsausruestung.
+  equipment('Antidote (Moderate)', 'nnnnnnnnnnnnnnnn'),
   equipment('Elixir of Life (Lesser)', 'jjjjjjjjjjjjjjjj'),
   // Die kuerzere Fassung ohne Steigerungsstufe — die Probe, dass der
   // laengste Treffer gewinnt.
@@ -182,6 +184,16 @@ describe('enrichPlainItems', () => {
     // Inhaltswort und kommt in jedem zweiten Satz vor.
     const text = "Let's keep the door open so we can hear them coming.";
     expect(enrichPlainItems(text, index)).toBe(text);
+  });
+
+  it('laesst zwei Sinnwoerter gelten, wenn der Kompendiumsname eine Stufe traegt', () => {
+    // `moderate antidote` sind nur zwei Sinnwoerter, aber `Antidote
+    // (Moderate)` ist ein Verbrauchsgut in Stufen -- die Wortfolge steht in
+    // Prosa nie zufaellig. In 8-06 blieb die Missionsausruestung sonst ohne
+    // Verweis.
+    expect(enrichPlainItems('She gives the PCs a moderate antidote.', index)).toBe(
+      'She gives the PCs a @UUID[Compendium.pf2e.equipment-srd.Item.nnnnnnnnnnnnnnnn]{moderate antidote}.',
+    );
   });
 
   it('laesst zwei Sinnwoerter allein noch nicht gelten', () => {
