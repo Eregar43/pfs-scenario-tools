@@ -186,6 +186,32 @@ export function opaqueAt(
 }
 
 /**
+ * Ob Kartenbeschriftungen **auf** dem Bild stehen.
+ *
+ * Der Alphakanal allein traegt die Trennung von Karte und Figur nicht mehr:
+ * In 8-06 liegt die Schlachtkarte `The Abandoned Mine` als RGBA im PDF —
+ * durchsichtig um den unregelmaessigen Hoehlenumriss — und lief als Figur,
+ * es entstand keine Szene. Was eine Karte sicher verraet, sind ihre
+ * Beschriftungen: Raumkennungen, `1 SQUARE = 5 FEET`, die Ortsnamen der
+ * Uebersicht. Figuren tragen keine. Gezaehlt wird nur eine Beschriftung auf
+ * deckenden Punkten, denn das Rechteck einer freigestellten Figur reicht
+ * weit ueber ihren Umriss hinaus und kann eine Nachbarkarte ueberlappen.
+ */
+export function traegtKartenbeschriftung(
+  image: RawImage,
+  at: Placement,
+  labels: Block[],
+): boolean {
+  for (const block of labels) {
+    const line = block.lines[0];
+    if (!line) continue;
+    if (line.x < at.left || line.x > at.right || line.y < at.bottom || line.y > at.top) continue;
+    if (opaqueAt(image, at, line.x, line.y)) return true;
+  }
+  return false;
+}
+
+/**
  * Ob das Bild der **Hintergrund** eines Kastens ist statt eine Abbildung.
  *
  * Sidebars liegen auf einer getoenten Flaeche, und die kommt als gewoehnliches
@@ -202,6 +228,11 @@ export function opaqueAt(
 export function isBackdrop(image: RawImage, at: Placement, blocks: Block[]): boolean {
   let onColour = 0;
   for (const block of blocks) {
+    // Eine Bildunterschrift steht auf dem Bild, das sie benennt — in 8-06
+    // sitzt `Dagur Hawksight` unten auf dem Portraet, auf deckenden Punkten,
+    // und das Portraet fiel als Kastengrund heraus. Ein Kastengrund traegt
+    // nie eine Bildunterschrift.
+    if (block.role === 'caption') continue;
     const line = block.lines[0];
     if (!line) continue;
     if (line.x < at.left || line.x > at.right || line.y < at.bottom || line.y > at.top) continue;
@@ -366,6 +397,9 @@ export async function* readImages(
     const onPage = (options.blocks ?? []).filter(
       (block) => block.page === pageNumber && block.role !== 'map-label',
     );
+    const labels = (options.blocks ?? []).filter(
+      (block) => block.page === pageNumber && block.role === 'map-label',
+    );
     let matrix: Matrix = UNIT;
     const stack: Matrix[] = [];
 
@@ -425,7 +459,7 @@ export async function* readImages(
         width: image.width,
         height: image.height,
         kind: image.kind,
-        role: imageRole(image.kind),
+        role: traegtKartenbeschriftung(image, at, labels) ? 'karte' : imageRole(image.kind),
         data: image.data,
       };
     }

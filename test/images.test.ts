@@ -1,5 +1,37 @@
 import { describe, expect, it } from 'vitest';
-import { colourShare, imageRole, GRAYSCALE, RGB, RGBA } from '../src/pdf/images.ts';
+import {
+  colourShare,
+  imageRole,
+  isBackdrop,
+  traegtKartenbeschriftung,
+  GRAYSCALE,
+  RGB,
+  RGBA,
+  type Placement,
+} from '../src/pdf/images.ts';
+import type { Block, BlockRole } from '../src/pdf/types.ts';
+
+/** Ein Block mit einer einzigen Zeile an dieser Stelle; nur die Geometrie zaehlt. */
+function blockAt(role: BlockRole, x: number, y: number): Block {
+  return {
+    page: 1,
+    column: 0,
+    role,
+    text: 'x',
+    lines: [{ x, y, runs: [], size: 9, column: 0 }],
+  } as unknown as Block;
+}
+
+/** Ein RGBA-Bild von 10x10 Punkten: links deckend, rechts durchsichtig. */
+function halbDeckend(): { width: number; height: number; kind: number; data: Uint8Array } {
+  const data = new Uint8Array(10 * 10 * 4);
+  for (let y = 0; y < 10; y++) {
+    for (let x = 0; x < 10; x++) data[(y * 10 + x) * 4 + 3] = x < 5 ? 255 : 0;
+  }
+  return { width: 10, height: 10, kind: RGBA, data };
+}
+
+const LAGE: Placement = { left: 100, right: 200, bottom: 300, top: 400 };
 
 // Die `encodeWebp`-Tests des Extractors fehlen hier absichtlich: die
 // WebP-Kodierung laeuft im Browser ueber `OffscreenCanvas`, das es unter
@@ -12,6 +44,45 @@ describe('imageRole', () => {
     expect(imageRole(RGB)).toBe('karte');
     expect(imageRole(GRAYSCALE)).toBe('karte');
     expect(imageRole(RGBA)).toBe('figur');
+  });
+});
+
+describe('isBackdrop', () => {
+  it('erkennt Text auf deckender Farbe als Kastengrund', () => {
+    expect(isBackdrop(halbDeckend(), LAGE, [blockAt('box', 120, 350)])).toBe(true);
+  });
+
+  it('laesst Text in der Luft neben einer Figur gelten', () => {
+    // Rechte Haelfte ist durchsichtig — dort steht der Text neben der Figur.
+    expect(isBackdrop(halbDeckend(), LAGE, [blockAt('body', 180, 350)])).toBe(false);
+  });
+
+  it('zaehlt eine Bildunterschrift auf dem Bild nicht als Kastengrund', () => {
+    // 8-06: `Dagur Hawksight` steht unten auf dem Portraet, auf deckenden
+    // Punkten. Ein Kastengrund traegt nie eine Bildunterschrift.
+    expect(isBackdrop(halbDeckend(), LAGE, [blockAt('caption', 120, 310)])).toBe(false);
+  });
+});
+
+describe('traegtKartenbeschriftung', () => {
+  it('erkennt eine Karte an der Beschriftung auf deckenden Punkten', () => {
+    expect(traegtKartenbeschriftung(halbDeckend(), LAGE, [blockAt('map-label', 120, 350)])).toBe(
+      true,
+    );
+  });
+
+  it('laesst eine Beschriftung ueber durchsichtigen Punkten nicht gelten', () => {
+    // Das Rechteck einer freigestellten Figur kann eine Nachbarkarte
+    // ueberlappen — deren Beschriftung liegt dann in der Luft der Figur.
+    expect(traegtKartenbeschriftung(halbDeckend(), LAGE, [blockAt('map-label', 180, 350)])).toBe(
+      false,
+    );
+  });
+
+  it('laesst eine Beschriftung ausserhalb des Bildes nicht gelten', () => {
+    expect(traegtKartenbeschriftung(halbDeckend(), LAGE, [blockAt('map-label', 50, 350)])).toBe(
+      false,
+    );
   });
 });
 
