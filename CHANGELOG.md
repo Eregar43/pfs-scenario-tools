@@ -3,6 +3,20 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
+## Unveröffentlicht
+
+- **Krankheiten des Hefts werden angelegt.** Ein Statblock „… Disease N" im
+  Anhang wird ein Affliction-Gegenstand des Systems mit Rettungswurf, Onset
+  und Stufen (Bedingungen, Schaden, Dauer), verlinkt an der ersten Nennung im
+  Journal. In der Season 8 betrifft das „Sewer Haze" in 8-06. Die Krankheiten
+  laufen mit den Effekten: gleicher Schalter, gleicher Ordner, gleiches
+  Entfernen.
+- **Starfinder-Vorlagen über „Starfinder Anachronism".** Nennt ein Statblock
+  ein Starfinder-Buch als Vorlage (der Mining Robot in 8-06), wird sie in den
+  Bestiarien des Moduls `sf2e-anachronism` gesucht — nach den
+  Pathfinder-Grundwerken. Fehlt das Modul, sagt die Vorschau das und legt die
+  Kreatur nicht an.
+
 ## 1.1.1 — 2026-09-07
 
 - **Spielhilfen- und Handout-Journal sind für Spieler geöffnet, ihre Seiten
