@@ -3,6 +3,12 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
+## Unveröffentlicht
+
+- **Karten von 8-05 „A Shark’s Guide to Piracy" vermessen und bewändet.**
+  „Nan’s Watch" und „The Gunpowder Keg" bekommen beim Import Gitter, Versatz
+  und fertige Wände, die Gunpowder Keg auch ihre Tür.
+
 ## 1.1.1 — 2026-09-07
 
 - **Spielhilfen- und Handout-Journal sind für Spieler geöffnet, ihre Seiten

@@ -39,6 +39,8 @@ export const KARTEN_EINSTELLUNGEN: Record<string, KartenEinstellung> = {
   '08-03/the-solstice-theater': { gitter: 87, versatzX: -43, versatzY: 28, skalierung: 2 },
   '08-04/the-sinister-stevedores': { gitter: 87, versatzX: -69, versatzY: 23, skalierung: 2 },
   '08-04/the-gallivanting-ghoul': { gitter: 67, versatzX: 19, versatzY: 17, skalierung: 2 },
+  '08-05/nans-watch': { gitter: 87, versatzX: 17, versatzY: 23, skalierung: 2 },
+  '08-05/the-gunpowder-keg': { gitter: 87, versatzX: 22, versatzY: 20, skalierung: 2 },
 };
 
 /** Die Einstellung einer Karte, falls sie schon vermessen ist. */
