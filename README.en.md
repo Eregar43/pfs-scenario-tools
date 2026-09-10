@@ -24,7 +24,10 @@ https://github.com/Eregar43/pfs-scenario-tools/releases/latest/download/module.j
 Requirements: Foundry VTT v14, Pathfinder Second Edition system. Compendium
 links and the creature import need the PF2e compendia available in your
 instance (Monster Core, NPC Core and so on, depending on what the scenario
-refers to).
+refers to). If a stat block refers to a **Starfinder** book (in season 8 the
+Mining Robot of 8-06, a variant from *Starfinder Alien Core*), you also need
+the module **Starfinder Anachronism** (`sf2e-anachronism`); without it the
+preview names the creature and does not create it.
 
 ## Usage
 
@@ -144,6 +147,11 @@ contents.
   limited to **that encounter**: the checks on that page carry a roll option
   and the effect tests for it. It may then stay on the character the whole
   time.
+- **Diseases** of the scenario (stat block "… Disease N" in the appendix) as
+  a text page of their own in the game aids journal, with the stat block as
+  printed: saving throw, onset, every stage. The main text links to it at the
+  first mention. Not an item: the system's affliction type is locked in
+  released builds.
 - **Hazards** as world actors. If they have a compendium template they are
   copied; scenario-specific ones are **built** from the printed stat block —
   stealth, description, disable, routine, reset, AC, hardness, hit points,

@@ -1,5 +1,5 @@
 import { L } from '../i18n.ts';
-import { sammleKreaturen } from '../pdf/journal.ts';
+import { sammleKreaturen, type OhneVorlage } from '../pdf/journal.ts';
 import { bilderAusBytes, type GelesenesBild, type Leseergebnis } from '../lesen.ts';
 import {
   angleichenAn,
@@ -14,6 +14,7 @@ import {
 import { reichereAn } from '../world/anreichern.ts';
 import { sammleEffekte } from '../pdf/effekte.ts';
 import { effektOption } from '../world/effekte.ts';
+import { ANACHRONISM_MODUL, anachronismAktiv } from '../world/compendium-index.ts';
 import { scenarioKey } from '../world/naming.ts';
 import { bildOrdner, bildPfad, type BildFuerSeiten } from '../world/bilder.ts';
 import { ladeHoch, stelleOrdnerSicher } from '../world/files.ts';
@@ -353,9 +354,29 @@ export async function zeigeWeltDialog(
 
   // Was gebaut wird, steht schon in der Kreaturenzeile. Hier bleibt nur, was
   // wirklich niemand anlegen kann.
-  const nichtAnlegbar = fund.ohneVorlage
-    .filter((eintrag) => eintrag.art !== 'hazard' || !eintrag.statblock)
+  // Eine Vorlage aus einem Starfinder-Buch steht nur im Modul „Starfinder
+  // Anachronism". Fehlt es, ist das der Grund — und der gehoert genannt,
+  // sonst sucht der Spielleiter im falschen Kompendium.
+  const ausStarfinder = (eintrag: OhneVorlage): boolean =>
+    eintrag.buch !== undefined && /^Starfinder\b/.test(eintrag.buch);
+  const modulFehlt = !anachronismAktiv();
+  const niemandKannBauen = fund.ohneVorlage.filter(
+    (eintrag) => eintrag.art !== 'hazard' || !eintrag.statblock,
+  );
+  const ohneAnachronism = niemandKannBauen
+    .filter((eintrag) => modulFehlt && ausStarfinder(eintrag))
     .map((eintrag) => eintrag.name);
+  const nichtAnlegbar = niemandKannBauen
+    .filter((eintrag) => !(modulFehlt && ausStarfinder(eintrag)))
+    .map((eintrag) => eintrag.name);
+  if (ohneAnachronism.length > 0) {
+    const li = document.createElement('li');
+    li.textContent = L('Welt.StarfinderOhneModul', {
+      modul: ANACHRONISM_MODUL,
+      namen: ohneAnachronism.join(', '),
+    });
+    liste.append(li);
+  }
   if (nichtAnlegbar.length > 0) {
     const li = document.createElement('li');
     li.textContent = L('Welt.KreaturenOhneVorlage', { namen: nichtAnlegbar.join(', ') });
@@ -437,6 +458,16 @@ export async function zeigeWeltDialog(
       zeile.textContent = L('Welt.Effekt', { name });
       liste.append(zeile);
     }
+  }
+
+  if (vorhaben.krankheiten.seiten.length > 0) {
+    const li = document.createElement('li');
+    li.textContent = L('Welt.KrankheitenZeile', {
+      anzahl: vorhaben.krankheiten.seiten.length,
+      namen: vorhaben.krankheiten.seiten.join(', '),
+      verlinkt: vorhaben.krankheiten.verlinkt,
+    });
+    liste.append(li);
   }
 
   if (vorhaben.plan.anhang) {

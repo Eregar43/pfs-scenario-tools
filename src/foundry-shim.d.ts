@@ -37,7 +37,7 @@ declare global {
       set(namespace: string, key: string, value: unknown): Promise<unknown>;
     };
     modules: {
-      get(id: string): { version?: string; api?: unknown } | undefined;
+      get(id: string): { active?: boolean; version?: string; api?: unknown } | undefined;
     };
     user?: { isGM?: boolean };
     folders?: FoundryCollection<FoundryFolder>;
@@ -179,7 +179,10 @@ declare global {
 
   const JournalEntry: {
     deleteDocuments(ids: string[], optionen?: Record<string, unknown>): Promise<unknown>;
-    create(daten: Record<string, unknown>): Promise<FoundryJournalEntry | undefined>;
+    create(
+      daten: Record<string, unknown>,
+      optionen?: Record<string, unknown>,
+    ): Promise<FoundryJournalEntry | undefined>;
   };
 
   const Scene: {

@@ -594,7 +594,7 @@ const NEBENJOURNAL_RECHTE: Journalrechte = { journal: 2, seite: 0 };
  */
 async function schreibeJournal(
   aktion:
-    | { art: 'anlegen'; name: string }
+    | { art: 'anlegen'; name: string; id?: string }
     | { art: 'aktualisieren'; id: string; name: string; alterName: string },
   seiten: SeitenAbbild[],
   zuDaten: (seite: SeitenAbbild) => Record<string, unknown>,
@@ -611,13 +611,19 @@ async function schreibeJournal(
 
   if (aktion.art === 'anlegen') {
     const alleFlags = mitJournalBlatt(flags);
-    const angelegt = await JournalEntry.create({
-      name: aktion.name,
-      folder: ordnerId,
-      pages: seiten.map(seitendaten),
-      flags: alleFlags,
-      ...journalRechte,
-    });
+    // Eine vom Plan vergebene Kennung wird uebernommen: Der Haupttext kann
+    // dann schon auf Seiten dieses Journals verweisen, bevor es existiert.
+    const angelegt = await JournalEntry.create(
+      {
+        ...(aktion.id !== undefined ? { _id: aktion.id } : {}),
+        name: aktion.name,
+        folder: ordnerId,
+        pages: seiten.map(seitendaten),
+        flags: alleFlags,
+        ...journalRechte,
+      },
+      aktion.id !== undefined ? { keepId: true } : undefined,
+    );
     if (!angelegt) throw new Error(`Journal „${aktion.name}" liess sich nicht anlegen.`);
 
     return {
@@ -678,8 +684,12 @@ function zuSeitendaten(seite: SeitenAbbild): Record<string, unknown> {
   };
 }
 
-/** Eine Bildseite des Spielhilfen-Journals; `inhalt` traegt den Dateipfad. */
+/**
+ * Eine Seite des Spielhilfen-Journals: eine Bildseite, `inhalt` traegt den
+ * Dateipfad — oder, mit `art: 'text'`, eine Krankheitsseite.
+ */
 function zuBildseitendaten(seite: SeitenAbbild): Record<string, unknown> {
+  if (seite.art === 'text') return zuSeitendaten(seite);
   return {
     _id: seite.id,
     name: seite.name,

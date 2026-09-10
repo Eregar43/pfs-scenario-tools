@@ -5,6 +5,16 @@ behobene Fehler.
 
 ## Unveröffentlicht
 
+- **Krankheiten des Hefts bekommen eine Seite im Spielhilfen-Journal.** Ein
+  Statblock „… Disease N" im Anhang wird eine Textseite mit Rettungswurf,
+  Onset und Stufen wie gedruckt, hinter den Bildseiten; der Haupttext
+  verweist an der ersten Nennung darauf. In der Season 8 betrifft das „Sewer
+  Haze" in 8-06. Vorschau, Übersicht und Entfernen zählen die Seite mit.
+- **Starfinder-Vorlagen über „Starfinder Anachronism".** Nennt ein Statblock
+  ein Starfinder-Buch als Vorlage (der Mining Robot in 8-06), wird sie in den
+  Bestiarien des Moduls `sf2e-anachronism` gesucht — nach den
+  Pathfinder-Grundwerken. Fehlt das Modul, sagt die Vorschau das und legt die
+  Kreatur nicht an.
 - **Seiten mit kurzem Titel werden wieder zweispaltig gelesen.** In 8-06
   „Falling Sparks" lag der Titel zusammen mit Autorenzeile und einer
   Bildunterschrift im Bundsteg, und Seite 3 wurde einspaltig gelesen — die

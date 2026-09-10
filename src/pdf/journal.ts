@@ -389,6 +389,12 @@ export interface OhneVorlage {
   name: string;
   art: ActorKind;
   /**
+   * Das Buch der Quellenzeile, falls sie eines nennt. Die Vorschau erkennt
+   * daran eine Starfinder-Vorlage, fuer die das Modul „Starfinder
+   * Anachronism" fehlt.
+   */
+  buch?: string;
+  /**
    * Der abgedruckte Statblock, falls die Kopfzeile im Anhang steht.
    *
    * Nur damit laesst sich etwas bauen. Fehlt er, stand die Kopfzeile bloss in
@@ -517,7 +523,12 @@ export function sammleKreaturen(blocks: Block[], actors: ActorIndex): Kreaturenf
       (statblock !== undefined || zeile !== undefined) &&
       !ohneVorlage.some((eintrag) => eintrag.name === name)
     ) {
-      ohneVorlage.push({ name, art, ...(statblock ? { statblock } : {}) });
+      ohneVorlage.push({
+        name,
+        art,
+        ...(statblock ? { statblock } : {}),
+        ...(zeile?.buch ? { buch: zeile.buch } : {}),
+      });
     }
   }
 

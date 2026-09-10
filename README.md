@@ -25,7 +25,11 @@ https://github.com/Eregar43/pfs-scenario-tools/releases/latest/download/module.j
 Voraussetzungen: Foundry VTT v14, System Pathfinder Second Edition. Für die
 Kompendium-Verweise und den Kreaturen-Import müssen die PF2e-Kompendien der
 Instanz verfügbar sein (Monster Core, NPC Core usw., je nachdem, worauf das
-Szenario verweist).
+Szenario verweist). Verweist ein Statblock auf ein **Starfinder**-Buch (in
+Season 8 der Mining Robot aus 8-06, eine Variante aus *Starfinder Alien
+Core*), braucht es zusätzlich das Modul **Starfinder Anachronism**
+(`sf2e-anachronism`); ohne das Modul nennt die Vorschau die Kreatur und
+legt sie nicht an.
 
 ## Benutzung
 
@@ -148,6 +152,11 @@ Inhalte einsammelt.
   **diese Begegnung** eingegrenzt: Die Proben jener Seite tragen eine
   Wurf-Option, der Effekt fragt sie ab. Er darf dann die ganze Zeit auf dem
   Charakter liegen.
+- **Krankheiten** des Hefts (Statblock „… Disease N" im Anhang) als eigene
+  Textseite im Spielhilfen-Journal, mit dem Statblock wie gedruckt:
+  Rettungswurf, Onset, jede Stufe. Der Haupttext verweist an der ersten
+  Nennung darauf. Kein Gegenstand: Der Affliction-Typ des Systems ist in
+  ausgelieferten Fassungen gesperrt.
 - **Hazards** als Welt-Actors. Haben sie eine Vorlage im Kompendium, werden
   sie kopiert; szenarioeigene werden aus dem abgedruckten Statblock **gebaut** —
   Heimlichkeit, Beschreibung, Entschärfen, Routine, Rücksetzung, Rüstung,

@@ -26,6 +26,12 @@ export interface SeitenAbbild {
   id: string;
   name: string;
   inhalt: string;
+  /**
+   * Nur im Spielhilfen-Journal: `text` fuer die Krankheitsseiten neben den
+   * Bildseiten. Fehlt es, entscheidet das Journal (Haupt- und Handout-Journal
+   * schreiben Text, das Spielhilfen-Journal Bilder).
+   */
+  art?: 'text' | 'bild';
   /** Gliederungstiefe; nur beim Schreiben gebraucht, nicht beim Vergleichen. */
   level?: number;
   sort?: number;
@@ -209,7 +215,13 @@ export type OrdnerAktion =
 /** Plan fuer ein Journal neben dem Hauptjournal — Spielhilfen oder Handouts. */
 export interface Nebenjournalplan {
   journal:
-    | { art: 'anlegen'; name: string }
+    /**
+     * `id` ist gesetzt, wenn die Kennung schon vor dem Anlegen feststehen
+     * muss — der Haupttext verweist auf die Krankheitsseite des
+     * Spielhilfen-Journals. `apply.ts` legt das Journal dann mit genau
+     * dieser Kennung an.
+     */
+    | { art: 'anlegen'; name: string; id?: string }
     | { art: 'aktualisieren'; id: string; name: string; alterName: string };
   seiten: ImportPlan['seiten'];
 }
