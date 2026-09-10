@@ -15,6 +15,11 @@ behobene Fehler.
   Bestiarien des Moduls `sf2e-anachronism` gesucht — nach den
   Pathfinder-Grundwerken. Fehlt das Modul, sagt die Vorschau das und legt die
   Kreatur nicht an.
+- **Karten von 8-05 „A Shark’s Guide to Piracy" vermessen und bewändet.**
+  „Nan’s Watch" und „The Gunpowder Keg" bekommen beim Import Gitter, Versatz
+  und fertige Wände, die Gunpowder Keg auch ihre Tür.
+- **Karte von 8-06 „Falling Sparks" vermessen und bewändet.** „Finding the
+  Mine" bekommt beim Import Gitter, Versatz und die Wände der Höhle.
 
 ## 1.1.1 — 2026-09-07
 
