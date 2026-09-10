@@ -25,6 +25,8 @@ import { baueNsc, sammleNscs } from './nscs.ts';
 import { sammleEffekte } from '../pdf/effekte.ts';
 import { sammleHandouts } from '../pdf/handouts.ts';
 import { baueEffekt, effektName, fuegeEffektVerweiseEin } from './effekte.ts';
+import { sammleKrankheiten } from '../pdf/krankheiten.ts';
+import { baueKrankheit, fuegeKrankheitVerweiseEin, krankheitName } from './krankheiten.ts';
 import {
   planeImport,
   type EffektWunsch,
@@ -347,7 +349,26 @@ export function plane(
       }))
     : [];
 
-  const effekteVerlinkt = fuegeEffektVerweiseEin(seiten, effekte);
+  // Die Krankheiten des Hefts gehen denselben Weg wie die Zusagen: Sie sind
+  // im System ein Effekt-Untertyp (Affliction) und laufen als Gegenstaende
+  // durch Plan, Bestand und Entfernen mit. Nur der Verweis ist ein anderer —
+  // die erste Nennung des Namens statt eines Satzes.
+  const krankheiten: EffektWunsch[] = optionen.effekte
+    ? sammleKrankheiten(szenario.blocks).map((krankheit) => ({
+        id: foundryId(`${szenario.title}/krankheit/${krankheit.name}`),
+        name: krankheitName(krankheit, schluesselFuerEffekte),
+        satz: krankheit.name,
+        daten: baueKrankheit(
+          krankheit,
+          schluesselFuerEffekte,
+          quellenangabe(designation, szenario.title),
+        ),
+      }))
+    : [];
+
+  const effekteVerlinkt =
+    fuegeEffektVerweiseEin(seiten, effekte) + fuegeKrankheitVerweiseEin(seiten, krankheiten);
+  effekte.push(...krankheiten);
 
   // Die Kennungen der Bildseiten haengen am Dateinamen, nicht an der
   // Reihenfolge — ein Bild mehr im naechsten Lauf verschiebt die anderen
