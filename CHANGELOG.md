@@ -3,7 +3,7 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
-## Unveröffentlicht
+## 1.2.0 — 2026-09-11
 
 - **Krankheiten des Hefts bekommen eine Seite im Spielhilfen-Journal.** Ein
   Statblock „… Disease N" im Anhang wird eine Textseite mit Rettungswurf,
