@@ -148,10 +148,10 @@ contents.
   and the effect tests for it. It may then stay on the character the whole
   time.
 - **Diseases** of the scenario (stat block "… Disease N" in the appendix) as
-  affliction items of the system: saving throw, onset, and per stage the
-  conditions, damage and duration as printed. Linked at the first mention in
-  the journal; invisible to players like the effects, and switched on and off
-  with them.
+  a text page of their own in the game aids journal, with the stat block as
+  printed: saving throw, onset, every stage. The main text links to it at the
+  first mention. Not an item: the system's affliction type is locked in
+  released builds.
 - **Hazards** as world actors. If they have a compendium template they are
   copied; scenario-specific ones are **built** from the printed stat block —
   stealth, description, disable, routine, reset, AC, hardness, hit points,

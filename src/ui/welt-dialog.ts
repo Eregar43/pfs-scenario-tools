@@ -460,6 +460,16 @@ export async function zeigeWeltDialog(
     }
   }
 
+  if (vorhaben.krankheiten.seiten.length > 0) {
+    const li = document.createElement('li');
+    li.textContent = L('Welt.KrankheitenZeile', {
+      anzahl: vorhaben.krankheiten.seiten.length,
+      namen: vorhaben.krankheiten.seiten.join(', '),
+      verlinkt: vorhaben.krankheiten.verlinkt,
+    });
+    liste.append(li);
+  }
+
   if (vorhaben.plan.anhang) {
     const li = document.createElement('li');
     li.textContent = L(

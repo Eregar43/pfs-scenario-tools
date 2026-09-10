@@ -62,6 +62,7 @@
   "PFSST.Welt.NscZeile": "Noncombat NPCs: {neu} new ({namen}), {vorhanden} already in the world",
   "PFSST.Welt.NscZeileOhneNeue": "Noncombat NPCs: none new, {vorhanden} already in the world",
   "PFSST.Welt.KreaturenOhneVorlage": "No compendium template, will not be created: {namen}",
+  "PFSST.Welt.KrankheitenZeile": "Diseases as pages in the game aids journal ({anzahl}): {namen} — {verlinkt} linked in the text",
   "PFSST.Welt.StarfinderOhneModul": "Template from a Starfinder book, but the module \"Starfinder Anachronism\" ({modul}) is not active — will not be created: {namen}",
   "PFSST.Welt.GefahrenGebaut": "Hazards without a template, built from the statblock ({anzahl}): {namen}",
   "PFSST.Welt.GefahrRest": "    Not applied — {punkt}",

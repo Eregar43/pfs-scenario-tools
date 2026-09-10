@@ -26,7 +26,11 @@ import { sammleEffekte } from '../pdf/effekte.ts';
 import { sammleHandouts } from '../pdf/handouts.ts';
 import { baueEffekt, effektName, fuegeEffektVerweiseEin } from './effekte.ts';
 import { sammleKrankheiten } from '../pdf/krankheiten.ts';
-import { baueKrankheit, fuegeKrankheitVerweiseEin, krankheitName } from './krankheiten.ts';
+import {
+  fuegeKrankheitVerweiseEin,
+  krankheitSeiteHtml,
+  krankheitSeitenName,
+} from './krankheiten.ts';
 import {
   planeImport,
   type EffektWunsch,
@@ -138,6 +142,11 @@ export interface Vorhaben {
    * erzeugten HTML nicht wiedergefunden — das gehoert in die Vorschau.
    */
   effekteVerlinkt: number;
+  /**
+   * Die Krankheiten des Hefts: Seitennamen im Spielhilfen-Journal, und wie
+   * viele davon im Haupttext verlinkt werden konnten.
+   */
+  krankheiten: { seiten: string[]; verlinkt: number };
   /**
    * Wie viele Bilddateien der Lauf hochlaedt — die Soll-Zahl fuer die
    * Vollstaendigkeitsprobe. Sie zaehlt alle Sorten, auch die Karten.
@@ -349,41 +358,33 @@ export function plane(
       }))
     : [];
 
-  // Die Krankheiten des Hefts gehen denselben Weg wie die Zusagen: Sie sind
-  // im System ein Effekt-Untertyp (Affliction) und laufen als Gegenstaende
-  // durch Plan, Bestand und Entfernen mit. Nur der Verweis ist ein anderer —
-  // die erste Nennung des Namens statt eines Satzes.
-  const krankheiten: EffektWunsch[] = optionen.effekte
-    ? sammleKrankheiten(szenario.blocks).map((krankheit) => ({
-        id: foundryId(`${szenario.title}/krankheit/${krankheit.name}`),
-        name: krankheitName(krankheit, schluesselFuerEffekte),
-        satz: krankheit.name,
-        daten: baueKrankheit(
-          krankheit,
-          schluesselFuerEffekte,
-          quellenangabe(designation, szenario.title),
-        ),
-      }))
-    : [];
-
-  const effekteVerlinkt =
-    fuegeEffektVerweiseEin(seiten, effekte) + fuegeKrankheitVerweiseEin(seiten, krankheiten);
-  effekte.push(...krankheiten);
+  const effekteVerlinkt = fuegeEffektVerweiseEin(seiten, effekte);
 
   // Die Kennungen der Bildseiten haengen am Dateinamen, nicht an der
   // Reihenfolge — ein Bild mehr im naechsten Lauf verschiebt die anderen
   // nicht.
+  const bildseiten = (optionen.anhang?.bilder ?? []).map((bild, index) => ({
+    id: foundryId(`${szenario.title}/anhang/${bild.file}`),
+    name: bild.name ?? bild.file,
+    inhalt: bild.pfad,
+    sort: FIRST_SORT + index * SORT_STEP,
+  }));
+
+  // Die Krankheiten des Hefts bekommen je eine Textseite im Spielhilfen-
+  // Journal, hinter den Bildseiten. Warum kein Gegenstand: siehe
+  // `world/krankheiten.ts`. Die Kennung haengt am Namen.
+  const krankheiten = sammleKrankheiten(szenario.blocks);
+  const krankheitsseiten = krankheiten.map((krankheit, index) => ({
+    id: foundryId(`${szenario.title}/anhang/krankheit/${krankheit.name}`),
+    name: krankheitSeitenName(krankheit),
+    inhalt: krankheitSeiteHtml(krankheit),
+    art: 'text' as const,
+    sort: FIRST_SORT + (bildseiten.length + index) * SORT_STEP,
+  }));
+
   const anhang =
-    optionen.anhang && optionen.anhang.bilder.length > 0
-      ? {
-          journalName: optionen.anhang.titel,
-          seiten: optionen.anhang.bilder.map((bild, index) => ({
-            id: foundryId(`${szenario.title}/anhang/${bild.file}`),
-            name: bild.name ?? bild.file,
-            inhalt: bild.pfad,
-            sort: FIRST_SORT + index * SORT_STEP,
-          })),
-        }
+    optionen.anhang && bildseiten.length + krankheitsseiten.length > 0
+      ? { journalName: optionen.anhang.titel, seiten: [...bildseiten, ...krankheitsseiten] }
       : undefined;
 
   // Die Handouts des Hefts — Briefe und Notizen fuer die Spieler — bekommen
@@ -477,14 +478,40 @@ export function plane(
     ...(effekte.length > 0 ? { effekte } : {}),
   };
 
+  const plan = planeImport(weltabbild(), wunsch);
+
+  // Der Verweis aus dem Haupttext auf eine Krankheitsseite braucht die
+  // Kennung des Spielhilfen-Journals. Ein vorhandenes Journal bringt sie im
+  // Plan mit; ein neues bekommt sie hier vergeben, aus dem Titel abgeleitet,
+  // und `apply.ts` legt es mit genau dieser Kennung an.
+  let krankheitenVerlinkt = 0;
+  if (plan.anhang && krankheitsseiten.length > 0) {
+    const journal = plan.anhang.journal;
+    const journalId =
+      journal.art === 'aktualisieren'
+        ? journal.id
+        : (journal.id ??= foundryId(`${szenario.title}/anhang`));
+    krankheitenVerlinkt = fuegeKrankheitVerweiseEin(
+      seiten,
+      krankheiten.map((krankheit, index) => ({
+        satz: krankheit.name,
+        uuid: `JournalEntry.${journalId}.JournalEntryPage.${krankheitsseiten[index]!.id}`,
+      })),
+    );
+  }
+
   return {
     wunsch,
-    plan: planeImport(weltabbild(), wunsch),
+    plan,
     seiten,
     schluessel: wunsch.schluessel,
     season: wunsch.season,
     bilderEingebettet,
     effekteVerlinkt,
+    krankheiten: {
+      seiten: krankheitsseiten.map((seite) => seite.name),
+      verlinkt: krankheitenVerlinkt,
+    },
     bilderGesamt: optionen.bilder?.length ?? 0,
     gefahrenReste,
     ...(optionen.sourceHash ? { sourceHash: optionen.sourceHash } : {}),

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { leseKrankheit } from '../src/pdf/krankheiten.ts';
 import {
-  baueKrankheit,
   fuegeKrankheitVerweiseEin,
-  krankheitName,
+  krankheitSeiteHtml,
+  krankheitSeitenName,
 } from '../src/world/krankheiten.ts';
 import type { SeitenAbbild } from '../src/world/plan.ts';
 
@@ -16,68 +16,40 @@ const KRANKHEIT = leseKrankheit(
   11,
 )!;
 
-describe('krankheitName', () => {
-  it('stellt die Kennung voran und nennt Art und Stufe', () => {
-    expect(krankheitName(KRANKHEIT, '08-06')).toBe('PFS 08-06: Rustlung (Disease 4)');
+describe('krankheitSeitenName', () => {
+  it('nennt Name, Art und Stufe wie die Kopfzeile', () => {
+    expect(krankheitSeitenName(KRANKHEIT)).toBe('Rustlung (Disease 4)');
   });
 });
 
-describe('baueKrankheit', () => {
-  const daten = baueKrankheit(KRANKHEIT, '08-06', 'Some Scenario');
-  const system = daten.system as Record<string, unknown>;
-
-  it('ist eine Affliction mit Rettungswurf, Onset und Stufen im Schema des Systems', () => {
-    expect(daten.type).toBe('affliction');
-    expect(daten.ownership).toEqual({ default: 0 });
-    expect(system.level).toEqual({ value: 4 });
-    expect(system.save).toEqual({ type: 'fortitude', value: 18 });
-    expect(system.onset).toEqual({ value: 1, unit: 'days' });
-    expect(system.status).toEqual({ onset: true, stage: 1, progress: 0 });
-    expect(system.duration).toEqual({ value: -1, unit: 'unlimited', expiry: null });
-    expect(system.stages).toEqual([
-      {
-        damage: [],
-        conditions: [{ slug: 'enfeebled', value: 1, linked: true }],
-        effects: [],
-        duration: { value: 1, unit: 'days' },
-      },
-      {
-        damage: [{ formula: '1d6', damageType: 'poison', category: null }],
-        conditions: [{ slug: 'enfeebled', value: 2, linked: true }],
-        effects: [],
-        duration: { value: 1, unit: 'days' },
-      },
-    ]);
-  });
-
-  it('traegt disease und virulent als Schlagwoerter, nicht als Effekt-Merkmale', () => {
-    // `effectTraits` des Systems kennt beide nicht; ein LaxArrayField wuerde
-    // sie stillschweigend verwerfen.
-    expect(system.traits).toEqual({ value: [], otherTags: ['disease', 'virulent'] });
-  });
-
-  it('schreibt den Statblock in die Beschreibung', () => {
-    const beschreibung = (system.description as { value: string }).value;
-    expect(beschreibung).toContain('<em>disease, virulent</em>');
-    expect(beschreibung).toContain('<strong>Saving Throw</strong> DC 18 Fortitude');
+describe('krankheitSeiteHtml', () => {
+  it('setzt die Plakette und je Abschnitt des Statblocks einen Absatz', () => {
+    expect(krankheitSeiteHtml(KRANKHEIT)).toBe(
+      [
+        '<p><em>disease, virulent</em></p>',
+        '<p><em>Some Rulebook</em> 12 <strong>Saving Throw</strong> DC 18 Fortitude</p>',
+        '<p><strong>Onset</strong> 1 day</p>',
+        '<p><strong>Stage 1</strong> enfeebled 1 (1 day)</p>',
+        '<p><strong>Stage 2</strong> enfeebled 2 and 1d6 poison damage (1 day)</p>',
+      ].join('\n'),
+    );
   });
 });
 
 describe('fuegeKrankheitVerweiseEin', () => {
   const seite = (inhalt: string): SeitenAbbild => ({ id: 'x', name: 'Seite', inhalt });
+  const UUID = 'JournalEntry.jjjjjjjjjjjjjjjj.JournalEntryPage.pppppppppppppppp';
 
   it('verlinkt die erste Nennung des Namens, ohne Ruecksicht auf die Schreibung', () => {
     const seiten = [
       seite('<p>Nothing here.</p>'),
       seite('<p>Creatures in the water are exposed to rustlung. Rustlung lingers.</p>'),
     ];
-    const gesetzt = fuegeKrankheitVerweiseEin(seiten, [
-      { satz: 'Rustlung', id: 'abc', name: 'PFS 08-06: Rustlung (Disease 4)' },
-    ]);
+    const gesetzt = fuegeKrankheitVerweiseEin(seiten, [{ satz: 'Rustlung', uuid: UUID }]);
 
     expect(gesetzt).toBe(1);
     expect(seiten[1]!.inhalt).toBe(
-      '<p>Creatures in the water are exposed to @UUID[Item.abc]{rustlung}. Rustlung lingers.</p>',
+      `<p>Creatures in the water are exposed to @UUID[${UUID}]{rustlung}. Rustlung lingers.</p>`,
     );
   });
 
@@ -85,9 +57,7 @@ describe('fuegeKrankheitVerweiseEin', () => {
     const seiten = [
       seite('<p class="rustlung">A @UUID[Actor.x]{Rustlung Carrier} and rustlungs.</p>'),
     ];
-    expect(
-      fuegeKrankheitVerweiseEin(seiten, [{ satz: 'Rustlung', id: 'abc', name: 'n' }]),
-    ).toBe(0);
+    expect(fuegeKrankheitVerweiseEin(seiten, [{ satz: 'Rustlung', uuid: UUID }])).toBe(0);
     expect(seiten[0]!.inhalt).toContain('class="rustlung"');
   });
 });

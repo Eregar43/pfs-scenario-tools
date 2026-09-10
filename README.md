@@ -152,11 +152,11 @@ Inhalte einsammelt.
   **diese Begegnung** eingegrenzt: Die Proben jener Seite tragen eine
   Wurf-Option, der Effekt fragt sie ab. Er darf dann die ganze Zeit auf dem
   Charakter liegen.
-- **Krankheiten** des Hefts (Statblock „… Disease N" im Anhang) als
-  Affliction-Gegenstände des Systems: Rettungswurf, Onset und je Stufe die
-  Bedingungen, der Schaden und die Dauer, wie gedruckt. Verlinkt an der
-  ersten Nennung im Journal; für Spieler unsichtbar wie die Effekte, und mit
-  ihnen ein- und ausschaltbar.
+- **Krankheiten** des Hefts (Statblock „… Disease N" im Anhang) als eigene
+  Textseite im Spielhilfen-Journal, mit dem Statblock wie gedruckt:
+  Rettungswurf, Onset, jede Stufe. Der Haupttext verweist an der ersten
+  Nennung darauf. Kein Gegenstand: Der Affliction-Typ des Systems ist in
+  ausgelieferten Fassungen gesperrt.
 - **Hazards** als Welt-Actors. Haben sie eine Vorlage im Kompendium, werden
   sie kopiert; szenarioeigene werden aus dem abgedruckten Statblock **gebaut** —
   Heimlichkeit, Beschreibung, Entschärfen, Routine, Rücksetzung, Rüstung,

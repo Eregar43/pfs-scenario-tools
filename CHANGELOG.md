@@ -5,12 +5,11 @@ behobene Fehler.
 
 ## Unveröffentlicht
 
-- **Krankheiten des Hefts werden angelegt.** Ein Statblock „… Disease N" im
-  Anhang wird ein Affliction-Gegenstand des Systems mit Rettungswurf, Onset
-  und Stufen (Bedingungen, Schaden, Dauer), verlinkt an der ersten Nennung im
-  Journal. In der Season 8 betrifft das „Sewer Haze" in 8-06. Die Krankheiten
-  laufen mit den Effekten: gleicher Schalter, gleicher Ordner, gleiches
-  Entfernen.
+- **Krankheiten des Hefts bekommen eine Seite im Spielhilfen-Journal.** Ein
+  Statblock „… Disease N" im Anhang wird eine Textseite mit Rettungswurf,
+  Onset und Stufen wie gedruckt, hinter den Bildseiten; der Haupttext
+  verweist an der ersten Nennung darauf. In der Season 8 betrifft das „Sewer
+  Haze" in 8-06. Vorschau, Übersicht und Entfernen zählen die Seite mit.
 - **Starfinder-Vorlagen über „Starfinder Anachronism".** Nennt ein Statblock
   ein Starfinder-Buch als Vorlage (der Mining Robot in 8-06), wird sie in den
   Bestiarien des Moduls `sf2e-anachronism` gesucht — nach den
