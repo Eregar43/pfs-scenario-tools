@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { leseKrankheit, sammleKrankheiten } from '../src/pdf/krankheiten.ts';
+import { klartext, leseKrankheit, sammleKrankheiten } from '../src/pdf/krankheiten.ts';
 import type { Block, BlockRole } from '../src/pdf/types.ts';
 
 // Erfunden, der Form des Krankheits-Statblocks nachgebildet — Wortlaut aus
@@ -59,6 +59,35 @@ describe('leseKrankheit', () => {
   it('laesst eine Kopfzeile ohne Krankheit und einen Block ohne Rettungswurf aus', () => {
     expect(leseKrankheit('RUSTLUNG CREATURE 4', PLAKETTE, WERTE, 11)).toBeUndefined();
     expect(leseKrankheit(KOPF, PLAKETTE, 'Just some prose about a fever.', 11)).toBeUndefined();
+  });
+});
+
+describe('klartext', () => {
+  it('fuehrt Proben, Schaden und Verweise auf den gedruckten Wortlaut zurueck', () => {
+    expect(
+      klartext(
+        '**Saving Throw** @Check[fortitude|dc:18|basic]; **Stage 2** ' +
+          '@UUID[Compendium.pf2e.conditionitems.Item.xxxxxxxxxxxxxxxx]{enfeebled 2} and ' +
+          '@Damage[1d6[poison]] damage (1 day)',
+      ),
+    ).toBe(
+      '**Saving Throw** DC 18 Fortitude; **Stage 2** enfeebled 2 and 1d6 poison damage (1 day)',
+    );
+  });
+
+  it('liest die Krankheit auch am angereicherten Text', () => {
+    // So kommt der Werteblock beim Import an — die Anreicherung laeuft vor
+    // dem Lesen. Am 11.09.2026 fiel die Krankheit deshalb still heraus.
+    const krankheit = leseKrankheit(
+      KOPF,
+      PLAKETTE,
+      '*Some Rulebook* 12 **Saving Throw** @Check[fortitude|dc:18]; **Onset** 1 day; ' +
+        '**Stage 1** @UUID[Compendium.pf2e.conditionitems.Item.xxxxxxxxxxxxxxxx]{enfeebled 1} (1 day)',
+      11,
+    )!;
+    expect(krankheit.rettungswurf).toEqual({ art: 'fortitude', dc: 18 });
+    expect(krankheit.stufen[0]!.bedingungen).toEqual([{ slug: 'enfeebled', wert: 1 }]);
+    expect(krankheit.text).toContain('DC 18 Fortitude');
   });
 });
 

@@ -60,6 +60,27 @@ export interface Krankheit {
   seite: number;
 }
 
+/**
+ * Macht die Anreicherung rueckgaengig, bevor gelesen wird.
+ *
+ * Der Import liest die Krankheit am **angereicherten** Szenario: Dort steht
+ * `@Check[fortitude|dc:23]` statt `DC 23 Fortitude`, `@Damage[1d6[poison]]
+ * damage` statt `1d6 poison damage` und `@UUID[…]{stupefied 2}` statt
+ * `stupefied 2`. Am 11.09.2026 fiel so die einzige Krankheit der Season 8
+ * still heraus — in Node am rohen Blockstrom geprueft, in der Instanz am
+ * angereicherten gelesen. Der Klartext ist die Form, an der der Leser
+ * geeicht ist; alles andere wird darauf zurueckgefuehrt.
+ */
+export function klartext(text: string): string {
+  return text
+    .replace(/@Check\[([a-z-]+)\|dc:(\d+)[^\]]*\](?:\{[^}]*\})?/g, (_, slug: string, dc: string) => {
+      const name = slug.charAt(0).toUpperCase() + slug.slice(1);
+      return `DC ${dc} ${name}`;
+    })
+    .replace(/@Damage\[([^\[\]]+)\[([a-z-]+)\]\]/g, '$1 $2')
+    .replace(/@UUID\[[^\]]+\]\{([^}]*)\}/g, '$1');
+}
+
 const KOPFZEILE = /^(.+?)\s+DISEASE\s+(\d+)$/;
 const QUELLE = /^\*([^*]+)\*\s+\d+/;
 const RETTUNGSWURF = /\*\*Saving Throw\*\*\s+DC\s+(\d+)\s+(Fortitude|Reflex|Will)\b/i;
@@ -141,7 +162,7 @@ export function leseKrankheit(
 ): Krankheit | undefined {
   const kopf = KOPFZEILE.exec(kopfzeile.replace(/\*\*/g, '').replace(/\s+/g, ' ').trim());
   if (!kopf) return undefined;
-  const text = werte.replace(/\s+/g, ' ').trim();
+  const text = klartext(werte).replace(/\s+/g, ' ').trim();
   const rettungswurf = RETTUNGSWURF.exec(text);
   if (!rettungswurf) return undefined;
 
