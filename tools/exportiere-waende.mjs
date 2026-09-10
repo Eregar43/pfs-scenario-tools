@@ -113,11 +113,16 @@ for (const datei of dateien) {
   }
 }
 
-const treffer = Object.entries(szenenNamen).filter(([, name]) => name === szenenName);
+// Die Datenbank wird als latin1 gelesen (Byte fuer Byte, wegen der
+// Blockstruktur); ein Szenenname mit Apostroph oder Umlaut (`Nan’s Watch`)
+// steht dort deshalb als UTF-8-Bytefolge. Der Aufrufer gibt ihn als Text —
+// also den Text in dieselbe Bytefolge bringen, sonst gibt es keinen Treffer.
+const gesucht = Buffer.from(szenenName, 'utf8').toString('latin1');
+const treffer = Object.entries(szenenNamen).filter(([, name]) => name === gesucht);
 if (treffer.length !== 1) {
   console.error(
     treffer.length === 0
-      ? `Keine Szene namens „${szenenName}" gefunden. Vorhanden: ${Object.values(szenenNamen).join(', ')}`
+      ? `Keine Szene namens „${szenenName}" gefunden. Vorhanden: ${Object.values(szenenNamen).map((n) => Buffer.from(n, 'latin1').toString('utf8')).join(', ')}`
       : `Szenenname „${szenenName}" ist mehrdeutig (${treffer.length} Szenen).`,
   );
   process.exit(1);
