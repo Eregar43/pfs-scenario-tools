@@ -55,8 +55,14 @@ export interface Krankheit {
   stufen: Krankheitsstufe[];
   /** Das Buch der Fundstelle, falls der Werteblock eines nennt. */
   quelle?: string;
-  /** Der Werteblock im Wortlaut — fuer die Beschreibung. */
+  /** Der Werteblock im gedruckten Wortlaut — geeicht wird daran. */
   text: string;
+  /**
+   * Der Werteblock, wie er hereinkam: beim Import **angereichert**, mit
+   * `@Check` fuer den Rettungswurf und `@UUID` fuer die Bedingungen. Das ist
+   * der Text fuer die Seite — dort sollen die Bedingungen anklickbar sein.
+   */
+  quelltext: string;
   seite: number;
 }
 
@@ -187,6 +193,7 @@ export function leseKrankheit(
     stufen,
     ...(quelle ? { quelle: quelle[1]!.trim() } : {}),
     text,
+    quelltext: werte.replace(/\s+/g, ' ').trim(),
     seite,
   };
 }

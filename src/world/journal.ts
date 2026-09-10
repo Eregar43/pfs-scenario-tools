@@ -495,6 +495,7 @@ export function plane(
       seiten,
       krankheiten.map((krankheit, index) => ({
         satz: krankheit.name,
+        kopfzeile: `${krankheit.name} Disease ${krankheit.stufe}`,
         uuid: `JournalEntry.${journalId}.JournalEntryPage.${krankheitsseiten[index]!.id}`,
       })),
     );

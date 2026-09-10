@@ -25,11 +25,12 @@ export function krankheitSeitenName(krankheit: Krankheit): string {
 
 /**
  * Der Statblock als Seite: die Plakette, dann je Abschnitt des Werteblocks
- * ein Absatz — Rettungswurf, Onset, jede Stufe. Der Wortlaut ist der
- * gedruckte (`leseKrankheit` hat die Anreicherung schon zurueckgefuehrt).
+ * ein Absatz — Rettungswurf, Onset, jede Stufe. Genommen wird der
+ * **angereicherte** Text: Der Rettungswurf ist dann ein `@Check`, jede
+ * Bedingung ein `@UUID` auf das Kompendium — anklickbar wie im Haupttext.
  */
 export function krankheitSeiteHtml(krankheit: Krankheit): string {
-  const absaetze = krankheit.text
+  const absaetze = krankheit.quelltext
     .split(/;\s*/)
     .map((teil) => teil.trim())
     .filter((teil) => teil !== '')
@@ -46,23 +47,42 @@ function regexSicher(text: string): string {
 }
 
 /**
- * Setzt den Verweis auf die Krankheitsseite an die erste Nennung des Namens
- * im Journal — „exposed to sewer haze".
+ * Setzt die Verweise auf die Krankheitsseite in den Haupttext — an zwei
+ * Stellen, wie bei einer Kreatur:
+ *
+ * - an die **Kopfzeile** der Begegnung (`<h3>Sewer Haze Disease 7</h3>`, im
+ *   Heft mit dem Kurzverweis `Page 11` darunter), das ist die Leiste, von
+ *   der aus der Spielleiter nachschlaegt;
+ * - an die **erste Nennung** des Namens im Fliesstext („exposed to sewer
+ *   haze").
  *
  * Gesucht wird ohne Ruecksicht auf Gross- und Kleinschreibung, als ganzes
  * Wort, ausserhalb von HTML-Tags und ausserhalb schon gesetzter Verweise.
- * Wird der Name nicht gefunden, bleibt die Seite trotzdem stehen; sie ist
- * dann nur nicht verlinkt, und die Vorschau zaehlt es mit.
+ * Wird nichts gefunden, bleibt die Seite trotzdem stehen; sie ist dann nur
+ * nicht verlinkt, und die Vorschau zaehlt es mit.
  *
  * Zurueck kommt die Zahl der gesetzten Verweise.
  */
 export function fuegeKrankheitVerweiseEin(
   seiten: SeitenAbbild[],
-  krankheiten: { satz: string; uuid: string }[],
+  krankheiten: { satz: string; kopfzeile?: string; uuid: string }[],
 ): number {
   let gesetzt = 0;
 
   for (const krankheit of krankheiten) {
+    if (krankheit.kopfzeile !== undefined) {
+      const kopf = new RegExp(
+        `(<h[1-6][^>]*>)(${regexSicher(krankheit.kopfzeile)})(</h[1-6]>)`,
+        'iu',
+      );
+      for (const seite of seiten) {
+        if (!kopf.test(seite.inhalt)) continue;
+        seite.inhalt = seite.inhalt.replace(kopf, `$1@UUID[${krankheit.uuid}]{$2}$3`);
+        gesetzt++;
+        break;
+      }
+    }
+
     const muster = new RegExp(
       `(^|[^\\p{L}\\p{N}@{\\[])(${regexSicher(krankheit.satz)})(?![\\p{L}\\p{N}])(?![^<]*>)(?![^\\[]*\\])`,
       'iu',
