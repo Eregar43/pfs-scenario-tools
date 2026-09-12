@@ -19,6 +19,7 @@ declare global {
     readonly version: string;
     readonly importieren: typeof import('./ui/import-dialog.ts').zeigeImportDialog;
     readonly uebersicht: typeof import('./ui/uebersicht-dialog.ts').zeigeUebersicht;
+    readonly karteExportieren: typeof import('./ui/karten-export-app.ts').zeigeKartenExport;
     readonly willkommen: typeof import('./ui/willkommen-dialog.ts').zeigeWillkommen;
     readonly szenarioAusDatei: typeof import('./lesen.ts').szenarioAusDatei;
     readonly fasseZusammen: typeof import('./lesen.ts').fasseZusammen;
