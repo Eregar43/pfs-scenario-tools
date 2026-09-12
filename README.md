@@ -254,21 +254,47 @@ Import fasst dort nie an, was von Hand eingestellt wurde.
 
 Die Wände werden wie die Gitterwerte einmal in Foundry gezeichnet und liegen
 dann als JSON unter `daten/waende/<szenario>/<datei>.json`, eingetragen in
-`src/world/waende.ts`. Alle sechs Karten der Season 8 sind
-bewandet; fünf davon haben auch Türen (Delusions of Grandeur kommt ohne aus).
+`src/world/waende.ts`. Alle neun Karten der Season 8 sind
+bewandet; sechs davon haben auch Türen.
 
 Liegt für eine Karte eine Wanddatei vor, ist **das Repo die Quelle**: Der
 Import ersetzt bei Abweichung die Wände der Szene. Wer am Tisch nachbessert,
-exportiert den neuen Stand zurück, statt ihn beim nächsten Lauf zu verlieren:
+exportiert den neuen Stand zurück, statt ihn beim nächsten Lauf zu verlieren.
+
+### Karte exportieren
+
+Im Verwaltungsfenster steht dafür der Knopf **Karte exportieren**. Er öffnet
+ein Fenster mit zwei Auswahllisten, Szenario und Szene, und liest aus der
+gewählten Szene alles, was das Modul über eine Karte führt:
+
+- Gittergröße, Versatz und Skalierung, wie sie in
+  `karten-einstellungen.ts` gehören
+- die Wände, als Datei zum Herunterladen
+- die drei Quelltextzeilen, mit denen die Karte im Modul ankommt
+
+Die Skalierung steht nicht in der Szene. Sie wird aus Leinwand- und
+Bildbreite gerechnet und lässt sich im Fenster überschreiben.
+
+Führt das Modul für die Karte schon eine Wanddatei, sagt das Fenster, ob der
+Stand in der Szene ihr gleicht. So fällt auf, wenn versehentlich gegen eine
+ältere Fassung gezeichnet wurde.
+
+Zusammen sind Datei und Zeilen genau der Inhalt eines Pull Requests für diese
+Karte. Das Übertragen ins Repo bleibt Handarbeit — das Modul läuft im
+Browser und kennt kein Git.
+
+### Ohne laufendes Foundry
+
+Dasselbe geht von außen, wenn die Instanz gerade nicht läuft:
 
 ```bash
 node tools/exportiere-waende.mjs "<Szenenname in Foundry>" 08-04/the-gallivanting-ghoul
 ```
 
-Das Werkzeug liest die Wände aus der LevelDB der Testwelt (lesend, die
-Instanz darf laufen) und nennt Wand- und Türzahl zum Gegenprüfen. Karten
-**ohne** Wanddatei fasst der Import nicht an; dort bleiben selbstgezeichnete
-Wände unangetastet.
+Das Werkzeug liest die Wände aus der LevelDB der Welt (lesend, die Instanz
+darf laufen) und schreibt dieselbe Datei — Zeichen für Zeichen, darauf gibt
+es einen Test. Karten **ohne** Wanddatei fasst der Import nicht an; dort
+bleiben selbstgezeichnete Wände unangetastet.
 
 ## Seasons
 
