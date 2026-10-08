@@ -34,6 +34,17 @@ describe('effektName', () => {
     expect(effektName(gegner, '08-04')).toBe('PFS 08-04: +2 initiative (enemies)');
   });
 
+  it('nennt Angriffe mit, wenn der Effekt auf sie wirkt', () => {
+    const beides = ausSatz(
+      'The guide helps, granting the PCs a +1 circumstance bonus to all skill checks ' +
+        'and attack rolls.',
+    );
+    const nurAngriffe = ausSatz('All PCs gain a +1 circumstance bonus to attack rolls.');
+
+    expect(effektName(beides, '08-08')).toBe('PFS 08-08: +1 checks and attacks');
+    expect(effektName(nurAngriffe, '08-08')).toBe('PFS 08-08: +1 attacks');
+  });
+
   it('nimmt den Wortlaut des Hefts, wenn das Ziel unbekannt ist', () => {
     const unklar = ausSatz(
       'All PCs gain a +1 circumstance bonus to their standing with the harbour guild.',
