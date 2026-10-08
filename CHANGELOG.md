@@ -13,6 +13,8 @@ behobene Fehler.
 - **Karte von 8-08 „Treatise on the Study of Clockwork" vermessen und
   bewändet.** „Escorting Luiza" bekommt Gitter, Versatz, die Wände des
   Herrenhauses und seine neun Türen.
+- **Tempo-Zusatz nach Semikolon bleibt erhalten.** „20 feet; troop movement"
+  verlor bisher den Zusatz; bei gebauten Kreaturen steht er jetzt am Tempo.
 - **Drei Lesefehler in Statblöcken behoben.** Ein Tempo, das im Satz an der
   Fähigkeit davor klebt, geht nicht mehr verloren; eine doppelte
   Aktionsplakette bleibt nicht mehr im Angriffsnamen stehen; ein
