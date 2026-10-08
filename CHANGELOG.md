@@ -7,6 +7,10 @@ behobene Fehler.
 
 - **Geprüfter Umfang: Season 8, Hefte 8-01 bis 8-08.** Begrüßung und README
   nannten noch 8-01 bis 8-04.
+- **Proben im Abschnitt „Getting Started" sind verdeckt.** Alle Proben
+  zwischen „Getting Started" und der nächsten Hauptüberschrift tragen das
+  Merkmal „secret" — Recall Knowledge und, in 8-07, Gather Information. In
+  der Season 8 sind das drei bis fünf Proben je Heft.
 - **Runen werden verlinkt.** „*shadow rune*" (8-08) zeigt jetzt auf die Rune
   „Shadow" im Kompendium. Verlinkt wird nur, was dort wirklich eine Rune ist.
 - **Schriftrollen mit Rang werden verlinkt.** „*3rd-rank scroll of soothe*"
