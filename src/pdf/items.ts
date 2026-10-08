@@ -25,6 +25,12 @@ export interface ItemEntry {
   /** Foundry-Kennung des Items. */
   id: string;
   kind: ItemKind;
+  /**
+   * Eine Rune: Das Kompendium nennt sie ohne das Wort (`Shadow`), das Heft
+   * mit (`*shadow rune*`). Erkannt an `system.usage.value` = `etched-onto-…`;
+   * ein eigenes Merkmal `rune` tragen sie nicht.
+   */
+  rune?: boolean;
 }
 
 export interface ItemLink {
@@ -80,6 +86,9 @@ const RUNE_PREFIX = /^([+-]\d+\s+)(.+)$/;
  * `3rd-level`) steht in 8-07 mit im Kursivsatz; er bleibt Text vor dem
  * Verweis, wie das Gefaess selbst.
  */
+/** `shadow rune`, `greater shadow runes` — der Name ohne das Wort `rune`. */
+const RUNE_SUFFIX = /^(.+?)\s+runes?$/i;
+
 const SPELL_VESSEL =
   /^(\d+(?:st|nd|rd|th)-(?:rank|level)\s+)?(scrolls?|wands?|staffs?|staves)(\s+of\s+)(.+)$/i;
 
@@ -126,6 +135,14 @@ export class ItemIndex {
       const [, rang = '', word, of, spellName] = vessel;
       const spell = this.#lookup('spell', spellName!);
       if (spell) return { label: spellName!, before: `${rang}${word}${of}`, entry: spell };
+    }
+
+    // Nur echte Runen: Sonst hiesse `*shadow rune*` womoeglich ein
+    // gewoehnlicher Gegenstand namens `Shadow`. 8-08: `Shadow`.
+    const rune = RUNE_SUFFIX.exec(trimmed);
+    if (rune) {
+      const eintrag = this.#lookup('equipment', rune[1]!);
+      if (eintrag?.rune) return { label: trimmed, before: '', entry: eintrag };
     }
 
     return undefined;

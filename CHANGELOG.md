@@ -7,6 +7,8 @@ behobene Fehler.
 
 - **Geprüfter Umfang: Season 8, Hefte 8-01 bis 8-08.** Begrüßung und README
   nannten noch 8-01 bis 8-04.
+- **Runen werden verlinkt.** „*shadow rune*" (8-08) zeigt jetzt auf die Rune
+  „Shadow" im Kompendium. Verlinkt wird nur, was dort wirklich eine Rune ist.
 - **Schriftrollen mit Rang werden verlinkt.** „*3rd-rank scroll of soothe*"
   (8-07) blieb ohne Verweis, weil der Rang mit im Kursivsatz steht. Jetzt
   bleibt der Rang Text, und der Zauber bekommt den Verweis.

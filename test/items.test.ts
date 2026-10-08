@@ -137,6 +137,18 @@ describe('enrichItems', () => {
     expect(enrichItems(text, index)).toBe(text);
   });
 
+  it('findet eine Rune unter ihrem Namen ohne das Wort rune', () => {
+    const runen = new ItemIndex([
+      { ...equipment('Gloom', 'oooooooooooooooo'), rune: true },
+      equipment('Lantern', 'pppppppppppppppp'),
+    ]);
+    expect(enrichItems('becomes a *gloom rune*.', runen)).toBe(
+      'becomes a *@UUID[Compendium.pf2e.equipment-srd.Item.oooooooooooooooo]{gloom rune}*.',
+    );
+    // Kein Treffer, wenn der Name zu keiner Rune gehoert.
+    expect(enrichItems('a *lantern rune*', runen)).toBe('a *lantern rune*');
+  });
+
   it('laesst den Rang vor der Schriftrolle als Text stehen', () => {
     // Der Rang steht mit im Kursivsatz; verlinkt wird nur der Zauber.
     const link = '@UUID[Compendium.pf2e.spells-srd.Item.hhhhhhhhhhhhhhhh]{illusory disguise}';
