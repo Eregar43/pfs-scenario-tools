@@ -5,6 +5,12 @@ behobene Fehler.
 
 ## Unveröffentlicht
 
+- **Karte von 8-07 „In the Halls of Dead Justice" vermessen und bewändet.**
+  „This Stinks" bekommt beim Import Gitter, Versatz und die Wände des
+  Ballsaals.
+- **Karte von 8-08 „Treatise on the Study of Clockwork" vermessen und
+  bewändet.** „Escorting Luiza" bekommt Gitter, Versatz, die Wände des
+  Herrenhauses und seine neun Türen.
 - **Drei Lesefehler in Statblöcken behoben.** Ein Tempo, das im Satz an der
   Fähigkeit davor klebt, geht nicht mehr verloren; eine doppelte
   Aktionsplakette bleibt nicht mehr im Angriffsnamen stehen; ein

@@ -7,6 +7,8 @@ import waende0804Ghoul from '../../daten/waende/08-04/the-gallivanting-ghoul.jso
 import waende0805NansWatch from '../../daten/waende/08-05/nans-watch.json';
 import waende0805GunpowderKeg from '../../daten/waende/08-05/the-gunpowder-keg.json';
 import waende0806FindingTheMine from '../../daten/waende/08-06/finding-the-mine.json';
+import waende0807ThisStinks from '../../daten/waende/08-07/this-stinks.json';
+import waende0808EscortingLuiza from '../../daten/waende/08-08/escorting-luiza.json';
 
 /**
  * Handgezeichnete Waende je Karte, das Gegenstueck zu den
@@ -36,6 +38,8 @@ const WAENDE: Record<string, Wand[]> = {
   '08-05/nans-watch': waende0805NansWatch,
   '08-05/the-gunpowder-keg': waende0805GunpowderKeg,
   '08-06/finding-the-mine': waende0806FindingTheMine,
+  '08-07/this-stinks': waende0807ThisStinks,
+  '08-08/escorting-luiza': waende0808EscortingLuiza,
 };
 
 /** Die Waende einer Karte, falls sie schon gezeichnet sind. */
