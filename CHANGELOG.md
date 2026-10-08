@@ -3,6 +3,14 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
+## Unveröffentlicht
+
+- **Drei Lesefehler in Statblöcken behoben.** Ein Tempo, das im Satz an der
+  Fähigkeit davor klebt, geht nicht mehr verloren; eine doppelte
+  Aktionsplakette bleibt nicht mehr im Angriffsnamen stehen; ein
+  abgesprengter Anfangsbuchstabe der Merkmalszeile wird wieder angefügt.
+  Gefunden in 8-07.
+
 ## 1.2.0 — 2026-09-11
 
 - **Krankheiten des Hefts bekommen eine Seite im Spielhilfen-Journal.** Ein

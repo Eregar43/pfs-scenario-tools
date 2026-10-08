@@ -281,6 +281,25 @@ export function zerlegeAbschnitte(text: string): Abschnitt[] {
   return abschnitte.filter((abschnitt, i) => i === 0 || abschnitt.etikett !== '');
 }
 
+/**
+ * Trennt ein Tempo, das am Etikett davor klebt.
+ *
+ * Eine Faehigkeit ohne eigenen Text kann mit dem folgenden Etikett in einem
+ * Fettsatz stehen: `**Troop Defenses Speed** 20 feet` (Undead Workers United
+ * Local 1014 in 8-07). Ohne die Trennung fehlte das Tempo, und die Faehigkeit
+ * hiesse `Troop Defenses Speed`.
+ */
+function trenneTempo(abschnitte: Abschnitt[]): Abschnitt[] {
+  return abschnitte.flatMap((abschnitt) => {
+    const treffer = /^(.+?)\s+Speed$/.exec(abschnitt.etikett);
+    if (!treffer) return [abschnitt];
+    return [
+      { etikett: treffer[1]!, text: '' },
+      { etikett: 'Speed', text: abschnitt.text },
+    ];
+  });
+}
+
 /** `+7 (+10 to Climb)` → Modifikator und Zusatz. */
 function leseFertigkeit(stueck: string): Fertigkeit | undefined {
   const treffer = /^(.*?)\s+([+–—-]\s*\d+)\s*(?:\(([^)]*)\))?\s*$/.exec(stueck.trim());
@@ -298,7 +317,9 @@ function leseFertigkeit(stueck: string): Fertigkeit | undefined {
  * Komma trennt ihn nur von der Schadenszeile, die als eigenes Etikett folgt.
  */
 function leseAngriff(art: Angriff['art'], text: string): Angriff | undefined {
-  const ohnePlakette = text.trim().replace(/^\[[^\]]*\]\s*/, '');
+  // Auch zwei Plaketten hintereinander: Leshtakap in 8-07 traegt eine
+  // vertippte und eine richtige, `[one-acion][one-action]claw`.
+  const ohnePlakette = text.trim().replace(/^(?:\[[^\]]*\]\s*)+/, '');
   const treffer = /^(.*?)\s+([+–—-]\s*\d+)\s*(?:\(([^)]*)\))?\s*,?\s*$/.exec(ohnePlakette);
   if (!treffer) return undefined;
   const mod = zahl(treffer[2]!);
@@ -384,6 +405,9 @@ export function leseStatblock(
     art: gelesen.kind,
     merkmale: merkmalszeile
       .replace(/\s+/g, ' ')
+      // Ein abgesprengter Anfangsbuchstabe: `M EDIUM` beim Beetle Carapace
+      // in 8-07. Ein Merkmal aus einem Buchstaben gibt es nicht.
+      .replace(/(^|\s)([A-Z]) (?=[A-Z]{2,})/g, '$1$2')
       .trim()
       .toLowerCase()
       .split(' ')
@@ -431,7 +455,7 @@ export function leseStatblock(
     (etikett: string, text: string): void =>
       setze(angehaengt(lies(), etikett, text));
 
-  for (const abschnitt of zerlegeAbschnitte(rumpf)) {
+  for (const abschnitt of trenneTempo(zerlegeAbschnitte(rumpf))) {
     const vorigerAngriff = offenerAngriff;
     offenerAngriff = undefined;
 
