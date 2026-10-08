@@ -65,6 +65,7 @@
   "PFSST.Welt.KrankheitenZeile": "Krankheiten als Seite im Spielhilfen-Journal ({anzahl}): {namen} — {verlinkt} Verweise im Text",
   "PFSST.Welt.StarfinderOhneModul": "Vorlage aus einem Starfinder-Buch, aber das Modul „Starfinder Anachronism“ ({modul}) ist nicht aktiv — werden nicht angelegt: {namen}",
   "PFSST.Welt.GefahrenGebaut": "Hazards ohne Vorlage, aus dem Statblock gebaut ({anzahl}): {namen}",
+  "PFSST.Welt.KreaturenGebaut": "Kreaturen ohne Vorlage, aus dem Statblock gebaut ({anzahl}): {namen}",
   "PFSST.Welt.GefahrRest": "    Nicht untergebracht — {punkt}",
   "PFSST.Einstellungen.Kreaturverweise.Name": "Kreaturverweise im Journal",
   "PFSST.Einstellungen.Kreaturverweise.Hinweis": "Wohin die Verweise an den Statblock-Leisten zeigen: auf die Kompendien oder auf die Actors, die der Import in der Welt anlegt. Wirkt beim nächsten Import.",

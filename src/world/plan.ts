@@ -120,8 +120,8 @@ export interface KreaturWunsch {
   /**
    * Fertige Actordaten statt einer Vorlage.
    *
-   * Gesetzt, wo es nichts zu kopieren gibt — an der Season 8 gemessen sind
-   * das genau die fuenf Gefahren. Liegt das Feld vor, legt `apply.ts` daraus
+   * Gesetzt, wo es nichts zu kopieren gibt — szenarioeigene Gefahren und,
+   * seit 8-07, Kreaturen ohne Quellenzeile (`kreaturen.ts`). Liegt das Feld vor, legt `apply.ts` daraus
    * an, statt aus dem Kompendium zu kopieren; alles Weitere (Ordner, Flags,
    * niemals loeschen, niemals auffrischen) bleibt gleich.
    */

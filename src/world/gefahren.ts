@@ -38,6 +38,14 @@ export interface Schluesselwerke {
   aktionsMerkmale?: ReadonlySet<string>;
   /** Merkmale eines Angriffs (`CONFIG.PF2E.npcAttackTraits`). */
   angriffsMerkmale?: ReadonlySet<string>;
+  /** Merkmale einer Kreatur (`CONFIG.PF2E.creatureTraits`) — nur fuer `kreaturen.ts`. */
+  kreaturMerkmale?: ReadonlySet<string>;
+  /** `CONFIG.PF2E.senses` */
+  sinne?: ReadonlySet<string>;
+  /** `CONFIG.PF2E.languages` */
+  sprachen?: ReadonlySet<string>;
+  /** Die Fertigkeiten ohne Wissen (`CONFIG.PF2E.skills`). */
+  fertigkeiten?: ReadonlySet<string>;
 }
 
 /**
@@ -49,12 +57,12 @@ export interface Schluesselwerke {
  */
 export function schluesselwerkeAusSystem(): Schluesselwerke {
   const pf2e = CONFIG?.PF2E;
-  const schluessel = (werk: Record<string, string> | undefined): ReadonlySet<string> | undefined =>
+  const schluessel = (werk: Record<string, unknown> | undefined): ReadonlySet<string> | undefined =>
     werk ? new Set(Object.keys(werk)) : undefined;
 
   const nimm = (
     name: keyof Schluesselwerke,
-    werk: Record<string, string> | undefined,
+    werk: Record<string, unknown> | undefined,
   ): Partial<Schluesselwerke> => {
     const menge = schluessel(werk);
     return menge ? { [name]: menge } : {};
@@ -67,6 +75,10 @@ export function schluesselwerkeAusSystem(): Schluesselwerke {
     ...nimm('resistenzen', pf2e?.resistanceTypes),
     ...nimm('aktionsMerkmale', pf2e?.actionTraits),
     ...nimm('angriffsMerkmale', pf2e?.npcAttackTraits),
+    ...nimm('kreaturMerkmale', pf2e?.creatureTraits),
+    ...nimm('sinne', pf2e?.senses),
+    ...nimm('sprachen', pf2e?.languages),
+    ...nimm('fertigkeiten', pf2e?.skills),
   };
 }
 
@@ -94,7 +106,7 @@ export interface GebauteGefahr {
 const KEINE_MERKMALE = new Set(['complex', 'hazard']);
 
 /** Seltenheiten stehen in der Plakette, im System aber in einem eigenen Feld. */
-const SELTENHEITEN = new Set(['common', 'uncommon', 'rare', 'unique']);
+export const SELTENHEITEN = new Set(['common', 'uncommon', 'rare', 'unique']);
 
 /**
  * Schluessel, bei denen der Wortlaut des Hefts nicht einfach zum Schluessel
@@ -160,7 +172,7 @@ const ABSATZ_VOR = new RegExp(
  * auch, und nur so bleibt im Blatt erkennbar, wo der Auslöser aufhört und die
  * Wirkung anfaengt.
  */
-function html(text: string | undefined): string {
+export function html(text: string | undefined): string {
   const sauber = (text ?? '').trim();
   if (sauber === '') return '';
   return sauber
@@ -223,7 +235,7 @@ export function leseIwr(eintrag: string): { typ: string; wert?: number } {
  * Was im Heft nachweislich anders heisst, steht in `MERKMAL_SONDERFALL`; alles
  * andere wird gemeldet statt geraten.
  */
-function gepruefteMerkmale(
+export function gepruefteMerkmale(
   merkmale: readonly string[],
   erlaubt: ReadonlySet<string> | undefined,
   woher: string,
@@ -242,7 +254,7 @@ function gepruefteMerkmale(
 }
 
 /** Ein Angriff als eingebettetes `melee`-Item. */
-function angriffsItem(
+export function angriffsItem(
   angriff: Angriff,
   samen: string,
   werke: Schluesselwerke,
@@ -266,7 +278,9 @@ function angriffsItem(
   });
 
   return {
-    name: angriff.name,
+    // Kursivsatz des Hefts (`*bastard sword*`, Leshtakap in 8-07) gehoert
+    // nicht in den Namen.
+    name: angriff.name.replace(/\*/g, '').trim(),
     type: 'melee',
     system: {
       bonus: { value: angriff.mod },
@@ -300,7 +314,7 @@ function angriffsItem(
 }
 
 /** Eine benannte Faehigkeit als eingebettetes `action`-Item. */
-function faehigkeitsItem(
+export function faehigkeitsItem(
   faehigkeit: Faehigkeit,
   werke: Schluesselwerke,
   ungenutzt: string[],

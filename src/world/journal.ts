@@ -22,6 +22,7 @@ import { lies } from './flags.ts';
 import { journalName, quellenangabe, scenarioFolderName, scenarioKey, seasonFolderName, type JournalNameSchema } from './naming.ts';
 import { baueGefahr, type Schluesselwerke } from './gefahren.ts';
 import { baueNsc, sammleNscs } from './nscs.ts';
+import { baueKreatur, wirdAlsKreaturGebaut } from './kreaturen.ts';
 import { sammleEffekte } from '../pdf/effekte.ts';
 import { sammleHandouts } from '../pdf/handouts.ts';
 import { baueEffekt, effektName, fuegeEffektVerweiseEin } from './effekte.ts';
@@ -160,6 +161,8 @@ export interface Vorhaben {
    * richtig aus und waere an einer Stelle falsch, die niemand nachprueft.
    */
   gefahrenReste: string[];
+  /** Dasselbe fuer die gebauten Kreaturen (`kreaturen.ts`). */
+  kreaturReste: string[];
 }
 
 /**
@@ -294,6 +297,31 @@ export function plane(
       ...(bild ? { bild } : {}),
       stufe: eintrag.statblock.stufe,
       art: 'hazard',
+    });
+  }
+
+  // Kreaturen, die nur im Heft stehen, werden ebenso gebaut. Der Samen fuehrt
+  // `gebaut` wie bei den Gefahren; die Art steht mit darin, damit eine
+  // gleichnamige Gefahr nicht dieselbe Kennung bekommt.
+  const kreaturReste: string[] = [];
+  for (const eintrag of optionen.ohneVorlage ?? []) {
+    if (!wirdAlsKreaturGebaut(eintrag)) continue;
+    const { daten, ungenutzt } = baueKreatur(
+      eintrag.statblock!,
+      optionen.gefahrenWerke ?? {},
+      quellenangabe(designation, szenario.title),
+    );
+    for (const punkt of ungenutzt) kreaturReste.push(`${eintrag.name}: ${punkt}`);
+    const bild = bildFuerKreatur(eintrag.name, optionen.personen ?? []);
+    const token = tokenAusPortraet('creature', bild, optionen.tokenRinge === true);
+    kreaturen.push({
+      id: foundryId(`${szenario.title}/actor/gebaut/creature/${eintrag.name}`),
+      name: eintrag.name,
+      daten,
+      ...(bild ? { bild } : {}),
+      ...(token ? { tokenBild: token.bild, ring: token.ring } : {}),
+      stufe: eintrag.statblock!.stufe,
+      art: 'creature',
     });
   }
 
@@ -515,6 +543,7 @@ export function plane(
     },
     bilderGesamt: optionen.bilder?.length ?? 0,
     gefahrenReste,
+    kreaturReste,
     ...(optionen.sourceHash ? { sourceHash: optionen.sourceHash } : {}),
   };
 }

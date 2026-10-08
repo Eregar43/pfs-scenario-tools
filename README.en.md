@@ -157,6 +157,12 @@ contents.
   stealth, description, disable, routine, reset, AC, hardness, hit points,
   saves, immunities and weaknesses, plus one entry for every attack and every
   named ability.
+- **Creatures without a template** are **built** the same way when their
+  stat block has no source line — they exist only in the scenario. Taken
+  over: level, traits, size, perception and senses, languages, skills and
+  lore, attributes, AC, saves, hit points, immunities, weaknesses and
+  resistances, speed, attacks and abilities. Items and spells stay as text;
+  the preview names whatever could not be placed.
 
 ### Importing again
 

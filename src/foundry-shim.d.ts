@@ -391,6 +391,8 @@ declare global {
       immunityTypes?: Record<string, string>;
       weaknessTypes?: Record<string, string>;
       resistanceTypes?: Record<string, string>;
+      /** Schluessel = Fertigkeit, Wert = `{ label, attribute }`. */
+      skills?: Record<string, unknown>;
     };
   };
 }
