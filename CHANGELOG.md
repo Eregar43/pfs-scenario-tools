@@ -5,6 +5,8 @@ behobene Fehler.
 
 ## Unveröffentlicht
 
+- **Geprüfter Umfang: Season 8, Hefte 8-01 bis 8-08.** Begrüßung und README
+  nannten noch 8-01 bis 8-04.
 - **Karte von 8-07 „In the Halls of Dead Justice" vermessen und bewändet.**
   „This Stinks" bekommt beim Import Gitter, Versatz und die Wände des
   Ballsaals.
