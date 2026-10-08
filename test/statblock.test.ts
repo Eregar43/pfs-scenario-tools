@@ -205,6 +205,23 @@ describe('leseStatblock, Einzelfaelle aus der Eichung', () => {
     expect(lies('**Hardness** 2').haerte).toBe(2);
   });
 
+  it('trennt ein Tempo, das am Etikett einer Faehigkeit ohne Text klebt', () => {
+    const gelesen = lies('**HP** 90 **Schwarmhaut Speed** 20 feet; swarm stride **Wogen** Es wogt.');
+    expect(gelesen.tempo?.wert).toBe(20);
+    expect(gelesen.faehigkeiten.map((f) => f.name)).toEqual(['Schwarmhaut', 'Wogen']);
+  });
+
+  it('streift auch eine doppelte Aktionsplakette vom Angriff', () => {
+    const gelesen = lies('**Melee** [one-acton][one-action]kralle +9 (agile), **Damage** 1d6 slashing');
+    expect(gelesen.angriffe[0]?.name).toBe('kralle');
+    expect(gelesen.angriffe[0]?.mod).toBe(9);
+  });
+
+  it('fuegt einen abgesprengten Anfangsbuchstaben der Merkmale wieder an', () => {
+    const gelesen = leseStatblock('PRUEFWICHT CREATURE 1', 'S MALL MINDLESS UNDEAD', '**HP** 10')!;
+    expect(gelesen.merkmale).toEqual(['small', 'mindless', 'undead']);
+  });
+
   it('hebt den Zusatz hinter Ruestung und Trefferpunkten auf', () => {
     const gelesen = lies('**AC** 15 (13 when broken), construct armor; **HP** 10 per usher');
     expect(gelesen.ac).toBe(15);
