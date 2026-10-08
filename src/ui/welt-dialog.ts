@@ -20,6 +20,7 @@ import { bildOrdner, bildPfad, type BildFuerSeiten } from '../world/bilder.ts';
 import { ladeHoch, stelleOrdnerSicher } from '../world/files.ts';
 import { plane, schreibe } from '../world/journal.ts';
 import { schluesselwerkeAusSystem } from '../world/gefahren.ts';
+import { wirdAlsKreaturGebaut } from '../world/kreaturen.ts';
 import { angleichwerkeAusSystem } from '../world/angleichen.ts';
 import { pruefeKreaturen } from '../world/statblock-abgleich.ts';
 import type { ImportPlan, OrdnerAktion } from '../world/plan.ts';
@@ -361,7 +362,8 @@ export async function zeigeWeltDialog(
     eintrag.buch !== undefined && /^Starfinder\b/.test(eintrag.buch);
   const modulFehlt = !anachronismAktiv();
   const niemandKannBauen = fund.ohneVorlage.filter(
-    (eintrag) => eintrag.art !== 'hazard' || !eintrag.statblock,
+    (eintrag) =>
+      (eintrag.art !== 'hazard' || !eintrag.statblock) && !wirdAlsKreaturGebaut(eintrag),
   );
   const ohneAnachronism = niemandKannBauen
     .filter((eintrag) => modulFehlt && ausStarfinder(eintrag))
@@ -397,6 +399,23 @@ export async function zeigeWeltDialog(
     // es besonders heimtueckisch: Die Gefahr entstuende trotzdem und saehe
     // richtig aus.
     for (const rest of vorhaben.gefahrenReste) {
+      const hinweis = document.createElement('li');
+      hinweis.textContent = L('Welt.GefahrRest', { punkt: rest });
+      liste.append(hinweis);
+    }
+  }
+
+  const gebauteKreaturen = fund.ohneVorlage
+    .filter((eintrag) => wirdAlsKreaturGebaut(eintrag))
+    .map((eintrag) => eintrag.name);
+  if (gebauteKreaturen.length > 0) {
+    const li = document.createElement('li');
+    li.textContent = L('Welt.KreaturenGebaut', {
+      anzahl: gebauteKreaturen.length,
+      namen: gebauteKreaturen.join(', '),
+    });
+    liste.append(li);
+    for (const rest of vorhaben.kreaturReste) {
       const hinweis = document.createElement('li');
       hinweis.textContent = L('Welt.GefahrRest', { punkt: rest });
       liste.append(hinweis);

@@ -65,6 +65,7 @@
   "PFSST.Welt.KrankheitenZeile": "Diseases as pages in the game aids journal ({anzahl}): {namen} — {verlinkt} links in the text",
   "PFSST.Welt.StarfinderOhneModul": "Template from a Starfinder book, but the module \"Starfinder Anachronism\" ({modul}) is not active — will not be created: {namen}",
   "PFSST.Welt.GefahrenGebaut": "Hazards without a template, built from the statblock ({anzahl}): {namen}",
+  "PFSST.Welt.KreaturenGebaut": "Creatures without a template, built from the statblock ({anzahl}): {namen}",
   "PFSST.Welt.GefahrRest": "    Not applied — {punkt}",
   "PFSST.Einstellungen.Kreaturverweise.Name": "Creature links in the journal",
   "PFSST.Einstellungen.Kreaturverweise.Hinweis": "Where the statblock links point: to the compendiums, or to the actors this import creates in the world. Takes effect on the next import.",
