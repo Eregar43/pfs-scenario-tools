@@ -165,6 +165,18 @@ describe('enrichPlainItems', () => {
     );
   });
 
+  it('nimmt zwei Sinnwoerter, wenn das Heft eine Quellenangabe dahinter setzt', () => {
+    // Ohne Angabe bleibt `wizard's tower` Erzaehlung (siehe unten). Mit
+    // Buch und Seite erklaert das Heft selbst, dass ein Gegenstand gemeint ist.
+    const link = '@UUID[Compendium.pf2e.equipment-srd.Item.mmmmmmmmmmmmmmmm]';
+    expect(
+      enrichPlainItems('Each PC receives a wizard’s tower (*Erfundene Schatzkammer* 12) to keep.', index),
+    ).toBe(`Each PC receives a ${link}{wizard’s tower} (*Erfundene Schatzkammer* 12) to keep.`);
+    expect(
+      enrichPlainItems("wizard's tower (level 3, 9 gp; *Erfundene Schatzkammer* 12)", index),
+    ).toBe(`${link}{wizard's tower} (level 3, 9 gp; *Erfundene Schatzkammer* 12)`);
+  });
+
   it('laesst ein einzelnes Wort in Ruhe', () => {
     // Zu viele Grundgegenstaende heissen `Scimitar`, `Dagger`, `Torch` — als
     // blosses Wort im Fliesstext waere der Treffer geraten, nicht gefunden.

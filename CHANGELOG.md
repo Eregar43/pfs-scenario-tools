@@ -7,6 +7,10 @@ behobene Fehler.
 
 - **Geprüfter Umfang: Season 8, Hefte 8-01 bis 8-08.** Begrüßung und README
   nannten noch 8-01 bis 8-04.
+- **Gegenstände mit Quellenangabe werden verlinkt, auch mit zwei Wörtern.**
+  Steht hinter dem Namen Buch und Seite, etwa „(*Pathfinder Treasure Vault*
+  47)", bekommt der Name einen Verweis. Neu verlinkt: diplomat’s charcuterie
+  (8-07), phantom roll (8-08), dueling pistol und flintlock pistol (8-05).
 - **Karte von 8-07 „In the Halls of Dead Justice" vermessen und bewändet.**
   „This Stinks" bekommt beim Import Gitter, Versatz und die Wände des
   Ballsaals.
