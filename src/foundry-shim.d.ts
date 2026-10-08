@@ -68,6 +68,8 @@ declare global {
     system?: {
       details?: { level?: { value?: number } };
       value?: { isValued?: boolean };
+      /** Bei Ausruestung: `etched-onto-…` kennzeichnet eine Rune. */
+      usage?: { value?: string };
     };
   }
 

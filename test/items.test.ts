@@ -137,6 +137,29 @@ describe('enrichItems', () => {
     expect(enrichItems(text, index)).toBe(text);
   });
 
+  it('findet eine Rune unter ihrem Namen ohne das Wort rune', () => {
+    const runen = new ItemIndex([
+      { ...equipment('Gloom', 'oooooooooooooooo'), rune: true },
+      equipment('Lantern', 'pppppppppppppppp'),
+    ]);
+    expect(enrichItems('becomes a *gloom rune*.', runen)).toBe(
+      'becomes a *@UUID[Compendium.pf2e.equipment-srd.Item.oooooooooooooooo]{gloom rune}*.',
+    );
+    // Kein Treffer, wenn der Name zu keiner Rune gehoert.
+    expect(enrichItems('a *lantern rune*', runen)).toBe('a *lantern rune*');
+  });
+
+  it('laesst den Rang vor der Schriftrolle als Text stehen', () => {
+    // Der Rang steht mit im Kursivsatz; verlinkt wird nur der Zauber.
+    const link = '@UUID[Compendium.pf2e.spells-srd.Item.hhhhhhhhhhhhhhhh]{illusory disguise}';
+    expect(enrichItems('finds a *3rd-rank scroll of illusory disguise*.', index)).toBe(
+      `finds a *3rd-rank scroll of ${link}*.`,
+    );
+    expect(enrichItems('a *2nd-level wand of illusory disguise*', index)).toBe(
+      `a *2nd-level wand of ${link}*`,
+    );
+  });
+
   it('verlinkt eine Rune und eine Schriftrolle im selben Satz', () => {
     expect(
       enrichItems('three *lesser acid flasks*, a *+1 scimitar*, and a *scroll of illusory disguise*.', index),
@@ -163,6 +186,18 @@ describe('enrichPlainItems', () => {
     expect(enrichPlainItems('three lesser elixirs of life for the road', index)).toBe(
       'three @UUID[Compendium.pf2e.equipment-srd.Item.jjjjjjjjjjjjjjjj]{lesser elixirs of life} for the road',
     );
+  });
+
+  it('nimmt zwei Sinnwoerter, wenn das Heft eine Quellenangabe dahinter setzt', () => {
+    // Ohne Angabe bleibt `wizard's tower` Erzaehlung (siehe unten). Mit
+    // Buch und Seite erklaert das Heft selbst, dass ein Gegenstand gemeint ist.
+    const link = '@UUID[Compendium.pf2e.equipment-srd.Item.mmmmmmmmmmmmmmmm]';
+    expect(
+      enrichPlainItems('Each PC receives a wizard’s tower (*Erfundene Schatzkammer* 12) to keep.', index),
+    ).toBe(`Each PC receives a ${link}{wizard’s tower} (*Erfundene Schatzkammer* 12) to keep.`);
+    expect(
+      enrichPlainItems("wizard's tower (level 3, 9 gp; *Erfundene Schatzkammer* 12)", index),
+    ).toBe(`${link}{wizard's tower} (level 3, 9 gp; *Erfundene Schatzkammer* 12)`);
   });
 
   it('laesst ein einzelnes Wort in Ruhe', () => {
