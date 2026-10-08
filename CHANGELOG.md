@@ -10,6 +10,18 @@ behobene Fehler.
   Aktionsplakette bleibt nicht mehr im Angriffsnamen stehen; ein
   abgesprengter Anfangsbuchstabe der Merkmalszeile wird wieder angefügt.
   Gefunden in 8-07.
+- **Kreaturen ohne Vorlage werden aus dem Statblock gebaut.** Steht ein
+  Statblock nur im Heft (keine Quellenzeile), entsteht ein vollständiger NPC
+  statt gar keinem Actor — in 8-07 Leshtakap und Undead Workers United
+  Local 1014. Die Vorschau nennt sie in einer eigenen Zeile und darunter,
+  was nicht unterkam (Gegenstände, Zauber).
+- **Keine 10-TP-NSCs mehr für solche Kreaturen.** Hatte eine Kreatur ohne
+  Vorlage ein Porträt im Anhang, legte der Import sie bisher als einfachen
+  NSC mit Stufe 1 an.
+- **Porträts mit abgekürztem Namen werden erkannt.** Die Bildunterschrift
+  „UWU Local 1014" gehört zum Statblock „Undead Workers United Local 1014".
+- **Angriffsnamen ohne Kursiv-Sternchen.** Ein kursiv gesetzter Waffenname
+  stand bisher als `*bastard sword*` im Blatt.
 
 ## 1.2.0 — 2026-09-11
 

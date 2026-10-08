@@ -162,6 +162,12 @@ Inhalte einsammelt.
   Heimlichkeit, Beschreibung, Entschärfen, Routine, Rücksetzung, Rüstung,
   Härte, Trefferpunkte, Rettungswürfe, Immunitäten und Schwächen, dazu je ein
   Eintrag für jeden Angriff und jede benannte Fähigkeit.
+- **Kreaturen ohne Vorlage** werden ebenso **gebaut**, wenn ihr Statblock
+  keine Quellenzeile trägt — sie stehen nur im Heft. Übernommen werden
+  Stufe, Merkmale, Größe, Wahrnehmung und Sinne, Sprachen, Fertigkeiten und
+  Wissen, Attribute, Rüstung, Rettungswürfe, Trefferpunkte, Immunitäten,
+  Schwächen und Resistenzen, Tempo, Angriffe und Fähigkeiten. Gegenstände und
+  Zauber bleiben Text; was nicht unterkam, nennt die Vorschau.
 
 ### Erneuter Import
 
