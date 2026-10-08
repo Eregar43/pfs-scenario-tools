@@ -3,7 +3,7 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
-## Unveröffentlicht
+## 1.3.0 — 2026-10-08
 
 - **Geprüfter Umfang: Season 8, Hefte 8-01 bis 8-08.** Begrüßung und README
   nannten noch 8-01 bis 8-04.
