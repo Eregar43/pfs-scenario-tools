@@ -7,6 +7,9 @@ behobene Fehler.
 
 - **Geprüfter Umfang: Season 8, Hefte 8-01 bis 8-08.** Begrüßung und README
   nannten noch 8-01 bis 8-04.
+- **Schriftrollen mit Rang werden verlinkt.** „*3rd-rank scroll of soothe*"
+  (8-07) blieb ohne Verweis, weil der Rang mit im Kursivsatz steht. Jetzt
+  bleibt der Rang Text, und der Zauber bekommt den Verweis.
 - **Gegenstände mit Quellenangabe werden verlinkt, auch mit zwei Wörtern.**
   Steht hinter dem Namen Buch und Seite, etwa „(*Pathfinder Treasure Vault*
   47)", bekommt der Name einen Verweis. Neu verlinkt: diplomat’s charcuterie

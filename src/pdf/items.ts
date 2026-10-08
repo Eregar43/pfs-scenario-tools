@@ -76,10 +76,12 @@ const RUNE_PREFIX = /^([+-]\d+\s+)(.+)$/;
 /**
  * `scroll of X`, `wand of X`, `staff of X` — dafuer gibt es im Kompendium nur
  * eine Blanko-Schriftrolle ohne Zauber. Verwiesen wird stattdessen auf den
- * Zauber selbst; der Rang, der im Text davorstehen kann (`3rd-rank scroll of
- * ...`), gehoert nicht zu diesem Ausdruck und bleibt ohnehin aussen vor.
+ * Zauber selbst. Der Rang davor (`3rd-rank scroll of soothe`, aelter
+ * `3rd-level`) steht in 8-07 mit im Kursivsatz; er bleibt Text vor dem
+ * Verweis, wie das Gefaess selbst.
  */
-const SPELL_VESSEL = /^(scrolls?|wands?|staffs?|staves)(\s+of\s+)(.+)$/i;
+const SPELL_VESSEL =
+  /^(\d+(?:st|nd|rd|th)-(?:rank|level)\s+)?(scrolls?|wands?|staffs?|staves)(\s+of\s+)(.+)$/i;
 
 function key(kind: ItemKind, name: string): string {
   return `${kind}|${canonicalise(name)}`;
@@ -121,9 +123,9 @@ export class ItemIndex {
 
     const vessel = SPELL_VESSEL.exec(trimmed);
     if (vessel) {
-      const [, word, of, spellName] = vessel;
+      const [, rang = '', word, of, spellName] = vessel;
       const spell = this.#lookup('spell', spellName!);
-      if (spell) return { label: spellName!, before: `${word}${of}`, entry: spell };
+      if (spell) return { label: spellName!, before: `${rang}${word}${of}`, entry: spell };
     }
 
     return undefined;

@@ -137,6 +137,17 @@ describe('enrichItems', () => {
     expect(enrichItems(text, index)).toBe(text);
   });
 
+  it('laesst den Rang vor der Schriftrolle als Text stehen', () => {
+    // Der Rang steht mit im Kursivsatz; verlinkt wird nur der Zauber.
+    const link = '@UUID[Compendium.pf2e.spells-srd.Item.hhhhhhhhhhhhhhhh]{illusory disguise}';
+    expect(enrichItems('finds a *3rd-rank scroll of illusory disguise*.', index)).toBe(
+      `finds a *3rd-rank scroll of ${link}*.`,
+    );
+    expect(enrichItems('a *2nd-level wand of illusory disguise*', index)).toBe(
+      `a *2nd-level wand of ${link}*`,
+    );
+  });
+
   it('verlinkt eine Rune und eine Schriftrolle im selben Satz', () => {
     expect(
       enrichItems('three *lesser acid flasks*, a *+1 scimitar*, and a *scroll of illusory disguise*.', index),
