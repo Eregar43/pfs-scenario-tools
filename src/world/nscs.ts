@@ -26,7 +26,7 @@
  * Journalseite entsteht erst in `apply.ts`, weil dort die Kennung des
  * Spielhilfen-Journals bekannt ist.
  */
-import { vergleichsform, type PersonenBild } from './bilder.ts';
+import { namensformen, vergleichsform, type PersonenBild } from './bilder.ts';
 
 /** Das Blatt des PF2e-Systems fuer Personen ohne Werte. */
 export const NSC_BLATT = 'pf2e.SimpleNPCSheet';
@@ -64,7 +64,9 @@ export interface NscQuelle {
  * Gleiche Namen fallen zusammen; das erste Bild gewinnt.
  */
 export function sammleNscs(bilder: PersonenBild[], kreaturNamen: string[]): NscQuelle[] {
-  const vergeben = new Set(kreaturNamen.map((name) => vergleichsform(name)));
+  // Mit Kurzformen: `UWU Local 1014` ist der Statblock `Undead Workers United
+  // Local 1014` (8-07), keine eigene Person.
+  const vergeben = new Set(kreaturNamen.flatMap((name) => namensformen(name)));
   for (const name of kreaturNamen) {
     vergeben.add(vergleichsform(name).replace(/^(?:elite|weak)\s+/, ''));
   }
