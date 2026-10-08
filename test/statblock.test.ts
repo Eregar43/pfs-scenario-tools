@@ -207,7 +207,7 @@ describe('leseStatblock, Einzelfaelle aus der Eichung', () => {
 
   it('trennt ein Tempo, das am Etikett einer Faehigkeit ohne Text klebt', () => {
     const gelesen = lies('**HP** 90 **Schwarmhaut Speed** 20 feet; swarm stride **Wogen** Es wogt.');
-    expect(gelesen.tempo?.wert).toBe(20);
+    expect(gelesen.tempo).toEqual({ wert: 20, weitere: ['swarm stride'] });
     expect(gelesen.faehigkeiten.map((f) => f.name)).toEqual(['Schwarmhaut', 'Wogen']);
   });
 

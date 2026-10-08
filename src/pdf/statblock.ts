@@ -374,7 +374,10 @@ function leseFaehigkeit(name: string, text: string): Faehigkeit {
 
 /** `25 feet, fly 30 feet` → Gehgeschwindigkeit und der Rest im Wortlaut. */
 function leseTempo(text: string): Tempo {
-  const stuecke = teileOben(text);
+  // Das Heft trennt mal mit Komma, mal mit Semikolon: `20 feet; troop
+  // movement` bei der Zombie-Truppe in 8-07. Ohne das zweite Trennzeichen
+  // haengt der Zusatz am Zahlwert und geht verloren.
+  const stuecke = teileOben(text.replace(/;/g, ','));
   const erstes = stuecke[0] ?? '';
   if (/^\d/.test(erstes)) {
     const wert = zahl(erstes);
