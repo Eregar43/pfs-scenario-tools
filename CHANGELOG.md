@@ -22,6 +22,10 @@ behobene Fehler.
   „UWU Local 1014" gehört zum Statblock „Undead Workers United Local 1014".
 - **Angriffsnamen ohne Kursiv-Sternchen.** Ein kursiv gesetzter Waffenname
   stand bisher als `*bastard sword*` im Blatt.
+- **Ein Bonus auf „skill checks and attack rolls" wirkt jetzt auf Fertigkeiten
+  und Angriffe.** Bisher galt jede Nennung von „checks" als Fertigkeiten und
+  Rettungswürfe — die Rettungswürfe zu viel, die Angriffe fehlten. Betroffen
+  ist der Effekt aus 8-08; er heißt jetzt „+1 checks and attacks".
 
 ## 1.2.0 — 2026-09-11
 
