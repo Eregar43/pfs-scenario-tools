@@ -3,6 +3,13 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
+## Unveröffentlicht
+
+- **Firefox: Karten fehlten, Szenen blieben aus.** In Firefox las der Import
+  Bilder ohne Transparenz nicht aus dem PDF — das trifft vor allem Karten.
+  In 8-03 fehlte so „The Solstice Theater", und die Szene wurde nicht
+  angelegt. Chrome und Edge waren nicht betroffen.
+
 ## 1.3.0 — 2026-10-08
 
 - **Geprüfter Umfang: Season 8, Hefte 8-01 bis 8-08.** Begrüßung und README
