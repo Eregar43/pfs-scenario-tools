@@ -4,7 +4,6 @@
   "description": "Erzeugt aus dem PDF eines Pathfinder-Society-Szenarios Journale, Bilder, Szenen und Kreaturen direkt in der Welt.",
   "version": "#{VERSION}#",
   "library": "false",
-  "manifestPlusVersion": "1.2.0",
   "compatibility": {
     "minimum": 14,
     "verified": "14.365"
