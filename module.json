@@ -3,7 +3,7 @@
   "title": "PFS Scenario Tools",
   "description": "Erzeugt aus dem PDF eines Pathfinder-Society-Szenarios Journale, Bilder, Szenen und Kreaturen direkt in der Welt.",
   "version": "#{VERSION}#",
-  "library": "false",
+  "library": false,
   "compatibility": {
     "minimum": 14,
     "verified": "14.365"
