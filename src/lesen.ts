@@ -145,9 +145,18 @@ export async function bilderAusBytes(
     // still null Bilder. In Node ist der Schalter immer aus, deshalb hat
     // der Extractor davon nie etwas bemerkt. Der Textlauf bleibt bei der
     // bestaetigten Kombination in `dokumentParameter` unveraendert.
+    //
+    // `isImageDecoderSupported: false` ist die zweite Tuer zur selben Falle:
+    // pdf.js schaltet den Schalter nur in Firefox an (Voreinstellung
+    // `isFirefox || !globalThis.chrome`). Dann dekodiert der Worker jedes
+    // undurchsichtige RGB-JPEG ohne Maske ueber `ImageDecoder` und liefert
+    // ebenfalls eine ImageBitmap ohne `data`. Freigestellte Figuren haben eine
+    // Maske und kamen durch — verschwunden sind gerade die Karten (8-03:
+    // `The Solstice Theater` fehlte, die Szene blieb aus).
     dokumentParameter: {
       ...dokumentParameter(optionen.variante),
       isOffscreenCanvasSupported: false,
+      isImageDecoderSupported: false,
     },
     ...(optionen.fortschritt ? { fortschritt: optionen.fortschritt } : {}),
   })) {
