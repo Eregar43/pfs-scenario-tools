@@ -3,7 +3,7 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
-## Unveröffentlicht
+## 1.3.1 — 2026-10-09
 
 - **Firefox: Karten fehlten, Szenen blieben aus.** In Firefox las der Import
   Bilder ohne Transparenz nicht aus dem PDF — das trifft vor allem Karten.
