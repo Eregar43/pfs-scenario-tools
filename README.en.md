@@ -239,56 +239,52 @@ inline on the element.
 
 ## Measured maps
 
-The square size of the printed grid cannot be computed reliably from the
-image. That is why `src/world/karten-einstellungen.ts` keeps a hand-maintained
-table: grid size, offset and, where needed, a canvas scale per map. The values
-are measured once with Foundry's grid tool and entered; the import then sets
-them on every run. All Season 8 maps are measured. Unmeasured maps get
-Foundry's defaults, and the import never touches what was set by hand there.
+For every measured map the module carries **one file**:
+`daten/karten/<scenario>/<file>.json`, for example
+`daten/karten/08-03/the-solstice-theater.json`. The module picks the files up
+on its own at build time; a new map needs no code change. All eleven Season 8
+maps are measured and have walls.
 
-## Walls on the maps
+A map file can carry:
 
-Walls, like grid values, are drawn once in Foundry and then live as JSON under
-`daten/waende/<scenario>/<file>.json`, registered in `src/world/waende.ts`.
-All nine Season 8 maps have walls; six of them have doors as well.
+- the canvas **scale** (image size times factor),
+- the **scene settings**: grid, shift, padding, token vision, fog of war,
+  environment and global light, weather, scene transition,
+- the **level**: elevation, background colour and tint, image placement,
+- the **walls**, **lights**, **regions**, **notes** and **drawings**.
 
-If a wall file exists for a map, **the repository is the source**: on a
-mismatch the import replaces the scene's walls. If you touch them up at the
-table, export the new state instead of losing it on the next run.
+Image paths stay out (the background image is created anew from the PDF in
+every world), as do the initial view and everything that only applies to one
+world. Notes point to the scenario's journal by its kind (main journal, Game
+Aids, Handouts), not by its ID — that is different in every world.
+
+If the file names a part, **the repository is the source**: on a mismatch the
+import replaces it. If you touch things up at the table, export the new state
+instead of losing it on the next run. What the file does not name belongs to
+the GM; the import does not touch it. Unmeasured maps get Foundry's defaults.
 
 ### Export map
 
-The management window has an **Export map** button for this. It opens a window
-with two dropdowns, scenario and scene, and reads everything the module keeps
-about a map out of the selected scene:
-
-- grid size, shift and scale, in the form `karten-einstellungen.ts` expects
-- the walls, as a file to download
-- the three source lines that register the map in the module
+The management window has an **Export map** button for this. It opens a
+window with two dropdowns, scenario and scene. The window reads everything
+that belongs in a map file from the selected scene and offers the file for
+download.
 
 The scale is not stored in the scene. It is computed from canvas and image
 width and can be overridden in the window.
 
-If the module already carries a wall file for this map, the window says
-whether the state in the scene matches it. That is how you notice when the
-walls were drawn against an older version by accident.
+If the module already carries a file for this map, the window says whether
+the state in the scene matches it, and otherwise names the parts that differ.
+That is how you notice when you drew against an older version by accident.
 
-Together, file and lines are exactly the content of a pull request for that
-map. Carrying them into the repository stays manual work: the module runs in
-the browser and knows nothing about Git.
+The export deliberately leaves three things out and reports them: region
+behaviors that run a script or macro; image paths on notes and drawings that
+do not belong to Foundry itself; and note links to journals that do not come
+from this module.
 
-### Without a running Foundry
-
-The same works from the outside when the instance is down:
-
-```bash
-node tools/exportiere-waende.mjs "<scene name in Foundry>" 08-04/the-gallivanting-ghoul
-```
-
-The tool reads the walls from the world's LevelDB (read-only, the instance may
-be running) and writes the very same file, character for character; there is a
-test for that. Maps **without** a wall file are not touched by the import;
-self-drawn walls stay as they are there.
+The downloaded file is exactly the content of a pull request for that map.
+Carrying it into the repository stays manual work: the module runs in the
+browser and knows nothing about Git.
 
 ## Seasons
 

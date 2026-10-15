@@ -247,60 +247,54 @@ Grundgestaltung inline am Element.
 
 ## Vermessene Karten
 
-Die Kästchengröße des aufgedruckten Rasters lässt sich nicht zuverlässig aus
-dem Bild errechnen. Deshalb führt
-`src/world/karten-einstellungen.ts` eine handgepflegte Tabelle: je Karte
-Gittergröße, Versatz und gegebenenfalls eine Skalierung der Leinwand. Die
-Werte werden mit Foundrys Gitterwerkzeug einmal ausgemessen und eingetragen;
-der Import setzt sie dann bei jedem Lauf. Alle Karten der Season 8 sind
-vermessen. Unvermessene Karten bekommen Foundry-Standardwerte, und der
-Import fasst dort nie an, was von Hand eingestellt wurde.
+Zu jeder vermessenen Karte führt das Modul **eine Datei**:
+`daten/karten/<szenario>/<datei>.json`, also etwa
+`daten/karten/08-03/the-solstice-theater.json`. Das Modul findet die Dateien
+beim Bauen selbst; eine neue Karte braucht keine Codeänderung. Alle elf
+Karten der Season 8 sind vermessen und bewandet.
 
-## Wände auf den Karten
+Eine Kartendatei kann tragen:
 
-Die Wände werden wie die Gitterwerte einmal in Foundry gezeichnet und liegen
-dann als JSON unter `daten/waende/<szenario>/<datei>.json`, eingetragen in
-`src/world/waende.ts`. Alle neun Karten der Season 8 sind
-bewandet; sechs davon haben auch Türen.
+- die **Skalierung** der Leinwand (Bildmaß mal Faktor),
+- die **Szeneneinstellungen**: Gitter, Versatz, Rand, Token-Sicht, Nebel des
+  Krieges, Umgebung und globales Licht, Wetter, Szenenwechsel,
+- die **Ebene**: Höhe, Hintergrundfarbe und Tönung, Lage des Bildes,
+- die **Wände**, **Lichter**, **Regionen**, **Notizen** und **Zeichnungen**.
 
-Liegt für eine Karte eine Wanddatei vor, ist **das Repo die Quelle**: Der
-Import ersetzt bei Abweichung die Wände der Szene. Wer am Tisch nachbessert,
-exportiert den neuen Stand zurück, statt ihn beim nächsten Lauf zu verlieren.
+Nicht hinein gehören Bildpfade (das Hintergrundbild entsteht in jeder Welt
+neu aus dem PDF), die Startansicht und alles, was nur in einer Welt gilt.
+Notizen verweisen auf das Journal des Szenarios über dessen Art
+(Hauptjournal, Game Aids, Handouts), nicht über seine Kennung — die ist in
+jeder Welt eine andere.
+
+Nennt die Datei einen Teil, ist **das Repo die Quelle**: Der Import ersetzt
+ihn bei Abweichung. Wer am Tisch nachbessert, exportiert den neuen Stand
+zurück, statt ihn beim nächsten Lauf zu verlieren. Was die Datei nicht nennt,
+gehört dem Spielleiter; dort fasst der Import nichts an. Unvermessene Karten
+bekommen Foundry-Standardwerte.
 
 ### Karte exportieren
 
 Im Verwaltungsfenster steht dafür der Knopf **Karte exportieren**. Er öffnet
-ein Fenster mit zwei Auswahllisten, Szenario und Szene, und liest aus der
-gewählten Szene alles, was das Modul über eine Karte führt:
-
-- Gittergröße, Versatz und Skalierung, wie sie in
-  `karten-einstellungen.ts` gehören
-- die Wände, als Datei zum Herunterladen
-- die drei Quelltextzeilen, mit denen die Karte im Modul ankommt
+ein Fenster mit zwei Auswahllisten, Szenario und Szene. Das Fenster liest aus
+der gewählten Szene alles, was in eine Kartendatei gehört, und bietet die
+Datei zum Herunterladen an.
 
 Die Skalierung steht nicht in der Szene. Sie wird aus Leinwand- und
 Bildbreite gerechnet und lässt sich im Fenster überschreiben.
 
-Führt das Modul für die Karte schon eine Wanddatei, sagt das Fenster, ob der
-Stand in der Szene ihr gleicht. So fällt auf, wenn versehentlich gegen eine
-ältere Fassung gezeichnet wurde.
+Führt das Modul für die Karte schon eine Datei, sagt das Fenster, ob der
+Stand in der Szene ihr gleicht, und nennt sonst die Teile, die abweichen. So
+fällt auf, wenn versehentlich gegen eine ältere Fassung gezeichnet wurde.
 
-Zusammen sind Datei und Zeilen genau der Inhalt eines Pull Requests für diese
-Karte. Das Übertragen ins Repo bleibt Handarbeit — das Modul läuft im
-Browser und kennt kein Git.
+Drei Dinge lässt der Export bewusst aus und meldet sie: Regionsverhalten,
+die ein Skript oder Makro ausführen; Bildpfade an Notizen und Zeichnungen,
+die nicht zu Foundry selbst gehören; und Verweise von Notizen auf Journale,
+die nicht von diesem Modul stammen.
 
-### Ohne laufendes Foundry
-
-Dasselbe geht von außen, wenn die Instanz gerade nicht läuft:
-
-```bash
-node tools/exportiere-waende.mjs "<Szenenname in Foundry>" 08-04/the-gallivanting-ghoul
-```
-
-Das Werkzeug liest die Wände aus der LevelDB der Welt (lesend, die Instanz
-darf laufen) und schreibt dieselbe Datei — Zeichen für Zeichen, darauf gibt
-es einen Test. Karten **ohne** Wanddatei fasst der Import nicht an; dort
-bleiben selbstgezeichnete Wände unangetastet.
+Die heruntergeladene Datei ist genau der Inhalt eines Pull Requests für diese
+Karte. Das Übertragen ins Repo bleibt Handarbeit — das Modul läuft im Browser
+und kennt kein Git.
 
 ## Seasons
 
