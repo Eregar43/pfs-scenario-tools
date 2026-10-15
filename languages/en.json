@@ -139,7 +139,7 @@
   "PFSST.Einstellungen.Angleichen.Name": "Match statblocks to the booklet",
   "PFSST.Einstellungen.Angleichen.Hinweis": "Applies the booklet's differences to the compendium copy — traits, senses, languages, speed, values and attacks. When off, the copy stays as the compendium has it; the preview still lists the differences. Only affects newly created creatures.",
   "PFSST.Einstellungen.Lesebericht.Name": "Show the import result after reading",
-  "PFSST.Einstellungen.Lesebericht.Hinweis": "Shows a window with page count, blocks, fonts and block roles after reading — and the button to download journal.json. The report is always written to the browser console, even with the window off. Applies to you only, not the whole world.",
+  "PFSST.Einstellungen.Lesebericht.Hinweis": "Shows a window with page count, blocks, fonts and block roles after reading — and the button to download journal.json. The report is always written to the browser console, even with the window off. Applies to the whole world.",
   "PFSST.Uebersicht.BestaetigenFrageMehrere": "These {anzahl} scenarios will be removed from the world entirely:",
   "PFSST.Uebersicht.EntferntMehrere": "{anzahl} scenarios removed: {journale} journals, {szenen} scenes, {aktoren} creatures, {ordner} folders.",
   "PFSST.Verwaltung.Teil.Journal": "Journal pages",

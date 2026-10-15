@@ -139,7 +139,7 @@
   "PFSST.Einstellungen.Angleichen.Name": "Statblöcke an das Heft angleichen",
   "PFSST.Einstellungen.Angleichen.Hinweis": "Wendet die Abweichungen des Hefts auf die Kompendium-Kopie an — Merkmale, Sinne, Sprachen, Bewegungsrate, Werte und Angriffe. Aus bleibt die Kopie so, wie das Kompendium sie führt; die Vorschau nennt die Abweichungen trotzdem. Wirkt nur auf neu angelegte Kreaturen.",
   "PFSST.Einstellungen.Lesebericht.Name": "Lesebericht nach dem Import zeigen",
-  "PFSST.Einstellungen.Lesebericht.Hinweis": "Zeigt nach dem Lesen ein Fenster mit Seitenzahl, Blöcken, Schriften und Blockrollen — und dem Knopf zum Herunterladen der journal.json. In die Browser-Konsole wird der Bericht immer geschrieben, auch wenn das Fenster aus ist. Gilt nur für dich, nicht für die ganze Welt.",
+  "PFSST.Einstellungen.Lesebericht.Hinweis": "Zeigt nach dem Lesen ein Fenster mit Seitenzahl, Blöcken, Schriften und Blockrollen — und dem Knopf zum Herunterladen der journal.json. In die Browser-Konsole wird der Bericht immer geschrieben, auch wenn das Fenster aus ist. Gilt für die ganze Welt.",
   "PFSST.Uebersicht.BestaetigenFrageMehrere": "Diese {anzahl} Szenarien werden vollständig aus der Welt entfernt:",
   "PFSST.Uebersicht.EntferntMehrere": "{anzahl} Szenarien entfernt: {journale} Journale, {szenen} Szenen, {aktoren} Kreaturen, {ordner} Ordner.",
   "PFSST.Verwaltung.Teil.Journal": "Journalseiten",

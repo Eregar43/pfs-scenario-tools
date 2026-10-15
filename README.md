@@ -214,7 +214,7 @@ löschen; der Dialog nennt den Ordner für den Griff zum Dateibrowser.
 | **Dynamische Token-Ringe verwenden** | Gibt Actors mit einem Bild aus dem Heft einen dynamischen Ring um das Token. Das Porträt wird auch ohne Ring zum Token. Hazards bekommen nie einen Ring. Standardmäßig an, wirkt nur auf neu angelegte Actors. |
 | **NPC-Actors ohne Werte anlegen** | Legt für jede Person aus dem Spielhilfen-Anhang ohne Statblock einen schlanken NPC an. Aus, bleiben sie nur ein Bild im Journal. Standardmäßig an, wirkt nur auf neu angelegte Actors. |
 | **Statblöcke an das Heft angleichen** | Überträgt die Abweichungen des Hefts auf die Kompendium-Kopie. Aus, bleibt die Kopie so, wie das Kompendium sie führt; die Vorschau nennt die Abweichungen trotzdem. Standardmäßig an, wirkt nur auf neu angelegte Kreaturen. |
-| **Lesebericht nach dem Import zeigen** | Zeigt das Fenster mit Kennzahlen und dem Knopf zum Herunterladen der `journal.json`. In die Konsole wird der Bericht immer geschrieben. Standardmäßig **aus**, gilt nur für dich. |
+| **Lesebericht nach dem Import zeigen** | Zeigt das Fenster mit Kennzahlen und dem Knopf zum Herunterladen der `journal.json`. In die Konsole wird der Bericht immer geschrieben. Standardmäßig **aus**, gilt für die ganze Welt. |
 | **Ausführliche Protokollausgabe** | Nur zur Fehlersuche. |
 
 ## Journal-Design

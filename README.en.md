@@ -208,7 +208,7 @@ names the folder so you can reach for the file browser.
 | **Use dynamic token rings** | Gives actors with an image from the scenario a dynamic ring around the token. The portrait becomes the token even without a ring. Hazards never get one. On by default, applies to newly created actors only. |
 | **Create NPC actors without values** | Creates a lean NPC for every person in the game aids appendix without a stat block. Off, they remain just an image in the journal. On by default, applies to newly created actors only. |
 | **Adjust stat blocks to the scenario** | Transfers the scenario's deviations onto the compendium copy. Off, the copy stays as the compendium keeps it; the preview names the deviations either way. On by default, applies to newly created creatures only. |
-| **Show reading report after import** | Shows the window with key figures and the button to download `journal.json`. The report always goes to the console. **Off** by default, applies to you only. |
+| **Show reading report after import** | Shows the window with key figures and the button to download `journal.json`. The report always goes to the console. **Off** by default, applies to the whole world. |
 | **Verbose logging** | For troubleshooting only. |
 
 ## Journal design
