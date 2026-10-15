@@ -12,6 +12,7 @@ import { szenarioBildOrdner } from '../world/bilder.ts';
 import { zaehleDateien } from '../world/files.ts';
 import { weltabbild } from '../world/journal.ts';
 import { zeigeImportDialog } from './import-dialog.ts';
+import { zeigeKartenExport } from './karten-export-app.ts';
 import { bestaetigeUndEntferne } from './uebersicht-dialog.ts';
 import { zeigeWillkommen } from './willkommen-dialog.ts';
 
@@ -51,6 +52,7 @@ export class PfsVerwaltungApp extends foundry.applications.api.ApplicationV2 {
     actions: {
       importieren: PfsVerwaltungApp.#importieren,
       entfernen: PfsVerwaltungApp.#entfernen,
+      karteExportieren: PfsVerwaltungApp.#karteExportieren,
       hilfe: PfsVerwaltungApp.#hilfe,
       schliessen: PfsVerwaltungApp.#schliessen,
     },
@@ -122,6 +124,17 @@ export class PfsVerwaltungApp extends foundry.applications.api.ApplicationV2 {
 
     await bestaetigeUndEntferne(gewaehlte);
     await this.render();
+  }
+
+  /**
+   * Das Fenster „Karte exportieren".
+   *
+   * Es steht hier und nicht in der Seitenleiste: Gebraucht wird es erst,
+   * wenn ein Szenario importiert **und** seine Waende gezeichnet sind — also
+   * im Anschluss an genau die Arbeit, die dieses Fenster verwaltet.
+   */
+  static async #karteExportieren(): Promise<void> {
+    await zeigeKartenExport();
   }
 
   /**
@@ -277,8 +290,9 @@ function baueListe(
 /**
  * Die Knopfleiste am Fuss.
  *
- * `Entfernen` ist nur da, wenn es ueberhaupt etwas zu entfernen gibt —
- * ein Knopf, der immer meckert, erzieht niemanden.
+ * `Entfernen` und `Karte exportieren` sind nur da, wenn es ueberhaupt etwas
+ * zu entfernen beziehungsweise zu exportieren gibt — ein Knopf, der immer
+ * meckert, erzieht niemanden. Ohne Import gibt es auch keine Szene.
  */
 function baueFussleiste(mitEntfernen: boolean): HTMLElement {
   const leiste = document.createElement('footer');
@@ -306,7 +320,12 @@ function baueFussleiste(mitEntfernen: boolean): HTMLElement {
   };
 
   leiste.append(knopf('importieren', L('Import.Knopf'), 'fa-file-import', true));
-  if (mitEntfernen) leiste.append(knopf('entfernen', L('Uebersicht.Entfernen'), 'fa-trash'));
+  if (mitEntfernen) {
+    leiste.append(
+      knopf('entfernen', L('Uebersicht.Entfernen'), 'fa-trash'),
+      knopf('karteExportieren', L('Kartenexport.Knopf'), 'fa-draw-polygon'),
+    );
+  }
   leiste.append(knopf('hilfe', L('Uebersicht.Hilfe'), 'fa-circle-question'));
   leiste.append(knopf('schliessen', L('Uebersicht.Schliessen'), 'fa-xmark'));
 

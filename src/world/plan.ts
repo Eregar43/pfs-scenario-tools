@@ -1,7 +1,8 @@
 import { defaultColorFor, gleicheFarbe, normalisiereFarbe, officialColorFor } from './colors.ts';
 import { lies, MODULE_ID, type Dokumentart, type MitFlags } from './flags.ts';
 import { passtZuSeason, schluesselAusOrdnername } from './naming.ts';
-import { wandSignaturen, type Wand } from './waende.ts';
+import type { Kartendaten } from './karten.ts';
+import { szenenAbweichung, weichtAb, type SzenenStand } from './kartenabgleich.ts';
 
 /**
  * Was beim Import geschehen soll — als reine Daten, ohne eine einzige
@@ -51,12 +52,11 @@ export interface SzeneAbbild extends MitFlags {
   ordnerId: string | null;
   /** Pfad des Hintergrundbilds. */
   hintergrund: string;
-  /** Kaestchengroesse; fehlt, wenn die Welt sie nicht hergibt. */
-  gitter?: number;
-  versatzX?: number;
-  versatzY?: number;
-  /** Kennzeichen der vorhandenen Waende (`wandSignaturen`), '' fuer keine. */
-  waendeSignatur?: string;
+  /**
+   * Die Quelldaten der Szene zum Vergleich mit ihrer Kartendatei. Fehlt bei
+   * Szenen, die nicht vom Modul stammen — die vergleicht niemand.
+   */
+  stand?: SzenenStand;
 }
 
 /** Abbild eines vorhandenen Actors, so viel wie die Planung braucht. */
@@ -173,14 +173,24 @@ export interface SzeneWunsch {
   hintergrund: string;
   breite: number;
   hoehe: number;
-  /** Handvermessene Kaestchengroesse, falls die Karte schon vermessen ist. */
-  gitter?: number;
-  versatzX?: number;
-  versatzY?: number;
-  /** Faktor zwischen Bild- und Szenengroesse; fehlt er, gilt 1. */
-  skalierung?: number;
-  /** Handgezeichnete Waende, falls die Karte schon welche hat. */
-  waende?: Wand[];
+  /**
+   * Was das Modul zu dieser Karte fuehrt (`daten/karten/`), falls sie schon
+   * vermessen ist: Skalierung, Szenen- und Ebenenfelder, Waende, Lichter,
+   * Regionen, Notizen, Zeichnungen.
+   */
+  karte?: Kartendaten;
+}
+
+/**
+ * Die Leinwand einer Szene: Bildmass mal Skalierung. Niedrig aufgeloeste
+ * Karten bekommen die doppelte Leinwand; Foundry zieht den Hintergrund auf
+ * die Szenengroesse auf.
+ */
+export function leinwand(szene: SzeneWunsch): { width: number; height: number } {
+  return {
+    width: Math.round(szene.breite * (szene.karte?.skalierung ?? 1)),
+    height: Math.round(szene.hoehe * (szene.karte?.skalierung ?? 1)),
+  };
 }
 
 export interface Wunsch {
@@ -544,9 +554,9 @@ function planeSzenen(
   const { aktion: szenarioOrdner } = planeSzenarioOrdner(ordner, wunsch, seasonOrdner);
 
   // Abgleich ueber die stabile Kennung, wie bei den Journalseiten. Als
-  // geaendert gilt nur, was dieser Import selbst setzt — Name, Hintergrund,
-  // Messwerte und exportierte Waende. Gitter und Licht unvermessener Karten
-  // gehoeren dem Spielleiter.
+  // geaendert gilt nur, was dieser Import selbst setzt — Name, Hintergrund
+  // und was die Kartendatei nennt. Karten ohne Datei gehoeren in Gitter,
+  // Licht und Waenden dem Spielleiter.
   const vorhandeneNachId = new Map(vorhandene.map((szene) => [szene.id, szene]));
   const gewuenschteIds = new Set(szenen.map((szene) => szene.id));
 
@@ -560,17 +570,13 @@ function planeSzenen(
     else if (
       vorher.name !== szene.name ||
       vorher.hintergrund !== szene.hintergrund ||
-      // Handvermessene Werte zaehlen nur, wenn es welche gibt — eine Karte
-      // ohne Eintrag soll die Einstellungen des Spielleiters nicht anfechten.
-      (szene.gitter !== undefined &&
-        (vorher.gitter !== szene.gitter ||
-          vorher.versatzX !== szene.versatzX ||
-          vorher.versatzY !== szene.versatzY)) ||
-      // Exportierte Waende zaehlen wie die Messwerte: nur wenn es welche
-      // gibt, und ein Unterschied macht die Szene aktualisierungsbeduerftig.
-      (szene.waende !== undefined &&
-        vorher.waendeSignatur !== undefined &&
-        vorher.waendeSignatur !== wandSignaturen(szene.waende))
+      // Dieselbe Pruefung, die `apply.ts` am lebenden Dokument stellt.
+      (vorher.stand !== undefined &&
+        (vorher.stand.szene.width !== leinwand(szene).width ||
+          vorher.stand.szene.height !== leinwand(szene).height)) ||
+      (szene.karte !== undefined &&
+        vorher.stand !== undefined &&
+        weichtAb(szenenAbweichung(vorher.stand, szene.karte)))
     ) {
       aktualisiert.push(szene.name);
     } else unveraendert.push(szene.name);

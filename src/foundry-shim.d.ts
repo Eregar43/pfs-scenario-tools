@@ -19,6 +19,7 @@ declare global {
     readonly version: string;
     readonly importieren: typeof import('./ui/import-dialog.ts').zeigeImportDialog;
     readonly uebersicht: typeof import('./ui/uebersicht-dialog.ts').zeigeUebersicht;
+    readonly karteExportieren: typeof import('./ui/karten-export-app.ts').zeigeKartenExport;
     readonly willkommen: typeof import('./ui/willkommen-dialog.ts').zeigeWillkommen;
     readonly szenarioAusDatei: typeof import('./lesen.ts').szenarioAusDatei;
     readonly fasseZusammen: typeof import('./lesen.ts').fasseZusammen;
@@ -110,6 +111,15 @@ declare global {
   interface FoundryWall {
     id: string;
     c?: number[];
+    /**
+     * Die Quelldaten der Wand — was der Export ins Repo schreibt.
+     *
+     * Nicht die Felder des Dokuments: `threshold` und `animation` sind dort
+     * Teilmodelle, und `JSON.stringify` darauf ist nicht dasselbe wie der in
+     * der Welt gespeicherte Wert. In die Kartendatei gehoeren die
+     * Quelldaten.
+     */
+    toObject(): Record<string, unknown>;
     /** Die uebrigen Vergleichsfelder (move, sight, door, ds, …). */
     [feld: string]: unknown;
   }
@@ -123,10 +133,28 @@ declare global {
     /** Versatz der Spielflaeche — im Dialog „Shift", die Messwerte der Karten. */
     shiftX?: number;
     shiftY?: number;
+    /**
+     * Groesse der Leinwand in Bildpunkten.
+     *
+     * Schon **mit** Skalierung: `apply.ts` legt sie als Bildmass mal Faktor
+     * an. Der Export teilt deshalb zurueck, statt einen Faktor zu suchen, den
+     * die Szene nicht fuehrt.
+     */
+    width?: number;
+    height?: number;
     levels?: FoundryCollection<FoundryLevel> & Iterable<FoundryLevel>;
     walls?: FoundryCollection<FoundryWall> & Iterable<FoundryWall>;
     update(daten: Record<string, unknown>): Promise<unknown>;
-    createEmbeddedDocuments(typ: string, daten: Record<string, unknown>[]): Promise<unknown>;
+    /**
+     * Die Quelldaten samt eingebetteter Sammlungen (`levels`, `walls`,
+     * `lights`, `regions`, `notes`, `drawings` …) als schlichte Objekte.
+     */
+    toObject(): Record<string, unknown>;
+    createEmbeddedDocuments(
+      typ: string,
+      daten: Record<string, unknown>[],
+      optionen?: { keepId?: boolean },
+    ): Promise<unknown>;
     updateEmbeddedDocuments(typ: string, daten: Record<string, unknown>[]): Promise<unknown>;
     /** `deleteAll: true` loescht alle eingebetteten Dokumente des Typs, die Id-Liste ist dann leer. */
     deleteEmbeddedDocuments(

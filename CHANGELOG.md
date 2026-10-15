@@ -3,6 +3,19 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
+## Unveröffentlicht
+
+- **Neues Fenster „Karte exportieren".** Ein Knopf im Verwaltungsfenster
+  öffnet es. Es liest aus einer Szene alles, was zur Karte gehört — Gitter
+  und übrige Einstellungen, Wände, Lichter, Regionen, Notizen und
+  Zeichnungen — und bietet es als eine Datei zum Herunterladen an. Bildpfade
+  und die Startansicht kommen nicht hinein.
+- **Der Import setzt jetzt mehr als Gitter und Wände.** Führt das Modul zu
+  einer Karte auch Lichter, Regionen, Notizen, Zeichnungen oder weitere
+  Szeneneinstellungen, legt der Import sie mit an. Für die elf Karten der
+  Season 8 ändert sich vorerst nichts: Sie führen bisher nur Gitter,
+  Versatz, Skalierung und Wände.
+
 ## 1.3.1 — 2026-10-09
 
 - **Firefox: Karten fehlten, Szenen blieben aus.** In Firefox las der Import

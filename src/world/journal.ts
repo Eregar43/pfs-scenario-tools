@@ -16,8 +16,8 @@ import {
   type BildFuerSeiten,
   type PersonenBild,
 } from './bilder.ts';
-import { kartenEinstellung } from './karten-einstellungen.ts';
-import { kartenWaende, wandSignaturen } from './waende.ts';
+import { kartenDaten } from './karten.ts';
+import { szenenStand, type JournalArt } from './kartenabgleich.ts';
 import { lies } from './flags.ts';
 import { journalName, quellenangabe, scenarioFolderName, scenarioKey, seasonFolderName, type JournalNameSchema } from './naming.ts';
 import { baueGefahr, type Schluesselwerke } from './gefahren.ts';
@@ -59,6 +59,22 @@ const SORT_STEP = 100;
  */
 const HANDOUT_JOURNAL = 'Handouts';
 
+/**
+ * Ordnet den Journalen des Moduls ihre Art zu. Notizen verweisen auf ein
+ * Journal ueber dessen Kennung; die Kartendatei fuehrt stattdessen die Art,
+ * weil die Kennung je Welt eine andere ist.
+ */
+export function journalArtVonWelt(): (journalId: string) => JournalArt | undefined {
+  const arten = new Map<string, JournalArt>();
+  for (const journal of game.journal?.contents ?? []) {
+    const art = lies(journal).kind;
+    if (art === 'journal' || art === 'anhangJournal' || art === 'handoutJournal') {
+      arten.set(journal.id, art);
+    }
+  }
+  return (id) => arten.get(id);
+}
+
 /** Liest den Weltbestand in die reine Form, mit der `plan.ts` rechnet. */
 export function weltabbild(): Weltabbild {
   const alsAbbild = (f: FoundryFolder): Weltabbild['ordner'][number] => ({
@@ -88,17 +104,19 @@ export function weltabbild(): Weltabbild {
     flags: aktor.flags,
   }));
 
-  // Hintergrundbild und -farbe leben seit v14 in der Ebene der Szene; der
-  // Versatz („Shift") steht dagegen am Szenen-Dokument selbst.
+  const artVon = journalArtVonWelt();
+
+  // Hintergrundbild und -farbe leben seit v14 in der Ebene der Szene. Den
+  // vollen Stand (`toObject`) braucht nur der Abgleich mit der Kartendatei,
+  // also nur bei Szenen des Moduls.
   const szenen = (game.scenes?.contents ?? []).map((szene) => ({
     id: szene.id,
     name: szene.name,
     ordnerId: szene.folder?.id ?? null,
     hintergrund: szene.levels?.contents?.[0]?.background?.src ?? '',
-    ...(szene.grid?.size !== undefined ? { gitter: szene.grid.size } : {}),
-    ...(szene.shiftX !== undefined ? { versatzX: szene.shiftX } : {}),
-    ...(szene.shiftY !== undefined ? { versatzY: szene.shiftY } : {}),
-    waendeSignatur: wandSignaturen(szene.walls?.contents ?? []),
+    ...(lies(szene).kind === 'scene'
+      ? { stand: szenenStand(szene.toObject(), artVon) }
+      : {}),
     flags: szene.flags,
   }));
 
@@ -472,23 +490,14 @@ export function plane(
     const name = karte.name ?? karte.file;
     const nth = (szenenNamen.get(name) ?? 0) + 1;
     szenenNamen.set(name, nth);
-    const vermessen = kartenEinstellung(schluessel, karte.file);
-    const waende = kartenWaende(schluessel, karte.file);
+    const daten = kartenDaten(schluessel, karte.file);
     return {
       id: foundryId(`${szenario.title}/szene/${karte.file}`),
       name: nth > 1 ? `${name} (${nth})` : name,
       hintergrund: karte.pfad,
       breite: karte.breite,
       hoehe: karte.hoehe,
-      ...(vermessen
-        ? {
-            gitter: vermessen.gitter,
-            versatzX: vermessen.versatzX,
-            versatzY: vermessen.versatzY,
-            ...(vermessen.skalierung !== undefined ? { skalierung: vermessen.skalierung } : {}),
-          }
-        : {}),
-      ...(waende ? { waende } : {}),
+      ...(daten ? { karte: daten } : {}),
     };
   });
 

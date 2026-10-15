@@ -2,6 +2,7 @@ import { L } from './i18n.ts';
 import { fasseZusammen, szenarioAusDatei } from './lesen.ts';
 import { MODULE_ID, diagnoseAn, registriereEinstellungen } from './settings.ts';
 import { zeigeImportDialog } from './ui/import-dialog.ts';
+import { zeigeKartenExport } from './ui/karten-export-app.ts';
 import { registrierePfsJournalSheet } from './ui/journal-sheet.ts';
 import { PfsVerwaltungApp } from './ui/verwaltung-app.ts';
 import { zeigeWillkommen, zeigeWillkommenWennNeu } from './ui/willkommen-dialog.ts';
@@ -50,6 +51,10 @@ function baueApi(): PfsScenarioToolsApi {
     // Der Name bleibt `uebersicht` — er steht seit der ersten Ausgabe in der Konsole und
     // in der Doku; das Fenster dahinter ist nur ein anderes geworden.
     uebersicht: zeigeVerwaltung,
+    // Der Weg fuer den Fall, dass noch kein Szenario importiert ist: Dann
+    // zeigt das Verwaltungsfenster den Knopf nicht, das Fenster selbst
+    // erklaert sich aber auch leer.
+    karteExportieren: zeigeKartenExport,
     willkommen: zeigeWillkommen,
     szenarioAusDatei,
     fasseZusammen,

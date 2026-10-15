@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { kartenWaende, wandSignaturen } from '../src/world/waende.ts';
+import { alleKarten, kartenDaten } from '../src/world/karten.ts';
+import { wandSignaturen } from '../src/world/waende.ts';
+
+const kartenWaende = (szenario: string, datei: string) => kartenDaten(szenario, datei)?.waende;
 
 /**
  * Wand- und Tuerzahlen sowie Leinwandgroessen der gezeichneten Szenen, in
@@ -14,7 +17,34 @@ const GEZEICHNET: Record<string, { waende: number; tueren: number; leinwand: [nu
   '08-04/the-gallivanting-ghoul': { waende: 134, tueren: 17, leinwand: [2650, 1846] },
 };
 
-describe('kartenWaende', () => {
+describe('Kartendateien', () => {
+  it('findet alle elf Karten der Season 8 ohne Registrierung im Code', () => {
+    expect([...alleKarten().keys()].sort()).toEqual([
+      '08-01/the-laboratory',
+      '08-01/the-laboratory-2',
+      '08-02/delusions-of-grandeur',
+      '08-03/the-solstice-theater',
+      '08-04/the-gallivanting-ghoul',
+      '08-04/the-sinister-stevedores',
+      '08-05/nans-watch',
+      '08-05/the-gunpowder-keg',
+      '08-06/finding-the-mine',
+      '08-07/this-stinks',
+      '08-08/escorting-luiza',
+    ]);
+  });
+
+  it('fuehrt nur bekannte Teile und keine Bildpfade', () => {
+    const erlaubt = ['skalierung', 'szene', 'ebene', 'waende', 'lichter', 'regionen', 'notizen', 'zeichnungen'];
+    for (const [schluessel, daten] of alleKarten()) {
+      for (const teil of Object.keys(daten)) expect(erlaubt, schluessel).toContain(teil);
+      // Das Hintergrundbild gehoert der Welt, nicht dem Repo.
+      expect(JSON.stringify(daten), schluessel).not.toMatch(/\.(webp|png|jpe?g)"/);
+    }
+  });
+});
+
+describe('Waende der Kartendateien', () => {
   it('kennt alle gezeichneten Karten mit den geprueften Zahlen', () => {
     for (const [schluessel, soll] of Object.entries(GEZEICHNET)) {
       const [szenario, datei] = schluessel.split('/') as [string, string];
