@@ -7,8 +7,8 @@
  * Deklaration ist zugleich die Liste dessen, was wirklich benutzt wird.
  *
  * Gebraucht wird es nur in `test/`: Der Kartenexport soll Zeichen fuer
- * Zeichen dieselbe Wanddatei schreiben wie `tools/exportiere-waende.mjs`, und
- * das laesst sich nur gegen die Dateien im Repo pruefen. In `src/` hat Node
+ * Zeichen dieselbe Schreibform liefern wie die Kartendateien unter
+ * `daten/karten/`, und das laesst sich nur gegen die Dateien im Repo pruefen. In `src/` hat Node
  * nichts zu suchen, dort laeuft alles im Browser.
  *
  * Sollte je `@types/node` dazukommen, ist diese Datei zu loeschen — zwei
