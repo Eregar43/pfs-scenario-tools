@@ -109,8 +109,12 @@ export function tiefMischen(
   return ergebnis;
 }
 
-/** Felder, die keine Datei fuehrt: Kennung, Fremd-Flags, Zeitstempel. */
-const OHNE = ['_id', 'flags', '_stats'] as const;
+/**
+ * Felder, die keine Datei fuehrt: Kennung, Fremd-Flags, Zeitstempel — und
+ * die Rechte. Regionen tragen `ownership` mit den Benutzerkennungen der Welt
+ * des Autors; die gibt es anderswo nicht.
+ */
+const OHNE = ['_id', 'flags', '_stats', 'ownership'] as const;
 
 /** Ein eingebettetes Dokument ohne die Felder aus `OHNE`. */
 export function ohneWeltfelder(

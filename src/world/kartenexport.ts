@@ -230,6 +230,31 @@ function liste(wert: unknown): Record<string, unknown>[] {
   return Array.isArray(wert) ? wert.filter(istObjekt) : [];
 }
 
+/**
+ * Feste Reihenfolge fuer die Datei: nach Lage auf der Karte (Wandkoordinaten,
+ * sonst `x`/`y`), bei Gleichstand nach dem ganzen Eintrag.
+ *
+ * Foundry liefert eingebettete Dokumente nicht in der Reihenfolge, in der der
+ * Import sie angelegt hat. Ohne Sortierung zeigte der Diff eines Karten-PR
+ * jede Wand als verschoben, obwohl sich keine geaendert hat.
+ */
+export function sortiert<T extends Record<string, unknown>>(eintraege: readonly T[]): T[] {
+  const lage = (eintrag: T): number[] =>
+    Array.isArray(eintrag.c)
+      ? (eintrag.c as number[])
+      : [Number(eintrag.x ?? 0), Number(eintrag.y ?? 0)];
+  return [...eintraege]
+    .map((eintrag) => ({ eintrag, lage: lage(eintrag), text: JSON.stringify(eintrag) }))
+    .sort((a, b) => {
+      for (let i = 0; i < Math.max(a.lage.length, b.lage.length); i++) {
+        const unterschied = (a.lage[i] ?? 0) - (b.lage[i] ?? 0);
+        if (unterschied !== 0) return unterschied;
+      }
+      return a.text < b.text ? -1 : a.text > b.text ? 1 : 0;
+    })
+    .map(({ eintrag }) => eintrag);
+}
+
 /** Was der Export gefunden und was er dabei weggelassen hat. */
 export interface Kartenauszug {
   daten: Kartendaten;
@@ -309,11 +334,11 @@ export function kartenauszug(
     ...(optionen.skalierung !== 1 ? { skalierung: optionen.skalierung } : {}),
     szene: waehleFelder(szene, SZENEN_FELDER),
     ...(ebene ? { ebene: waehleFelder(ebene, EBENEN_FELDER) } : {}),
-    ...(waende.waende.length > 0 ? { waende: waende.waende } : {}),
-    ...(lichter.length > 0 ? { lichter } : {}),
-    ...(regionen.length > 0 ? { regionen } : {}),
-    ...(notizen.length > 0 ? { notizen } : {}),
-    ...(zeichnungen.length > 0 ? { zeichnungen } : {}),
+    ...(waende.waende.length > 0 ? { waende: sortiert(waende.waende) } : {}),
+    ...(lichter.length > 0 ? { lichter: sortiert(lichter) } : {}),
+    ...(regionen.length > 0 ? { regionen: sortiert(regionen) } : {}),
+    ...(notizen.length > 0 ? { notizen: sortiert(notizen) } : {}),
+    ...(zeichnungen.length > 0 ? { zeichnungen: sortiert(zeichnungen) } : {}),
   };
 
   return {

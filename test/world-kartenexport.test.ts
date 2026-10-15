@@ -8,6 +8,7 @@ import {
   kartendateiText,
   kartenkennungAusPfad,
   skalierungAus,
+  sortiert,
   wandauszug,
 } from '../src/world/kartenexport.ts';
 
@@ -149,6 +150,17 @@ describe('Kartendateien im Repo', () => {
   }
 });
 
+describe('sortiert', () => {
+  it('ordnet nach Lage, damit ein neuer Export keinen Diff erzeugt', () => {
+    const a = { c: [0, 0, 10, 0] };
+    const b = { c: [0, 5, 10, 5] };
+    const c = { x: 3, y: 1 };
+    const d = { x: 1, y: 9 };
+    expect(sortiert([b, a])).toEqual([a, b]);
+    expect(sortiert([c, d])).toEqual([d, c]);
+  });
+});
+
 describe('kartenauszug', () => {
   const basis = {
     name: 'Karte',
@@ -237,6 +249,7 @@ describe('kartenauszug', () => {
               { _id: 'Verhalten0000003', type: 'executeMacro', system: { uuid: 'Macro.x' } },
             ],
             flags: { fremd: {} },
+            ownership: { default: 0, Benutzer00000001: 3 },
           },
         ],
       },
@@ -283,9 +296,10 @@ describe('kartenauszug', () => {
       },
       { skalierung: 1, artVon },
     );
+    // Ohne Lage sortiert der Export nach dem ganzen Eintrag.
     expect(daten.zeichnungen).toEqual([
-      { shape: { type: 'r' } },
       { shape: { type: 'e' }, text: 'Buehne', texture: null },
+      { shape: { type: 'r' } },
     ]);
     expect(bilderEntfernt).toBe(1);
   });
