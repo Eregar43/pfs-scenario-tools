@@ -1,24 +1,19 @@
+import type { Kartendaten } from './karten.ts';
+import { notizInDatei, ohneWeltfelder, type JournalArt } from './kartenabgleich.ts';
 import type { Wand } from './waende.ts';
 
 /**
- * Eine vermessene Karte aus einer Szene der Welt zurueckgewinnen: Masse und
- * Waende in genau der Form, die `daten/waende/` und
- * `karten-einstellungen.ts` fuehren.
+ * Eine vermessene Karte aus einer Szene der Welt zurueckgewinnen: die
+ * Kartendatei (`daten/karten/`, siehe `karten.ts`) mit Szenen- und
+ * Ebenenfeldern, Waenden, Lichtern, Regionen, Notizen und Zeichnungen.
  *
- * Reine Logik, kein Foundry-Zugriff — das Gegenstueck zu
- * `tools/exportiere-waende.mjs`, das dasselbe von **aussen** holt: als
- * Textsuche ueber die LevelDB-Dateien der Welt, samt Blockstruktur der
- * `.log`-Dateien. Der Weg von innen ist der bessere, weil die Szene ihre
- * Werte selbst nennt; das Werkzeug bleibt fuer den Fall, dass Foundry gar
- * nicht laeuft.
- *
- * Damit beide dasselbe liefern, steht hier dieselbe Feldliste und dieselbe
- * Schreibform — `wanddateiText` ist zeichengleich zur Ausgabe des Werkzeugs.
+ * Reine Logik, kein Foundry-Zugriff: Eingabe sind die Quelldaten der Szene
+ * aus `toObject()`. Das Fenster „Karte exportieren" (`ui/karten-export-app.ts`)
+ * holt sie und bietet das Ergebnis zum Herunterladen an.
  */
 
 /**
- * Die Felder, die eine Wanddatei fuehrt — **dieselbe Liste und dieselbe
- * Reihenfolge** wie in `tools/exportiere-waende.mjs`.
+ * Die Felder einer Wand in der Kartendatei, in dieser Reihenfolge.
  *
  * Nur, was der Import wieder anlegt: Ids vergibt Foundry neu, und Fremd-Flags
  * (etwa von einem Levels-Modul) gehoeren nicht ins Repo.
@@ -35,15 +30,6 @@ export const EXPORT_FELDER = [
   'threshold',
   'animation',
 ] as const;
-
-/** Die Messwerte einer Karte, wie `KARTEN_EINSTELLUNGEN` sie fuehrt. */
-export interface Kartenmasse {
-  gitter: number;
-  versatzX: number;
-  versatzY: number;
-  /** Faktor zwischen Bild- und Leinwandgroesse; 1 wird nicht eingetragen. */
-  skalierung?: number;
-}
 
 export interface Wandauszug {
   waende: Wand[];
@@ -108,17 +94,6 @@ export function wandauszug(roh: readonly Record<string, unknown>[]): Wandauszug 
   return { waende, tueren, doppel, verworfen };
 }
 
-/**
- * Die Wanddatei als Text.
- *
- * Zwei Leerzeichen Einrueckung und ein Zeilenende am Schluss — zeichengleich
- * zur Ausgabe von `tools/exportiere-waende.mjs`. Sonst zeigte `git diff` beim
- * Wechsel des Werkzeugs jede Zeile jeder Datei als geaendert.
- */
-export function wanddateiText(waende: readonly Wand[]): string {
-  return `${JSON.stringify(waende, null, 2)}\n`;
-}
-
 /** Kennung einer Karte, aus dem Pfad ihres Hintergrundbildes gelesen. */
 export interface Kartenkennung {
   /** Gepaddet, `08-01`; fehlt, wenn der Pfad nicht dem Ablageschema folgt. */
@@ -172,62 +147,193 @@ export function skalierungAus(
 }
 
 /**
- * Bezeichner der Import-Zeile in `waende.ts`: `waende0801TheLaboratory`.
+ * Die Felder des Szenen-Dokuments, die in die Kartendatei gehen — als Pfade.
  *
- * Die vorhandenen Zeilen tragen von Hand gekuerzte Namen (`waende0801Labor`).
- * Der erzeugte Name ist laenger, dafuer eindeutig aus dem Schluessel
- * ableitbar — was er sein muss, solange ihn niemand nachliest.
+ * Alles, was auf jeder Welt gleich sein soll. Nicht dabei: Bildpfade
+ * (`thumb`, `fog.overlay`), alles Weltgebundene (Name, Ordner, Rechte,
+ * Navigation, Playlist, Journal, `active`), die Startansicht (`initial`,
+ * `initialLevel`, auf Wunsch des Autors) und `fog.reset` (ein Zeitstempel).
+ * Breite und Hoehe ergeben sich aus Bildmass und `skalierung`.
  */
-export function wandBezeichner(szenario: string, datei: string): string {
-  const nummer = szenario.replace(/\D/g, '');
-  const name = datei
-    .split(/[^A-Za-z0-9]+/)
-    .filter((teil) => teil !== '')
-    .map((teil) => teil.charAt(0).toUpperCase() + teil.slice(1))
-    .join('');
-  return `waende${nummer}${name}`;
+export const SZENEN_FELDER = [
+  'grid',
+  'shiftX',
+  'shiftY',
+  'padding',
+  'tokenVision',
+  'fog.mode',
+  'fog.colors',
+  'environment',
+  'weather',
+  'transition',
+] as const;
+
+/**
+ * Die Felder der ersten Ebene, die in die Kartendatei gehen. Die Bildpfade
+ * (`background.src`, `foreground.src`, `fog.src`) bleiben draussen — das
+ * Hintergrundbild entsteht in jeder Welt neu aus dem PDF. `visibility` auch:
+ * Es verweist auf andere Ebenen, und die Module legen nur eine an.
+ */
+export const EBENEN_FELDER = [
+  'elevation',
+  'background.color',
+  'background.tint',
+  'background.alphaThreshold',
+  'foreground.tint',
+  'foreground.alphaThreshold',
+  'textures',
+] as const;
+
+/**
+ * Regionsverhalten, die Code ausfuehren. Sie kommen nicht in die Datei: Ein
+ * oeffentliches Repo, dessen Karten in jeder Welt Skripte anlegen, waere
+ * eine Einladung — und ein Makro-Verweis zeigt ohnehin auf ein Dokument, das
+ * es nur in der Welt des Autors gibt.
+ */
+const VERHALTEN_OHNE = ['executeScript', 'executeMacro'];
+
+function istObjekt(wert: unknown): wert is Record<string, unknown> {
+  return typeof wert === 'object' && wert !== null && !Array.isArray(wert);
 }
 
-/** Was eine neue Karte im Quelltext braucht — fertig zum Einsetzen. */
-export interface Quelltextzeilen {
-  /** Ablageort der Wanddatei im Repo. */
-  dateipfad: string;
-  /** Die Import-Zeile am Kopf von `src/world/waende.ts`. */
-  importZeile: string;
-  /** Der Eintrag in der Tabelle `WAENDE` derselben Datei. */
-  tabellenZeile: string;
-  /** Der Eintrag in `KARTEN_EINSTELLUNGEN`. */
-  einstellungsZeile: string;
+/** Holt die Pfade aus `quelle` in ein neues Objekt; fehlende bleiben weg. */
+export function waehleFelder(
+  quelle: Record<string, unknown>,
+  pfade: readonly string[],
+): Record<string, unknown> {
+  const ziel: Record<string, unknown> = {};
+  for (const pfad of pfade) {
+    const teile = pfad.split('.');
+    let wert: unknown = quelle;
+    for (const teil of teile) wert = istObjekt(wert) ? wert[teil] : undefined;
+    if (wert === undefined) continue;
+    let knoten = ziel;
+    teile.slice(0, -1).forEach((teil) => {
+      if (!istObjekt(knoten[teil])) knoten[teil] = {};
+      knoten = knoten[teil] as Record<string, unknown>;
+    });
+    knoten[teile[teile.length - 1]!] = wert;
+  }
+  return ziel;
 }
 
 /**
- * Die drei Zeilen, mit denen eine neue Karte im Modul ankommt.
- *
- * Solange die Registrierung im Quelltext steht, kann ein Export sie nicht
- * selbst setzen — er kann sie aber **vorschreiben**, und genau das ist der
- * Inhalt eines Pull Requests: eine neue Datei und drei Zeilen.
+ * Ein Bildpfad darf bleiben, wenn er zu Foundry selbst gehoert (`icons/…`) —
+ * den gibt es in jeder Installation. Alles andere liegt im Datenbaum des
+ * Autors.
  */
-export function quelltextzeilen(
-  szenario: string,
-  datei: string,
-  masse: Kartenmasse,
-): Quelltextzeilen {
-  const schluessel = `${szenario}/${datei}`;
-  const bezeichner = wandBezeichner(szenario, datei);
-  // Skalierung 1 bleibt weg: Das Feld ist optional, und `apply.ts` nimmt 1 an.
-  const werte = [
-    `gitter: ${masse.gitter}`,
-    `versatzX: ${masse.versatzX}`,
-    `versatzY: ${masse.versatzY}`,
-    ...(masse.skalierung !== undefined && masse.skalierung !== 1
-      ? [`skalierung: ${masse.skalierung}`]
-      : []),
-  ].join(', ');
+function istKernbild(pfad: unknown): boolean {
+  return typeof pfad === 'string' && pfad.startsWith('icons/');
+}
+
+function liste(wert: unknown): Record<string, unknown>[] {
+  return Array.isArray(wert) ? wert.filter(istObjekt) : [];
+}
+
+/** Was der Export gefunden und was er dabei weggelassen hat. */
+export interface Kartenauszug {
+  daten: Kartendaten;
+  waende: Wandauszug;
+  lichter: number;
+  regionen: number;
+  notizen: number;
+  zeichnungen: number;
+  /** Regionsverhalten mit Skript oder Makro, siehe `VERHALTEN_OHNE`. */
+  verhaltenVerworfen: number;
+  /** Notizen, die auf ein Journal ausserhalb des Moduls zeigten. */
+  verweiseEntfernt: number;
+  /** Bildpfade an Notizen und Zeichnungen, die nicht zu Foundry gehoeren. */
+  bilderEntfernt: number;
+}
+
+/**
+ * Baut die Kartendatei aus den Quelldaten einer Szene.
+ *
+ * Leere Sammlungen kommen **nicht** in die Datei. Eine Liste in der Datei
+ * heisst fuer den Import „das Repo ist die Quelle", er ersetzt dann, was in
+ * der Szene steht. Eine leere Liste wuerde so bei jedem Import die eigenen
+ * Notizen oder Lichter des Spielleiters loeschen — fuer eine Karte, zu der
+ * der Autor gar keine gesetzt hat.
+ */
+export function kartenauszug(
+  szene: Record<string, unknown>,
+  optionen: { skalierung: number; artVon: (journalId: string) => JournalArt | undefined },
+): Kartenauszug {
+  let bilderEntfernt = 0;
+  let verweiseEntfernt = 0;
+  let verhaltenVerworfen = 0;
+
+  const waende = wandauszug(liste(szene.walls));
+  const lichter = liste(szene.lights).map((eintrag) => ohneWeltfelder(eintrag));
+
+  // Regionen behalten ihre Kennung: Verhalten verweisen darueber
+  // aufeinander, `apply.ts` legt sie mit `keepId` an.
+  const regionen = liste(szene.regions).map((region) => {
+    const verhalten = liste(region.behaviors).filter((eintrag) => {
+      const raus = VERHALTEN_OHNE.includes(String(eintrag.type));
+      if (raus) verhaltenVerworfen++;
+      return !raus;
+    });
+    return {
+      ...ohneWeltfelder(region, ['_id']),
+      behaviors: verhalten.map((eintrag) => ohneWeltfelder(eintrag, ['_id'])),
+    };
+  });
+
+  const notizen = liste(szene.notes).map((roh) => {
+    const { notiz, verweisEntfernt } = notizInDatei(roh, optionen.artVon);
+    if (verweisEntfernt) verweiseEntfernt++;
+    const textur = notiz.texture;
+    if (istObjekt(textur) && textur.src && !istKernbild(textur.src)) {
+      bilderEntfernt++;
+      const { src: _weg, ...rest } = textur;
+      return { ...notiz, texture: rest };
+    }
+    return notiz;
+  });
+
+  const zeichnungen = liste(szene.drawings).map((roh) => {
+    // `author` ist ein Benutzer der Welt des Autors; Foundry setzt beim
+    // Anlegen den, der importiert.
+    const { author: _autor, ...zeichnung } = ohneWeltfelder(roh);
+    if (zeichnung.texture && !istKernbild(zeichnung.texture)) {
+      bilderEntfernt++;
+      const { texture: _weg, ...rest } = zeichnung;
+      return rest;
+    }
+    return zeichnung;
+  });
+
+  const ebene = liste(szene.levels)[0];
+  const daten: Kartendaten = {
+    ...(optionen.skalierung !== 1 ? { skalierung: optionen.skalierung } : {}),
+    szene: waehleFelder(szene, SZENEN_FELDER),
+    ...(ebene ? { ebene: waehleFelder(ebene, EBENEN_FELDER) } : {}),
+    ...(waende.waende.length > 0 ? { waende: waende.waende } : {}),
+    ...(lichter.length > 0 ? { lichter } : {}),
+    ...(regionen.length > 0 ? { regionen } : {}),
+    ...(notizen.length > 0 ? { notizen } : {}),
+    ...(zeichnungen.length > 0 ? { zeichnungen } : {}),
+  };
 
   return {
-    dateipfad: `daten/waende/${schluessel}.json`,
-    importZeile: `import ${bezeichner} from '../../daten/waende/${schluessel}.json';`,
-    tabellenZeile: `  '${schluessel}': ${bezeichner},`,
-    einstellungsZeile: `  '${schluessel}': { ${werte} },`,
+    daten,
+    waende,
+    lichter: lichter.length,
+    regionen: regionen.length,
+    notizen: notizen.length,
+    zeichnungen: zeichnungen.length,
+    verhaltenVerworfen,
+    verweiseEntfernt,
+    bilderEntfernt,
   };
+}
+
+/**
+ * Die Kartendatei als Text: zwei Leerzeichen Einrueckung und ein Zeilenende
+ * am Schluss — dieselbe Form wie die Dateien im Repo, damit `git diff` nur
+ * zeigt, was sich wirklich geaendert hat.
+ */
+export function kartendateiText(daten: Kartendaten): string {
+  return `${JSON.stringify(daten, null, 2)}\n`;
 }

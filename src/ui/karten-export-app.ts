@@ -1,25 +1,23 @@
 import { L } from '../i18n.ts';
 import { lies } from '../world/flags.ts';
-import { kartenEinstellung } from '../world/karten-einstellungen.ts';
+import { journalArtVonWelt } from '../world/journal.ts';
+import { kartenDaten, kartendateiPfad } from '../world/karten.ts';
+import { szenenAbweichung, szenenStand, type Szenenabweichung } from '../world/kartenabgleich.ts';
 import {
-  type Kartenmasse,
-  type Quelltextzeilen,
-  type Wandauszug,
+  type Kartenauszug,
+  kartenauszug,
+  kartendateiText,
   kartenkennungAusPfad,
-  quelltextzeilen,
   skalierungAus,
-  wandauszug,
-  wanddateiText,
 } from '../world/kartenexport.ts';
-import { kartenWaende, wandSignaturen } from '../world/waende.ts';
 
 /**
- * Das Fenster „Karte exportieren": Szenario und Szene waehlen, die Messwerte
- * und Waende der Szene ablesen, als Wanddatei herunterladen und die Zeilen
- * zeigen, die der Quelltext dazu braucht.
- *
- * Es ersetzt `tools/exportiere-waende.mjs` fuer den Normalfall. Das Werkzeug
- * bleibt: Es kommt ohne laufendes Foundry aus, dieses Fenster nicht.
+ * Das Fenster „Karte exportieren": Szenario und Szene waehlen, alles ablesen,
+ * was die Szene ueber die Karte weiss — Gitter und uebrige Einstellungen,
+ * Waende, Lichter, Regionen, Notizen, Zeichnungen —, und als **eine**
+ * Kartendatei herunterladen. Die Datei gehoert unveraendert nach
+ * `daten/karten/<szenario>/<datei>.json`; mehr braucht ein Pull Request fuer
+ * eine Karte nicht.
  *
  * **`ApplicationV2`, nicht `DialogV2`** — und nicht wegen der Optik: Die
  * Szenen-Auswahl haengt von der Szenario-Auswahl ab, also muss sich der
@@ -44,9 +42,10 @@ interface Kandidat {
 interface Stand {
   szenario: string;
   datei: string;
-  auszug: Wandauszug;
-  masse: Kartenmasse;
-  zeilen: Quelltextzeilen;
+  skalierung: number;
+  auszug: Kartenauszug;
+  /** Abgleich mit der Datei im Modul; fehlt, wenn es noch keine gibt. */
+  abweichung?: Szenenabweichung;
 }
 
 /** Das Hintergrundbild liegt seit v14 in der ersten Ebene der Szene. */
@@ -100,12 +99,9 @@ export class PfsKartenExportApp extends foundry.applications.api.ApplicationV2 {
       icon: 'fa-solid fa-draw-polygon',
       resizable: true,
     },
-    // Breit genug fuer die laengste Quelltextzeile ohne Umbruch — der Import
-    // in `waende.ts` misst bei einem langen Kartennamen rund 90 Zeichen.
-    position: { width: 720 },
+    position: { width: 600 },
     actions: {
       herunterladen: PfsKartenExportApp.#herunterladen,
-      kopieren: PfsKartenExportApp.#kopieren,
       schliessen: PfsKartenExportApp.#schliessen,
     },
   };
@@ -180,10 +176,9 @@ export class PfsKartenExportApp extends foundry.applications.api.ApplicationV2 {
     const stand = await this.#rechne(gewaehlt);
     this.#stand = stand;
 
-    inhalt.append(this.#baueSkalierung(stand.masse.skalierung ?? 1));
+    inhalt.append(this.#baueSkalierung(stand.skalierung));
     inhalt.append(baueBericht(gewaehlt, stand));
-    inhalt.append(baueZeilen(stand.zeilen));
-    inhalt.append(this.#baueFussleiste(stand.auszug.waende.length > 0));
+    inhalt.append(this.#baueFussleiste(true));
     return inhalt;
   }
 
@@ -191,45 +186,36 @@ export class PfsKartenExportApp extends foundry.applications.api.ApplicationV2 {
     content.replaceChildren(result);
   }
 
-  /** Liest Masse und Waende der gewaehlten Szene und baut die Zeilen dazu. */
+  /** Liest die gewaehlte Szene und baut die Kartendatei daraus. */
   async #rechne(gewaehlt: Kandidat): Promise<Stand> {
-    // Die Quelldaten, nicht die Felder des Dokuments — `threshold` und
-    // `animation` sind dort Teilmodelle und kaemen anders heraus als in der
-    // Datei, die `tools/exportiere-waende.mjs` schreibt.
-    const auszug = wandauszug(
-      (gewaehlt.szene.walls?.contents ?? []).map((wand) => wand.toObject()),
-    );
-
     const auswahl = `${gewaehlt.szenario}/${gewaehlt.datei}`;
     if (this.#skalierungFuer !== auswahl) {
       this.#skalierungFuer = auswahl;
       this.#skalierungText = undefined;
     }
 
-    // Reihenfolge mit Absicht: erst aus der Szene gerechnet, dann der
-    // Tabellenwert. Der Export soll sagen, was **jetzt** in der Welt steht —
-    // wer die Leinwand geaendert hat, will nicht den alten Eintrag zurueck.
+    // Reihenfolge mit Absicht: erst aus der Szene gerechnet, dann der Wert
+    // der Kartendatei. Der Export soll sagen, was **jetzt** in der Welt steht
+    // — wer die Leinwand geaendert hat, will nicht den alten Eintrag zurueck.
+    const imModul = kartenDaten(gewaehlt.szenario, gewaehlt.datei);
     const bildBreite = await this.#bildBreite(gewaehlt.hintergrund);
     const gerechnet =
       bildBreite === undefined
         ? undefined
         : skalierungAus(gewaehlt.szene.width ?? 0, bildBreite);
-    const vorschlag =
-      gerechnet ?? kartenEinstellung(gewaehlt.szenario, gewaehlt.datei)?.skalierung ?? 1;
+    const skalierung = zahlOder(this.#skalierungText) ?? gerechnet ?? imModul?.skalierung ?? 1;
 
-    const masse: Kartenmasse = {
-      gitter: gewaehlt.szene.grid?.size ?? 0,
-      versatzX: gewaehlt.szene.shiftX ?? 0,
-      versatzY: gewaehlt.szene.shiftY ?? 0,
-      skalierung: zahlOder(this.#skalierungText) ?? vorschlag,
-    };
+    // Die Quelldaten, nicht die Felder des Dokuments — Teilmodelle wie
+    // `threshold` oder `config` kaemen sonst anders heraus als in der Datei.
+    const daten = gewaehlt.szene.toObject();
+    const artVon = journalArtVonWelt();
 
     return {
       szenario: gewaehlt.szenario,
       datei: gewaehlt.datei,
-      auszug,
-      masse,
-      zeilen: quelltextzeilen(gewaehlt.szenario, gewaehlt.datei, masse),
+      skalierung,
+      auszug: kartenauszug(daten, { skalierung, artVon }),
+      ...(imModul ? { abweichung: szenenAbweichung(szenenStand(daten, artVon), imModul) } : {}),
     };
   }
 
@@ -317,13 +303,7 @@ export class PfsKartenExportApp extends foundry.applications.api.ApplicationV2 {
     return gruppe;
   }
 
-  /**
-   * Die Knopfleiste am Fuss.
-   *
-   * `Herunterladen` fehlt, solange die Szene keine Waende hat — eine leere
-   * Wanddatei im Repo hiesse „diese Karte hat keine Waende", und das ist eine
-   * andere Aussage als „noch nicht gezeichnet".
-   */
+  /** Die Knopfleiste am Fuss; ohne gewaehlte Szene nur „Schliessen". */
   #baueFussleiste(mitDatei: boolean): HTMLElement {
     const leiste = document.createElement('footer');
     leiste.className = 'form-footer';
@@ -351,7 +331,6 @@ export class PfsKartenExportApp extends foundry.applications.api.ApplicationV2 {
     if (mitDatei) {
       leiste.append(
         knopf('herunterladen', L('Kartenexport.Herunterladen'), 'fa-file-arrow-down', true),
-        knopf('kopieren', L('Kartenexport.Kopieren'), 'fa-clipboard'),
       );
     }
     leiste.append(knopf('schliessen', L('Uebersicht.Schliessen'), 'fa-xmark'));
@@ -360,36 +339,16 @@ export class PfsKartenExportApp extends foundry.applications.api.ApplicationV2 {
 
   static async #herunterladen(this: PfsKartenExportApp): Promise<void> {
     const stand = this.#stand;
-    if (!stand || stand.auszug.waende.length === 0) {
-      ui.notifications?.warn(L('Kartenexport.KeineWaende'));
-      return;
-    }
+    if (!stand) return;
 
     foundry.utils.saveDataToFile(
-      wanddateiText(stand.auszug.waende),
+      kartendateiText(stand.auszug.daten),
       'application/json',
       `${stand.datei}.json`,
     );
     ui.notifications?.info(
-      L('Kartenexport.Heruntergeladen', {
-        anzahl: stand.auszug.waende.length,
-        pfad: stand.zeilen.dateipfad,
-      }),
+      L('Kartenexport.Heruntergeladen', { pfad: kartendateiPfad(stand.szenario, stand.datei) }),
     );
-  }
-
-  static async #kopieren(this: PfsKartenExportApp): Promise<void> {
-    const feld = this.element.querySelector<HTMLTextAreaElement>('textarea[name="zeilen"]');
-    if (!feld) return;
-    try {
-      await navigator.clipboard.writeText(feld.value);
-      ui.notifications?.info(L('Kartenexport.Kopiert'));
-    } catch {
-      // Die Zwischenablage gibt es nur in einem sicheren Kontext. Die
-      // Testinstanz laeuft im LAN ueber http — dort bleibt das Markieren.
-      feld.select();
-      ui.notifications?.warn(L('Kartenexport.KopierenFehlt'));
-    }
   }
 
   static async #schliessen(this: PfsKartenExportApp): Promise<void> {
@@ -405,23 +364,25 @@ function absatz(text: string, klasse?: string): HTMLElement {
 }
 
 /**
- * Was die Szene hergibt, in Zahlen — und der Vergleich mit dem Repo.
+ * Was die Szene hergibt, in Zahlen — und der Vergleich mit dem Modul.
  *
- * Der Vergleich ist die Eichung: Fuer eine Karte, deren Wanddatei es schon
- * gibt, muss „unveraendert" herauskommen. Steht dort etwas anderes, ist
- * entweder gezeichnet worden oder der Weg von innen liefert nicht dasselbe
- * wie das Werkzeug — und das will man wissen, bevor die Datei in einen Pull
+ * Der Vergleich ist die Eichung: Fuer eine Karte, die frisch importiert und
+ * nicht angefasst wurde, muss „stimmt ueberein" herauskommen. Steht dort
+ * etwas anderes, ist entweder gezeichnet worden oder Export und Import sind
+ * sich nicht einig — und das will man wissen, bevor die Datei in einen Pull
  * Request geht.
  */
 function baueBericht(gewaehlt: Kandidat, stand: Stand): HTMLElement {
   const block = document.createElement('div');
+  const { auszug } = stand;
+  const gitter = (auszug.daten.szene?.grid as { size?: number } | undefined)?.size ?? 0;
 
   block.append(
     absatz(
       L('Kartenexport.Masse', {
-        gitter: stand.masse.gitter,
-        versatzX: stand.masse.versatzX,
-        versatzY: stand.masse.versatzY,
+        gitter,
+        versatzX: gewaehlt.szene.shiftX ?? 0,
+        versatzY: gewaehlt.szene.shiftY ?? 0,
         breite: gewaehlt.szene.width ?? 0,
         hoehe: gewaehlt.szene.height ?? 0,
       }),
@@ -429,63 +390,61 @@ function baueBericht(gewaehlt: Kandidat, stand: Stand): HTMLElement {
     ),
     absatz(
       L('Kartenexport.Zahlen', {
-        waende: stand.auszug.waende.length,
-        tueren: stand.auszug.tueren,
+        waende: auszug.waende.waende.length,
+        tueren: auszug.waende.tueren,
+        lichter: auszug.lichter,
+        regionen: auszug.regionen,
+        notizen: auszug.notizen,
+        zeichnungen: auszug.zeichnungen,
       }),
       'notes',
     ),
   );
 
-  if (stand.auszug.doppel > 0) {
-    block.append(absatz(L('Kartenexport.Doppel', { anzahl: stand.auszug.doppel }), 'notes'));
+  const warnung = (text: string): void => {
+    block.append(absatz(text, 'notification warning'));
+  };
+  if (auszug.waende.doppel > 0) {
+    block.append(absatz(L('Kartenexport.Doppel', { anzahl: auszug.waende.doppel }), 'notes'));
   }
-  if (stand.auszug.verworfen > 0) {
-    block.append(
-      absatz(L('Kartenexport.Verworfen', { anzahl: stand.auszug.verworfen }), 'notification warning'),
-    );
+  if (auszug.waende.verworfen > 0) {
+    warnung(L('Kartenexport.Verworfen', { anzahl: auszug.waende.verworfen }));
+  }
+  if (auszug.verhaltenVerworfen > 0) {
+    warnung(L('Kartenexport.Skripte', { anzahl: auszug.verhaltenVerworfen }));
+  }
+  if (auszug.verweiseEntfernt > 0) {
+    warnung(L('Kartenexport.Verweise', { anzahl: auszug.verweiseEntfernt }));
+  }
+  if (auszug.bilderEntfernt > 0) {
+    warnung(L('Kartenexport.Bilder', { anzahl: auszug.bilderEntfernt }));
   }
 
-  const imRepo = kartenWaende(stand.szenario, stand.datei);
-  if (imRepo === undefined) {
+  if (!stand.abweichung) {
     block.append(absatz(L('Kartenexport.Neu'), 'notification info'));
-  } else if (wandSignaturen(imRepo) === wandSignaturen(stand.auszug.waende)) {
+    return block;
+  }
+
+  // Jeder Name einzeln ausgeschrieben, nicht ueber eine Variable gebaut —
+  // sonst sieht `tools/pruefe.mjs` die Schluessel nicht.
+  const namen: Record<keyof Szenenabweichung, string> = {
+    szene: L('Kartenexport.Teil.Szene'),
+    ebene: L('Kartenexport.Teil.Ebene'),
+    waende: L('Kartenexport.Teil.Waende'),
+    lichter: L('Kartenexport.Teil.Lichter'),
+    regionen: L('Kartenexport.Teil.Regionen'),
+    notizen: L('Kartenexport.Teil.Notizen'),
+    zeichnungen: L('Kartenexport.Teil.Zeichnungen'),
+  };
+  const abweichend = (Object.keys(namen) as (keyof Szenenabweichung)[])
+    .filter((teil) => stand.abweichung![teil])
+    .map((teil) => namen[teil]);
+  if (abweichend.length === 0) {
     block.append(absatz(L('Kartenexport.Unveraendert'), 'notification info'));
   } else {
-    block.append(
-      absatz(L('Kartenexport.Abweichend', { anzahl: imRepo.length }), 'notification warning'),
-    );
+    warnung(L('Kartenexport.Abweichend', { teile: abweichend.join(', ') }));
   }
-
   return block;
-}
-
-/** Die Quelltextzeilen, nach Zieldatei gruppiert und zum Markieren bereit. */
-function baueZeilen(zeilen: Quelltextzeilen): HTMLElement {
-  const gruppe = document.createElement('div');
-  gruppe.className = 'form-group';
-
-  const label = document.createElement('label');
-  label.textContent = L('Kartenexport.ZeilenFeld');
-
-  const feld = document.createElement('textarea');
-  feld.name = 'zeilen';
-  feld.readOnly = true;
-  feld.rows = 6;
-  feld.style.fontFamily = 'var(--font-mono, monospace)';
-  feld.style.whiteSpace = 'pre';
-  feld.value = [
-    zeilen.dateipfad,
-    '',
-    'src/world/waende.ts',
-    zeilen.importZeile,
-    zeilen.tabellenZeile,
-    '',
-    'src/world/karten-einstellungen.ts',
-    zeilen.einstellungsZeile,
-  ].join('\n');
-
-  gruppe.append(label, feld);
-  return gruppe;
 }
 
 /**

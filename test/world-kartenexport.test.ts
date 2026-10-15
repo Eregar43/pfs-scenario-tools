@@ -1,15 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { KARTEN_EINSTELLUNGEN } from '../src/world/karten-einstellungen.ts';
-import { kartenWaende } from '../src/world/waende.ts';
+import { alleKarten, kartendateiPfad } from '../src/world/karten.ts';
+import { szenenAbweichung, szenenStand, tiefMischen } from '../src/world/kartenabgleich.ts';
 import {
   EXPORT_FELDER,
+  kartenauszug,
+  kartendateiText,
   kartenkennungAusPfad,
-  quelltextzeilen,
   skalierungAus,
-  wandBezeichner,
   wandauszug,
-  wanddateiText,
 } from '../src/world/kartenexport.ts';
 
 // `readFileSync` ist in `test/node-shim.d.ts` eingetippt; dieses Repo fuehrt
@@ -83,35 +82,213 @@ describe('wandauszug', () => {
 });
 
 /**
- * Die Eichung: Die vorhandenen Wanddateien hat
- * `tools/exportiere-waende.mjs` geschrieben. Schickt man sie durch den Weg
- * von innen, muss **Zeichen fuer Zeichen dasselbe** herauskommen — sonst
- * zeigte jeder Export im Modul die ganze Datei als geaendert, und niemand
- * koennte einen Pull Request noch lesen.
+ * Eine Szene, wie der Import sie aus einer Kartendatei anlegt — als
+ * Quelldaten, so wie `toObject()` sie liefert, mit Kennungen und Fremd-Flags.
  */
-describe('wanddateiText gegen die Dateien im Repo', () => {
-  // Die Liste kommt aus den Tabellen des Moduls, nicht aus dem Verzeichnis:
-  // Geprueft werden soll genau das, was der Import auch benutzt.
-  const schluessel = Object.keys(KARTEN_EINSTELLUNGEN).filter((eintrag) => {
-    const [szenario, datei] = eintrag.split('/') as [string, string];
-    return kartenWaende(szenario, datei) !== undefined;
+function szeneAusDatei(daten: ReturnType<typeof alleKarten> extends ReadonlyMap<string, infer T> ? T : never) {
+  const mitKennung = (eintrag: Record<string, unknown>, index: number) => ({
+    _id: `Kennung${String(index).padStart(9, '0')}`,
+    flags: { fremd: { x: 1 } },
+    ...eintrag,
   });
+  return {
+    ...tiefMischen(
+      { name: 'Karte', padding: 0, grid: { alpha: 0, type: 1 }, initial: { x: 5 }, thumb: 'x.webp' },
+      daten.szene ?? {},
+    ),
+    levels: [tiefMischen({ _id: 'defaultLevel0000', background: { src: 'karte.webp', color: '#000000' } }, daten.ebene ?? {})],
+    walls: (daten.waende ?? []).map(mitKennung),
+    lights: (daten.lichter ?? []).map(mitKennung),
+    regions: daten.regionen ?? [],
+    notes: [],
+    drawings: (daten.zeichnungen ?? []).map(mitKennung),
+  };
+}
 
-  it('findet die Wanddateien ueberhaupt', () => {
+/**
+ * Die Eichung: Jede Kartendatei im Repo, durch den Import in eine Szene
+ * gelegt und wieder exportiert, muss ihre Werte behalten — und der Import
+ * muss die frisch exportierte Datei als „stimmt ueberein" erkennen. Sonst
+ * zeigte jeder Export Aenderungen, die keiner gemacht hat.
+ */
+describe('Kartendateien im Repo', () => {
+  const karten = [...alleKarten()];
+
+  it('findet die Kartendateien ueberhaupt', () => {
     // Eine Schranke gegen den stillen Leerlauf: Faellt die Liste leer aus,
     // wuerde unten kein einziger Vergleich laufen und der Test doch gruen.
-    expect(schluessel.length).toBeGreaterThanOrEqual(5);
+    expect(karten.length).toBeGreaterThanOrEqual(11);
   });
 
-  for (const eintrag of schluessel) {
-    it(`${eintrag} kommt unveraendert wieder heraus`, () => {
-      const original = readFileSync(`daten/waende/${eintrag}.json`, 'utf8');
-      const auszug = wandauszug(JSON.parse(original) as Record<string, unknown>[]);
-      expect(auszug.doppel).toBe(0);
-      expect(auszug.verworfen).toBe(0);
-      expect(wanddateiText(auszug.waende)).toBe(original);
+  for (const [schluessel, daten] of karten) {
+    it(`${schluessel} steht in der Schreibform des Exports`, () => {
+      const [szenario, datei] = schluessel.split('/') as [string, string];
+      expect(kartendateiText(daten)).toBe(readFileSync(kartendateiPfad(szenario, datei), 'utf8'));
+    });
+
+    it(`${schluessel} uebersteht Import und Export`, () => {
+      const szene = szeneAusDatei(daten);
+      const auszug = kartenauszug(szene, { skalierung: daten.skalierung ?? 1, artVon: () => undefined });
+      expect(auszug.waende.doppel).toBe(0);
+      expect(auszug.waende.verworfen).toBe(0);
+      expect(auszug.daten.waende).toEqual(daten.waende);
+      expect(auszug.daten.skalierung).toBe(daten.skalierung);
+      // Der Export nimmt mehr Szenenfelder mit, als die alten Dateien
+      // nennen — aber jedes genannte mit demselben Wert.
+      expect(auszug.daten.szene).toMatchObject(daten.szene ?? {});
+      expect(szenenAbweichung(szenenStand(szene, () => undefined), auszug.daten)).toEqual({
+        szene: false,
+        ebene: false,
+        waende: false,
+        lichter: false,
+        regionen: false,
+        notizen: false,
+        zeichnungen: false,
+      });
     });
   }
+});
+
+describe('kartenauszug', () => {
+  const basis = {
+    name: 'Karte',
+    thumb: 'worlds/w/thumb.webp',
+    navigation: false,
+    initial: { x: 10, y: 20, scale: 1 },
+    initialLevel: 'defaultLevel0000',
+    grid: { size: 87, alpha: 0, type: 1 },
+    shiftX: -43,
+    shiftY: 28,
+    padding: 0,
+    tokenVision: true,
+    fog: { mode: 1, reset: 1791559808465, overlay: 'nebel.webp', colors: { explored: null } },
+    environment: { darknessLevel: 0.4, globalLight: { enabled: true } },
+    weather: '',
+    transition: { duration: 1500 },
+    levels: [
+      {
+        _id: 'defaultLevel0000',
+        name: 'Level',
+        elevation: { bottom: 0, top: 20 },
+        background: { src: 'karte.webp', color: '#000000', tint: '#ffffff' },
+        foreground: { src: 'vorne.webp', tint: '#ffffff' },
+        fog: { src: null },
+        textures: { fit: 'fill' },
+        visibility: { levels: [] },
+      },
+    ],
+    walls: [],
+    lights: [],
+    regions: [],
+    notes: [],
+    drawings: [],
+  };
+  const artVon = (id: string) => (id === 'HauptJournal0001' ? ('journal' as const) : undefined);
+
+  it('nimmt die Szeneneinstellungen ohne Startansicht, Bildpfade und Weltgebundenes', () => {
+    const { daten } = kartenauszug(basis, { skalierung: 2, artVon });
+    expect(daten.skalierung).toBe(2);
+    expect(daten.szene).toEqual({
+      grid: { size: 87, alpha: 0, type: 1 },
+      shiftX: -43,
+      shiftY: 28,
+      padding: 0,
+      tokenVision: true,
+      fog: { mode: 1, colors: { explored: null } },
+      environment: { darknessLevel: 0.4, globalLight: { enabled: true } },
+      weather: '',
+      transition: { duration: 1500 },
+    });
+    expect(daten.ebene).toEqual({
+      elevation: { bottom: 0, top: 20 },
+      background: { color: '#000000', tint: '#ffffff' },
+      foreground: { tint: '#ffffff' },
+      textures: { fit: 'fill' },
+    });
+    expect(kartendateiText(daten)).not.toMatch(/webp/);
+  });
+
+  it('laesst die Skalierung 1 und leere Sammlungen weg', () => {
+    const { daten } = kartenauszug(basis, { skalierung: 1, artVon });
+    expect(Object.keys(daten)).toEqual(['szene', 'ebene']);
+  });
+
+  it('nimmt Lichter ohne Kennung und Fremd-Flags', () => {
+    const { daten, lichter } = kartenauszug(
+      { ...basis, lights: [{ _id: 'L1', x: 1, y: 2, config: { bright: 10 }, flags: { a: {} }, _stats: {} }] },
+      { skalierung: 1, artVon },
+    );
+    expect(lichter).toBe(1);
+    expect(daten.lichter).toEqual([{ x: 1, y: 2, config: { bright: 10 } }]);
+  });
+
+  it('behaelt bei Regionen die Kennung und wirft Skript-Verhalten heraus', () => {
+    const { daten, verhaltenVerworfen } = kartenauszug(
+      {
+        ...basis,
+        regions: [
+          {
+            _id: 'Region0000000001',
+            name: 'Falle',
+            shapes: [{ type: 'rectangle', x: 0, y: 0, width: 87, height: 87 }],
+            behaviors: [
+              { _id: 'Verhalten0000001', type: 'pauseGame', system: {}, flags: {} },
+              { _id: 'Verhalten0000002', type: 'executeScript', system: { source: 'boese()' } },
+              { _id: 'Verhalten0000003', type: 'executeMacro', system: { uuid: 'Macro.x' } },
+            ],
+            flags: { fremd: {} },
+          },
+        ],
+      },
+      { skalierung: 1, artVon },
+    );
+    expect(verhaltenVerworfen).toBe(2);
+    expect(daten.regionen).toEqual([
+      {
+        _id: 'Region0000000001',
+        name: 'Falle',
+        shapes: [{ type: 'rectangle', x: 0, y: 0, width: 87, height: 87 }],
+        behaviors: [{ _id: 'Verhalten0000001', type: 'pauseGame', system: {} }],
+      },
+    ]);
+  });
+
+  it('gibt Notizen die Journal-Art und nimmt fremde Bilder und Verweise heraus', () => {
+    const { daten, verweiseEntfernt, bilderEntfernt } = kartenauszug(
+      {
+        ...basis,
+        notes: [
+          { _id: 'N1', x: 1, entryId: 'HauptJournal0001', pageId: 'S1', texture: { src: 'icons/svg/book.svg' } },
+          { _id: 'N2', x: 2, entryId: 'FremdesJournal01', pageId: 'S2', texture: { src: 'worlds/w/pin.png', tint: null } },
+        ],
+      },
+      { skalierung: 1, artVon },
+    );
+    expect(daten.notizen).toEqual([
+      { x: 1, texture: { src: 'icons/svg/book.svg' }, journal: 'journal', pageId: 'S1' },
+      { x: 2, texture: { tint: null } },
+    ]);
+    expect(verweiseEntfernt).toBe(1);
+    expect(bilderEntfernt).toBe(1);
+  });
+
+  it('nimmt Zeichnungen ohne Autor und ohne fremde Fuellbilder', () => {
+    const { daten, bilderEntfernt } = kartenauszug(
+      {
+        ...basis,
+        drawings: [
+          { _id: 'D1', author: 'Benutzer00000001', shape: { type: 'r' }, texture: 'worlds/w/muster.png' },
+          { _id: 'D2', author: 'Benutzer00000001', shape: { type: 'e' }, text: 'Buehne', texture: null },
+        ],
+      },
+      { skalierung: 1, artVon },
+    );
+    expect(daten.zeichnungen).toEqual([
+      { shape: { type: 'r' } },
+      { shape: { type: 'e' }, text: 'Buehne', texture: null },
+    ]);
+    expect(bilderEntfernt).toBe(1);
+  });
 });
 
 describe('kartenkennungAusPfad', () => {
@@ -170,57 +347,5 @@ describe('skalierungAus', () => {
     expect(skalierungAus(0, 1325)).toBeUndefined();
     expect(skalierungAus(2650, 0)).toBeUndefined();
     expect(skalierungAus(Number.NaN, 1325)).toBeUndefined();
-  });
-});
-
-describe('wandBezeichner', () => {
-  it('baut einen gueltigen Namen aus Schluessel und Datei', () => {
-    expect(wandBezeichner('08-01', 'the-laboratory')).toBe('waende0801TheLaboratory');
-    expect(wandBezeichner('08-05', 'nans-watch')).toBe('waende0805NansWatch');
-  });
-
-  it('faengt auch eine Datei ab, die mit einer Zahl beginnt', () => {
-    expect(wandBezeichner('08-06', '2-the-mine')).toBe('waende08062TheMine');
-  });
-});
-
-describe('quelltextzeilen', () => {
-  const masse = { gitter: 87, versatzX: 19, versatzY: 22, skalierung: 2 };
-
-  it('nennt den Ablageort der Wanddatei', () => {
-    expect(quelltextzeilen('08-01', 'the-laboratory', masse).dateipfad).toBe(
-      'daten/waende/08-01/the-laboratory.json',
-    );
-  });
-
-  /**
-   * Die zweite Eichung: Der erzeugte Eintrag muss **wortgleich** in
-   * `karten-einstellungen.ts` stehen. Weicht die Schreibform ab, waere jede
-   * eingesetzte Zeile eine Formatierungsaenderung mitten in der Tabelle.
-   */
-  it('schreibt den Messwert so, wie er in der Tabelle steht', () => {
-    const quelle = readFileSync('src/world/karten-einstellungen.ts', 'utf8');
-    const zeile = quelltextzeilen('08-01', 'the-laboratory', masse).einstellungsZeile;
-    expect(quelle).toContain(zeile);
-  });
-
-  it('laesst die Skalierung 1 weg, wie die Tabelle es tut', () => {
-    const ohne = quelltextzeilen('08-02', 'delusions-of-grandeur', {
-      gitter: 43,
-      versatzX: -25,
-      versatzY: -27,
-      skalierung: 1,
-    }).einstellungsZeile;
-    expect(ohne).not.toContain('skalierung');
-    const quelle = readFileSync('src/world/karten-einstellungen.ts', 'utf8');
-    expect(quelle).toContain(ohne);
-  });
-
-  it('baut Import und Tabelleneintrag passend zueinander', () => {
-    const zeilen = quelltextzeilen('08-06', 'finding-the-mine', masse);
-    expect(zeilen.importZeile).toBe(
-      "import waende0806FindingTheMine from '../../daten/waende/08-06/finding-the-mine.json';",
-    );
-    expect(zeilen.tabellenZeile).toBe("  '08-06/finding-the-mine': waende0806FindingTheMine,");
   });
 });
