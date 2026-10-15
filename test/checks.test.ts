@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { enrichChecks, slugifySkill } from '../src/pdf/checks.ts';
+import { withChecks } from '../src/pdf/enrich.ts';
+import type { Scenario } from '../src/pdf/scenario.ts';
+import type { Block } from '../src/pdf/types.ts';
 
 describe('slugifySkill', () => {
   it('macht aus dem Namen den Slug des Systems', () => {
@@ -105,5 +108,50 @@ describe('enrichChecks — Wurf-Optionen', () => {
 
   it('laesst die Probe ohne Optionen unveraendert', () => {
     expect(enrichChecks('DC 17 Acrobatics check')).toBe('@Check[acrobatics|dc:17] check');
+  });
+});
+
+describe('Proben im Abschnitt Getting Started', () => {
+  const block = (role: Block['role'], text: string, level?: 1 | 2 | 3): Block => ({
+    role,
+    page: 3,
+    column: 0,
+    lines: [],
+    text,
+    ...(level ? { level } : {}),
+  });
+  const szenario = (blocks: Block[]) => ({ blocks }) as unknown as Scenario;
+  const proben = (blocks: Block[]) => withChecks(szenario(blocks)).blocks.map((b) => b.text);
+
+  it('setzt traits:secret an jede Probe des Abschnitts', () => {
+    expect(enrichChecks('DC 15 Society check', [], ['secret'])).toBe(
+      '@Check[society|dc:15|traits:secret] check',
+    );
+  });
+
+  it('markiert nur bis zur naechsten Hauptueberschrift', () => {
+    const text = proben([
+      block('heading', 'Getting Started', 1),
+      block('body', 'A PC who succeeds at a DC 15 Society check remembers the harbour.'),
+      block('subheading', 'Mission Gear', 2),
+      block('heading', 'A. Der Erfundene Hafen', 1),
+      block('body', 'A DC 18 Athletics check climbs the wall.'),
+    ]);
+    expect(text[1]).toContain('@Check[society|dc:15|traits:secret]');
+    expect(text[4]).toContain('@Check[athletics|dc:18]');
+    expect(text[4]).not.toContain('secret');
+  });
+
+  it('beginnt auch an einer Unterueberschrift', () => {
+    // So steht es in 8-08: „Getting Started" unter „Adventure Background".
+    const text = proben([
+      block('heading', 'Adventure Background', 1),
+      block('body', 'A DC 12 Society check before the start.'),
+      block('subheading', 'Getting Started', 2),
+      block('body', 'A DC 20 Religion check recalls the order.'),
+      block('heading', 'Das Erfundene Schloss', 1),
+    ]);
+    expect(text[1]).not.toContain('secret');
+    expect(text[3]).toContain('@Check[religion|dc:20|traits:secret]');
   });
 });

@@ -39,14 +39,48 @@ export function withChecks(
   scenario: Scenario,
   optionenJeSeite: ReadonlyMap<number, string[]> = new Map(),
 ): Scenario {
+  const geheim = imEinstieg(scenario.blocks);
   return {
     ...scenario,
-    blocks: scenario.blocks.map((block) =>
+    blocks: scenario.blocks.map((block, i) =>
       PROSE_ROLES.has(block.role)
-        ? { ...block, text: enrichChecks(block.text, optionenJeSeite.get(block.page) ?? []) }
+        ? {
+            ...block,
+            text: enrichChecks(
+              block.text,
+              optionenJeSeite.get(block.page) ?? [],
+              geheim.has(i) ? ['secret'] : [],
+            ),
+          }
         : block,
     ),
   };
+}
+
+/**
+ * Die Bloecke des Abschnitts „Getting Started" — von seiner Ueberschrift bis
+ * zur naechsten Hauptueberschrift.
+ *
+ * Dort stehen die Proben vor dem Abenteuer: Recall Knowledge, in 8-07 auch
+ * Gather Information. Sie wuerfelt der Spielleiter verdeckt; auf Wunsch des
+ * Autors werden **alle** Proben dieses Abschnitts als `secret` markiert.
+ */
+export function imEinstieg(blocks: readonly Block[]): Set<number> {
+  const gefunden = new Set<number>();
+  let drin = false;
+  blocks.forEach((block, i) => {
+    const ueberschrift = block.role === 'heading' || block.role === 'subheading';
+    // Meist eine Hauptueberschrift; in 8-08 steht sie als Unterueberschrift
+    // unter „Adventure Background". Zu Ende ist der Abschnitt in beiden
+    // Faellen erst an der naechsten Hauptueberschrift.
+    if (ueberschrift && /^getting started$/i.test(block.text.trim())) {
+      drin = true;
+      return;
+    }
+    if (block.role === 'heading' && block.level === 1) drin = false;
+    if (drin) gefunden.add(i);
+  });
+  return gefunden;
 }
 
 /**

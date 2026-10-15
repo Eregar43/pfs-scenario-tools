@@ -69,6 +69,8 @@ declare global {
     system?: {
       details?: { level?: { value?: number } };
       value?: { isValued?: boolean };
+      /** Bei Ausruestung: `etched-onto-…` kennzeichnet eine Rune. */
+      usage?: { value?: string };
     };
   }
 
@@ -410,6 +412,8 @@ declare global {
       immunityTypes?: Record<string, string>;
       weaknessTypes?: Record<string, string>;
       resistanceTypes?: Record<string, string>;
+      /** Schluessel = Fertigkeit, Wert = `{ label, attribute }`. */
+      skills?: Record<string, unknown>;
     };
   };
 }

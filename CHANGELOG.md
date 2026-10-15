@@ -3,6 +3,60 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
+## 1.3.1 — 2026-10-09
+
+- **Firefox: Karten fehlten, Szenen blieben aus.** In Firefox las der Import
+  Bilder ohne Transparenz nicht aus dem PDF — das trifft vor allem Karten.
+  In 8-03 fehlte so „The Solstice Theater", und die Szene wurde nicht
+  angelegt. Chrome und Edge waren nicht betroffen.
+
+## 1.3.0 — 2026-10-08
+
+- **Geprüfter Umfang: Season 8, Hefte 8-01 bis 8-08.** Begrüßung und README
+  nannten noch 8-01 bis 8-04.
+- **Proben im Abschnitt „Getting Started" sind verdeckt.** Alle Proben
+  zwischen „Getting Started" und der nächsten Hauptüberschrift tragen das
+  Merkmal „secret" — Recall Knowledge und, in 8-07, Gather Information. In
+  der Season 8 sind das drei bis fünf Proben je Heft.
+- **Runen werden verlinkt.** „*shadow rune*" (8-08) zeigt jetzt auf die Rune
+  „Shadow" im Kompendium. Verlinkt wird nur, was dort wirklich eine Rune ist.
+- **Schriftrollen mit Rang werden verlinkt.** „*3rd-rank scroll of soothe*"
+  (8-07) blieb ohne Verweis, weil der Rang mit im Kursivsatz steht. Jetzt
+  bleibt der Rang Text, und der Zauber bekommt den Verweis.
+- **Gegenstände mit Quellenangabe werden verlinkt, auch mit zwei Wörtern.**
+  Steht hinter dem Namen Buch und Seite, etwa „(*Pathfinder Treasure Vault*
+  47)", bekommt der Name einen Verweis. Neu verlinkt: diplomat’s charcuterie
+  (8-07), phantom roll (8-08), dueling pistol und flintlock pistol (8-05).
+- **Karte von 8-07 „In the Halls of Dead Justice" vermessen und bewändet.**
+  „This Stinks" bekommt beim Import Gitter, Versatz und die Wände des
+  Ballsaals.
+- **Karte von 8-08 „Treatise on the Study of Clockwork" vermessen und
+  bewändet.** „Escorting Luiza" bekommt Gitter, Versatz, die Wände des
+  Herrenhauses und seine neun Türen.
+- **Tempo-Zusatz nach Semikolon bleibt erhalten.** „20 feet; troop movement"
+  verlor bisher den Zusatz; bei gebauten Kreaturen steht er jetzt am Tempo.
+- **Drei Lesefehler in Statblöcken behoben.** Ein Tempo, das im Satz an der
+  Fähigkeit davor klebt, geht nicht mehr verloren; eine doppelte
+  Aktionsplakette bleibt nicht mehr im Angriffsnamen stehen; ein
+  abgesprengter Anfangsbuchstabe der Merkmalszeile wird wieder angefügt.
+  Gefunden in 8-07.
+- **Kreaturen ohne Vorlage werden aus dem Statblock gebaut.** Steht ein
+  Statblock nur im Heft (keine Quellenzeile), entsteht ein vollständiger NPC
+  statt gar keinem Actor — in 8-07 Leshtakap und Undead Workers United
+  Local 1014. Die Vorschau nennt sie in einer eigenen Zeile und darunter,
+  was nicht unterkam (Gegenstände, Zauber).
+- **Keine 10-TP-NSCs mehr für solche Kreaturen.** Hatte eine Kreatur ohne
+  Vorlage ein Porträt im Anhang, legte der Import sie bisher als einfachen
+  NSC mit Stufe 1 an.
+- **Porträts mit abgekürztem Namen werden erkannt.** Die Bildunterschrift
+  „UWU Local 1014" gehört zum Statblock „Undead Workers United Local 1014".
+- **Angriffsnamen ohne Kursiv-Sternchen.** Ein kursiv gesetzter Waffenname
+  stand bisher als `*bastard sword*` im Blatt.
+- **Ein Bonus auf „skill checks and attack rolls" wirkt jetzt auf Fertigkeiten
+  und Angriffe.** Bisher galt jede Nennung von „checks" als Fertigkeiten und
+  Rettungswürfe — die Rettungswürfe zu viel, die Angriffe fehlten. Betroffen
+  ist der Effekt aus 8-08; er heißt jetzt „+1 checks and attacks".
+
 ## 1.2.0 — 2026-09-11
 
 - **Krankheiten des Hefts bekommen eine Seite im Spielhilfen-Journal.** Ein

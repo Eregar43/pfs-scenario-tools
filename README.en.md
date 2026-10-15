@@ -7,8 +7,8 @@ Society scenario in your browser and creates everything you need at the table
 directly in the world: the journal, the images, the scenes, the creatures and
 the NPCs.
 
-Currently supported are the four scenarios of **Season 8** (Year of Clockwork
-Mystery): **8-01 through 8-04**. Everything is measured against them, and only
+Currently supported are the eight scenarios of **Season 8** (Year of Clockwork
+Mystery): **8-01 through 8-08**. Everything is measured against them, and only
 their maps come with grid values and walls. Other scenarios can be read as
 well, but the result is untested; older seasons run through but are not the
 target (see [Seasons](#seasons)).
@@ -157,6 +157,12 @@ contents.
   stealth, description, disable, routine, reset, AC, hardness, hit points,
   saves, immunities and weaknesses, plus one entry for every attack and every
   named ability.
+- **Creatures without a template** are **built** the same way when their
+  stat block has no source line — they exist only in the scenario. Taken
+  over: level, traits, size, perception and senses, languages, skills and
+  lore, attributes, AC, saves, hit points, immunities, weaknesses and
+  resistances, speed, attacks and abilities. Items and spells stay as text;
+  the preview names whatever could not be placed.
 
 ### Importing again
 

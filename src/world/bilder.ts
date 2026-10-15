@@ -105,13 +105,37 @@ export function vergleichsform(text: string): string {
 const ANPASSUNG = /^(?:elite|weak)\s+/;
 
 /**
+ * Der Name in Vergleichsform, dazu seine Kurzformen.
+ *
+ * Eine Kurzform ersetzt **zwei oder mehr** aufeinanderfolgende grossgeschriebene
+ * Woerter durch ihre Anfangsbuchstaben; der Rest bleibt wortgleich. Anlass ist
+ * 8-07: Der Statblock heisst `Undead Workers United Local 1014`, die
+ * Bildunterschrift `UWU Local 1014`. Das ist noch Namensgleichheit — nur
+ * abgekuerzt, wie das Heft selbst abkuerzt —, kein Raten ueber Teilstuecke.
+ */
+export function namensformen(name: string): string[] {
+  const woerter = name.replace(/\s+/g, ' ').trim().split(' ');
+  const formen = [vergleichsform(name)];
+  for (let von = 0; von < woerter.length; von++) {
+    for (let bis = von + 2; bis <= woerter.length; bis++) {
+      const stueck = woerter.slice(von, bis);
+      if (!stueck.every((wort) => /^\p{Lu}/u.test(wort))) break;
+      const kuerzel = stueck.map((wort) => wort[0]).join('');
+      formen.push(vergleichsform([...woerter.slice(0, von), kuerzel, ...woerter.slice(bis)].join(' ')));
+    }
+  }
+  return formen;
+}
+
+/**
  * Das Bild aus dem Heft, das zu diesem Actor gehoert — oder keines.
  *
  * Die Regel ist absichtlich eng: **Namensgleichheit**, nichts weiter. Sie
  * traegt, weil beide Namen aus demselben Heft stammen — die Kopfzeile des
  * Statblocks und die Bildunterschrift derselben Person. An der Season 8
  * belegt: `Captain Ashfell Grimme` (8-04), `Poppet Mage` (8-01), `Twigjack`
- * (8-02), `Wenna Lafonte` und `Wight` (8-03).
+ * (8-02), `Wenna Lafonte` und `Wight` (8-03). Abkuerzungen zaehlen mit
+ * (`namensformen`).
  *
  * Weiter zu gehen — Mehrzahl abschneiden, Teilzeichenketten suchen — waere
  * geraten. Ein falsches Portraet am Actor ist schlimmer als gar keines: Es
@@ -119,7 +143,8 @@ const ANPASSUNG = /^(?:elite|weak)\s+/;
  */
 export function bildFuerKreatur(name: string, bilder: PersonenBild[]): string | undefined {
   const gesucht = vergleichsform(name);
-  const treffer = bilder.find((bild) => vergleichsform(bild.name) === gesucht);
+  const formen = new Set(namensformen(name));
+  const treffer = bilder.find((bild) => formen.has(vergleichsform(bild.name)));
   if (treffer) return treffer.pfad;
 
   const ohneVorsilbe = gesucht.replace(ANPASSUNG, '');

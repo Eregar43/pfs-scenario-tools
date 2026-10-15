@@ -101,7 +101,11 @@ export function slugifySkill(name: string): string {
  * Hinweis. Deshalb wird es nur uebernommen, wenn auch wirklich ein
  * Rettungswurf dasteht.
  */
-export function enrichChecks(text: string, optionen: readonly string[] = []): string {
+export function enrichChecks(
+  text: string,
+  optionen: readonly string[] = [],
+  merkmale: readonly string[] = [],
+): string {
   return text.replace(CHECK, (match, dc: string, basic: string | undefined, list: string) => {
     // Die Trenner bleiben beim Zerlegen erhalten, damit die Aufzaehlung
     // hinterher mit ihren eigenen Worten wieder dasteht.
@@ -119,6 +123,9 @@ export function enrichChecks(text: string, optionen: readonly string[] = []): st
         // Wurf-Optionen der Probe. Sie tragen den Bonus einer Begegnung:
         // Der Effekt fragt sie in seinem `predicate` ab und wirkt nur hier.
         if (optionen.length > 0) parts.push(`options:${optionen.join(',')}`);
+        // Zusaetzliche Merkmale, etwa `secret` — das System liest sie aus
+        // `traits:` und zeigt die Probe dann als verdeckt (`text-editor.ts`).
+        if (merkmale.length > 0) parts.push(`traits:${merkmale.join(',')}`);
         const probe = `@Check[${parts.join('|')}]`;
         const mitStufe = eintrag.stufe ? `${probe} (${eintrag.stufe})` : probe;
         return i === 0 ? mitStufe : `${trenner[i - 1] ?? ' or '}${mitStufe}`;

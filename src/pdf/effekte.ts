@@ -83,6 +83,34 @@ const ZIELE: { muster: RegExp; domaenen: string[] }[] = [
   { muster: /\b(checks?|challenges?)\b/i, domaenen: ['skill-check', 'saving-throw'] },
 ];
 
+/**
+ * Wurfarten, die das Heft einzeln beim Namen nennt.
+ *
+ * „all skill checks and attack rolls" ist eine Aufzaehlung, kein allgemeines
+ * „checks": Die erste passende Zeile von `ZIELE` gaebe dort Fertigkeiten und
+ * Rettungswuerfe — die Rettungswuerfe zu viel, die Angriffe zu wenig.
+ */
+const EINZELN: { muster: RegExp; domaene: string }[] = [
+  { muster: /\bskill checks?\b/i, domaene: 'skill-check' },
+  { muster: /\battack rolls?\b/i, domaene: 'attack-roll' },
+  { muster: /\b(saving throws?|saves?)\b/i, domaene: 'saving-throw' },
+];
+
+/**
+ * Die Domaenen zu „worauf".
+ *
+ * Eine Aufzaehlung gilt wie gedruckt. Ein Rettungswurf allein ist keine: Er
+ * laeuft weiter durch `ZIELE`, damit „Will saves … if the Perception check"
+ * bleibt, was es war.
+ */
+function domaenenFuer(worauf: string): string[] {
+  const genannt = EINZELN.filter((eintrag) => eintrag.muster.test(worauf)).map(
+    (eintrag) => eintrag.domaene,
+  );
+  if (genannt.some((domaene) => domaene !== 'saving-throw')) return genannt;
+  return ZIELE.find((ziel) => ziel.muster.test(worauf))?.domaenen ?? [];
+}
+
 /** Zerlegt einen Absatz in Saetze. Grob, aber fuer diesen Zweck genau genug. */
 function saetze(text: string): string[] {
   return text
@@ -123,7 +151,7 @@ export function sammleEffekte(blocks: Block[]): Szenarioeffekt[] {
         satz,
         wert: vorzeichen * Number(treffer[2]),
         art: (treffer[3]?.toLowerCase() as Bonusart) ?? 'untyped',
-        domaenen: ZIELE.find((ziel) => ziel.muster.test(worauf))?.domaenen ?? [],
+        domaenen: domaenenFuer(worauf),
         ziel: /\b(enemies|creatures)\b/i.test(satz) ? 'gegner' : 'gruppe',
         worauf,
         ...(SEITENVERWEIS.exec(worauf) ? { seite: Number(SEITENVERWEIS.exec(worauf)![1]) } : {}),

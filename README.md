@@ -7,8 +7,8 @@ Pathfinder-Society-Szenarios im Browser und legt daraus direkt in der Welt an,
 was am Spieltisch gebraucht wird: das Journal, die Bilder, die Szenen, die
 Kreaturen und die NPCs.
 
-Unterstützt sind derzeit die vier Hefte der **Season 8** (Year of Clockwork
-Mystery): **8-01 bis 8-04**. Gegen sie ist alles gemessen, und nur für ihre
+Unterstützt sind derzeit die acht Hefte der **Season 8** (Year of Clockwork
+Mystery): **8-01 bis 8-08**. Gegen sie ist alles gemessen, und nur für ihre
 Karten liegen Gitterwerte und Wände bereit. Andere Hefte lassen sich einlesen,
 das Ergebnis ist dann aber ungeprüft; ältere Seasons laufen durch, sind aber
 nicht das Ziel (siehe [Seasons](#seasons)).
@@ -162,6 +162,12 @@ Inhalte einsammelt.
   Heimlichkeit, Beschreibung, Entschärfen, Routine, Rücksetzung, Rüstung,
   Härte, Trefferpunkte, Rettungswürfe, Immunitäten und Schwächen, dazu je ein
   Eintrag für jeden Angriff und jede benannte Fähigkeit.
+- **Kreaturen ohne Vorlage** werden ebenso **gebaut**, wenn ihr Statblock
+  keine Quellenzeile trägt — sie stehen nur im Heft. Übernommen werden
+  Stufe, Merkmale, Größe, Wahrnehmung und Sinne, Sprachen, Fertigkeiten und
+  Wissen, Attribute, Rüstung, Rettungswürfe, Trefferpunkte, Immunitäten,
+  Schwächen und Resistenzen, Tempo, Angriffe und Fähigkeiten. Gegenstände und
+  Zauber bleiben Text; was nicht unterkam, nennt die Vorschau.
 
 ### Erneuter Import
 

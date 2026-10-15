@@ -60,6 +60,29 @@ describe('sammleEffekte', () => {
     expect(sammleEffekte([HEFT.backen])[0]?.domaenen).toEqual(['skill-check', 'saving-throw']);
   });
 
+  it('nimmt eine Aufzaehlung von Wurfarten wie gedruckt', () => {
+    // „checks" allein hiesse Fertigkeiten und Rettungswuerfe. Hier sind
+    // Fertigkeiten und Angriffe genannt — und nur die.
+    const helferin = block(
+      '- **Critical Success** As success, and the guide points out every loose ' +
+        'floorboard, granting the PCs a +1 circumstance bonus to all skill checks ' +
+        'and attack rolls.',
+    );
+
+    expect(sammleEffekte([helferin])[0]?.domaenen).toEqual(['skill-check', 'attack-roll']);
+  });
+
+  it('laesst einen einzelnen Rettungswurf beim alten Weg', () => {
+    // Rettungswurf plus Wahrnehmung im selben Satzteil blieb Wahrnehmung.
+    const nebel = block(
+      'All PCs gain a +1 circumstance bonus to Will saves from the fog (+2 if the ' +
+        'Perception check is a critical success).',
+      'body',
+    );
+
+    expect(sammleEffekte([nebel])[0]?.domaenen).toEqual(['perception']);
+  });
+
   it('unterscheidet einen Effekt fuer die Gegner', () => {
     const [effekt] = sammleEffekte([HEFT.piraten]);
 

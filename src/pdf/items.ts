@@ -25,6 +25,12 @@ export interface ItemEntry {
   /** Foundry-Kennung des Items. */
   id: string;
   kind: ItemKind;
+  /**
+   * Eine Rune: Das Kompendium nennt sie ohne das Wort (`Shadow`), das Heft
+   * mit (`*shadow rune*`). Erkannt an `system.usage.value` = `etched-onto-…`;
+   * ein eigenes Merkmal `rune` tragen sie nicht.
+   */
+  rune?: boolean;
 }
 
 export interface ItemLink {
@@ -76,10 +82,15 @@ const RUNE_PREFIX = /^([+-]\d+\s+)(.+)$/;
 /**
  * `scroll of X`, `wand of X`, `staff of X` — dafuer gibt es im Kompendium nur
  * eine Blanko-Schriftrolle ohne Zauber. Verwiesen wird stattdessen auf den
- * Zauber selbst; der Rang, der im Text davorstehen kann (`3rd-rank scroll of
- * ...`), gehoert nicht zu diesem Ausdruck und bleibt ohnehin aussen vor.
+ * Zauber selbst. Der Rang davor (`3rd-rank scroll of soothe`, aelter
+ * `3rd-level`) steht in 8-07 mit im Kursivsatz; er bleibt Text vor dem
+ * Verweis, wie das Gefaess selbst.
  */
-const SPELL_VESSEL = /^(scrolls?|wands?|staffs?|staves)(\s+of\s+)(.+)$/i;
+/** `shadow rune`, `greater shadow runes` — der Name ohne das Wort `rune`. */
+const RUNE_SUFFIX = /^(.+?)\s+runes?$/i;
+
+const SPELL_VESSEL =
+  /^(\d+(?:st|nd|rd|th)-(?:rank|level)\s+)?(scrolls?|wands?|staffs?|staves)(\s+of\s+)(.+)$/i;
 
 function key(kind: ItemKind, name: string): string {
   return `${kind}|${canonicalise(name)}`;
@@ -121,9 +132,17 @@ export class ItemIndex {
 
     const vessel = SPELL_VESSEL.exec(trimmed);
     if (vessel) {
-      const [, word, of, spellName] = vessel;
+      const [, rang = '', word, of, spellName] = vessel;
       const spell = this.#lookup('spell', spellName!);
-      if (spell) return { label: spellName!, before: `${word}${of}`, entry: spell };
+      if (spell) return { label: spellName!, before: `${rang}${word}${of}`, entry: spell };
+    }
+
+    // Nur echte Runen: Sonst hiesse `*shadow rune*` womoeglich ein
+    // gewoehnlicher Gegenstand namens `Shadow`. 8-08: `Shadow`.
+    const rune = RUNE_SUFFIX.exec(trimmed);
+    if (rune) {
+      const eintrag = this.#lookup('equipment', rune[1]!);
+      if (eintrag?.rune) return { label: trimmed, before: '', entry: eintrag };
     }
 
     return undefined;
@@ -218,6 +237,15 @@ const MIN_CONTENT_WORDS = 3;
 const MIN_CONTENT_WORDS_GRADED = 2;
 const GRADED = /\(/;
 
+/**
+ * Eine Quellenangabe direkt hinter dem Namen: `(*Pathfinder Treasure Vault*
+ * 47)` im Fliesstext, `(level 3, 9 gp; *Pathfinder Treasure Vault* 47)` in der
+ * Liste der Ausruestung. Damit erklaert das Heft selbst, dass hier ein
+ * Gegenstand steht — dann genuegen wie bei den Stufen zwei Sinnwoerter. In 8-07
+ * blieb so `diplomat’s charcuterie` der Missionsausruestung ohne Verweis.
+ */
+const QUELLENANGABE = /^\s*\((?:level\s+\d+[^;)]*;\s*)?\*[^*]+\*\s*\d+\)/i;
+
 function contentWords(words: readonly string[]): number {
   return words.filter((word) => !FILLER.has(word.toLowerCase())).length;
 }
@@ -246,8 +274,14 @@ function tokenise(text: string): { words: string[]; gaps: string[] } {
  * ebenfalls aussen vor; ein zufaellig passendes Wortpaar in der Erzaehlung
  * waere sonst zu leicht ein falscher Treffer.
  */
-function enrichPlainSegment(text: string, items: ItemIndex): string {
+function enrichPlainSegment(text: string, items: ItemIndex, folgetext = ''): string {
   const { words, gaps } = tokenise(text);
+  /** Was hinter den ersten `bis` Woertern steht, bis ueber das Stueck hinaus. */
+  const dahinter = (bis: number): string => {
+    let rest = gaps[bis] ?? '';
+    for (let k = bis; k < words.length; k++) rest += words[k]! + (gaps[k + 1] ?? '');
+    return rest + folgetext;
+  };
   const parts: string[] = [gaps[0] ?? ''];
   let i = 0;
 
@@ -260,7 +294,10 @@ function enrichPlainSegment(text: string, items: ItemIndex): string {
       if (contentWords(slice) < MIN_CONTENT_WORDS_GRADED) continue;
       const found = items.find(slice.join(' '));
       if (!found || found.before !== '' || found.entry.kind !== 'equipment') continue;
-      const noetig = GRADED.test(found.entry.name) ? MIN_CONTENT_WORDS_GRADED : MIN_CONTENT_WORDS;
+      const noetig =
+        GRADED.test(found.entry.name) || QUELLENANGABE.test(dahinter(i + candidate))
+          ? MIN_CONTENT_WORDS_GRADED
+          : MIN_CONTENT_WORDS;
       if (contentWords(slice) < noetig) continue;
       link = found;
       span = candidate;
@@ -290,8 +327,13 @@ function enrichPlainSegment(text: string, items: ItemIndex): string {
 export function enrichPlainItems(text: string, items: ItemIndex): string {
   const parts: string[] = [];
   let last = 0;
+  // Die Quellenangabe steht kursiv und damit im geschuetzten Teil dahinter —
+  // das Stueck bekommt den restlichen Text deshalb zum Nachsehen mit.
   for (const match of text.matchAll(PROTECTED)) {
-    parts.push(enrichPlainSegment(text.slice(last, match.index), items), match[0]);
+    parts.push(
+      enrichPlainSegment(text.slice(last, match.index), items, text.slice(match.index)),
+      match[0],
+    );
     last = match.index + match[0].length;
   }
   parts.push(enrichPlainSegment(text.slice(last), items));

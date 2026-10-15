@@ -165,9 +165,18 @@ async function sammleItems(): Promise<ItemEntry[]> {
   const gefunden: ItemEntry[] = [];
 
   for (const { collection, kind } of ITEM_PACKS) {
-    for (const eintrag of await holeIndex(collection, [])) {
+    // Die Verwendung verraet die Runen — kein Vorgabefeld des Index.
+    const felder = kind === 'equipment' ? ['system.usage.value'] : [];
+    for (const eintrag of await holeIndex(collection, felder)) {
       if (typeof eintrag.name !== 'string') continue;
-      gefunden.push({ name: eintrag.name, pack: collection, id: eintrag._id, kind });
+      const rune = eintrag.system?.usage?.value?.startsWith('etched-onto') === true;
+      gefunden.push({
+        name: eintrag.name,
+        pack: collection,
+        id: eintrag._id,
+        kind,
+        ...(rune ? { rune } : {}),
+      });
     }
   }
 

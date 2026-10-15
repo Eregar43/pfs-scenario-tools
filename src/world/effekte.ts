@@ -53,9 +53,13 @@ export function effektName(effekt: Szenarioeffekt, schluessel: string): string {
     ? 'initiative'
     : effekt.domaenen.includes('perception')
       ? 'Perception'
-      : effekt.domaenen.length > 0
-        ? 'checks'
-        : kuerze(effekt.worauf, 40);
+      : effekt.domaenen.includes('attack-roll')
+        ? effekt.domaenen.length > 1
+          ? 'checks and attacks'
+          : 'attacks'
+        : effekt.domaenen.length > 0
+          ? 'checks'
+          : kuerze(effekt.worauf, 40);
   const wer = effekt.ziel === 'gegner' ? ' (enemies)' : '';
   return `PFS ${schluessel}: ${wert} ${worauf}${wer}`;
 }
