@@ -15,6 +15,10 @@ behobene Fehler.
   Szeneneinstellungen, legt der Import sie mit an. Für die elf Karten der
   Season 8 ändert sich vorerst nichts: Sie führen bisher nur Gitter,
   Versatz, Skalierung und Wände.
+- **Spieler sehen die Einstellungen des Moduls nicht mehr.** Der Schalter
+  „Lesebericht" galt je Benutzer und erschien deshalb auch bei Spielern. Er
+  gilt jetzt für die ganze Welt und ist nur noch für den Spielleiter sichtbar.
+  Wer ihn eingeschaltet hatte, muss ihn einmal neu einschalten.
 
 ## 1.3.1 — 2026-10-09
 
