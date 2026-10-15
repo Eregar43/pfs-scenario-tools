@@ -80,13 +80,16 @@ export function registriereEinstellungen(): void {
     default: true,
   });
 
-  // `client`, nicht `world`: Das ist eine Anzeigevorliebe des einzelnen
-  // Benutzers und aendert nichts an dem, was in der Welt landet. Alle uebrigen
-  // Einstellungen des Moduls tun genau das und sind deshalb weltweit.
+  // `world`, obwohl es eine Anzeigevorliebe ist: Foundry zeigt Einstellungen
+  // mit `client` **jedem** Benutzer, auch Spielern — und dieser Schalter war
+  // der einzige Grund, warum das Modul in ihren Einstellungen auftauchte.
+  // Einstellungen mit `world` sieht nur, wer Einstellungen aendern darf
+  // (`SETTINGS_MODIFY`, nachgelesen in `SettingsConfig` von v14). Importieren
+  // kann ohnehin nur der Spielleiter.
   registriere(SETTING_LESEBERICHT, {
     name: L('Einstellungen.Lesebericht.Name'),
     hint: L('Einstellungen.Lesebericht.Hinweis'),
-    scope: 'client',
+    scope: 'world',
     config: true,
     type: Boolean,
     default: false,
