@@ -3,7 +3,7 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
-## Unveröffentlicht
+## 1.4.0 — 2026-10-15
 
 - **Neues Fenster „Karte exportieren".** Ein Knopf im Verwaltungsfenster
   öffnet es. Es liest aus einer Szene alles, was zur Karte gehört — Gitter
