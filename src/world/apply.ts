@@ -10,7 +10,16 @@ import type {
   SeitenAbbild,
   SzeneWunsch,
 } from './plan.ts';
-import { wandSignaturen, type Wand } from './waende.ts';
+import { leinwand } from './plan.ts';
+import {
+  notizAusDatei,
+  szenenAbweichung,
+  szenenStand,
+  tiefMischen,
+  type JournalArt,
+  type Journalkennungen,
+} from './kartenabgleich.ts';
+import type { Kartendaten } from './karten.ts';
 
 /**
  * Fuehrt einen Plan aus.
@@ -151,8 +160,9 @@ export async function fuehreAus(
     ergebnis.anhangSeiten = anhangSeiten.length;
   }
 
+  let handoutJournalId: string | undefined;
   if (plan.handouts) {
-    await schreibeJournal(
+    const handoutErgebnis = await schreibeJournal(
       plan.handouts.journal,
       handoutSeiten,
       zuSeitendaten,
@@ -161,11 +171,19 @@ export async function fuehreAus(
       plan.handouts.seiten.aktualisiert.length,
       NEBENJOURNAL_RECHTE,
     );
+    handoutJournalId = handoutErgebnis.journalId;
     ergebnis.handoutSeiten = handoutSeiten.length;
   }
 
   if (plan.szenen && szenen.length > 0) {
-    await schreibeSzenen(plan.szenen, szenen, optionen, gemeinsam);
+    // Notizen der Kartendatei zeigen auf Journale ueber deren Art; erst
+    // hier, nach dem Schreiben der Journale, stehen die Kennungen fest.
+    const journale: Journalkennungen = {
+      journal: ergebnis.journalId,
+      ...(anhangJournalId ? { anhangJournal: anhangJournalId } : {}),
+      ...(handoutJournalId ? { handoutJournal: handoutJournalId } : {}),
+    };
+    await schreibeSzenen(plan.szenen, szenen, optionen, gemeinsam, journale);
   }
 
   if (plan.kreaturen && kreaturen.length > 0) {
@@ -379,15 +397,17 @@ async function schreibeKreaturen(
 /**
  * Legt den Szenen-Ordnerbaum an und gleicht die Szenen ab.
  *
- * Aktualisiert werden Name, Hintergrund, Ordner, Messwerte und exportierte
- * Waende — Gitter und Licht unvermessener Karten gehoeren dem Spielleiter. Geloescht wird nie; der Plan meldet
- * Entfallenes nur.
+ * Aktualisiert werden Name, Hintergrund, Ordner und alles, was die
+ * Kartendatei nennt (`daten/karten/`) — Karten ohne Datei gehoeren in
+ * Gitter, Licht und Waenden dem Spielleiter. Geloescht wird nie; der Plan
+ * meldet Entfallenes nur.
  */
 async function schreibeSzenen(
   plan: NonNullable<ImportPlan['szenen']>,
   szenen: SzeneWunsch[],
   optionen: AusfuehrOptionen,
   gemeinsam: Record<string, unknown> & { season: number },
+  journale: Journalkennungen,
 ): Promise<void> {
   const seasonId = await ordnerId(plan.seasonOrdner, () => ({
     name: plan.seasonOrdner.name,
@@ -413,29 +433,29 @@ async function schreibeSzenen(
 
   const flags = stempel({ ...gemeinsam, kind: 'scene', scenario: optionen.schluessel });
   const vorhanden = new Set<string>((game.scenes?.contents ?? []).map((szene) => szene.id));
+  const artVon = journalArtVon(journale);
 
   const anzulegen = szenen
     .filter((szene) => !vorhanden.has(szene.id))
-    .map((szene) => ({
-      _id: szene.id,
-      name: szene.name,
-      folder: szenarioId,
-      // Der Versatz der Karte heisst am Dokument `shift`, im Dialog steht er
-      // unter „Scene Properties" — nicht zu verwechseln mit den
-      // Textur-Offsets der Ebene, die das Gitterwerkzeug nicht anfasst.
-      shiftX: szene.versatzX ?? 0,
-      shiftY: szene.versatzY ?? 0,
-      // Niedrig aufgeloeste Karten bekommen die doppelte Leinwand; Foundry
-      // zieht den Hintergrund auf die Szenengroesse auf.
-      width: Math.round(szene.breite * (szene.skalierung ?? 1)),
-      height: Math.round(szene.hoehe * (szene.skalierung ?? 1)),
-      padding: 0,
-      // Das Raster ist auf der Karte aufgedruckt — Foundrys Linien darueber
-      // waeren doppelt.
-      grid: { alpha: 0, ...(szene.gitter !== undefined ? { size: szene.gitter } : {}) },
-      navigation: false,
-      flags,
-    }));
+    .map((szene) =>
+      // Erst die Vorgaben des Moduls, darueber die Kartendatei: Was der
+      // Autor in der Szene eingestellt hat, gewinnt.
+      tiefMischen(
+        {
+          _id: szene.id,
+          name: szene.name,
+          folder: szenarioId,
+          ...leinwand(szene),
+          padding: 0,
+          // Das Raster ist auf der Karte aufgedruckt — Foundrys Linien
+          // darueber waeren doppelt.
+          grid: { alpha: 0 },
+          navigation: false,
+          flags,
+        },
+        szene.karte?.szene ?? {},
+      ),
+    );
 
   if (anzulegen.length) {
     await Scene.createDocuments(anzulegen, { keepId: true });
@@ -444,11 +464,12 @@ async function schreibeSzenen(
   // Hintergrundbild und -farbe leben seit v14 in der **Ebene** der Szene —
   // Felder am Szenen-Dokument werden dafuer stillschweigend verworfen (so
   // entstanden Szenen ohne Bild). Foundry legt beim Anlegen selbst eine
-  // Standardebene an; die bekommt hier Bild und schwarzen Grund.
+  // Standardebene an; die bekommt hier Bild, Grund und die Ebenenfelder der
+  // Kartendatei.
   for (const szene of szenen) {
     const dokument = game.scenes?.get(szene.id);
     if (!dokument || vorhanden.has(szene.id)) continue;
-    await schreibeEbene(dokument, szene.hintergrund);
+    await schreibeEbene(dokument, szene.hintergrund, szene.karte?.ebene);
   }
 
   // Vorhandene Szenen nur anfassen, wenn sich an **unseren** Feldern etwas
@@ -459,77 +480,128 @@ async function schreibeSzenen(
     if (!dokument) continue;
 
     const hintergrund = dokument.levels?.contents?.[0]?.background?.src ?? '';
-    const vermessen =
-      szene.gitter !== undefined &&
-      (dokument.grid?.size !== szene.gitter ||
-        dokument.shiftX !== szene.versatzX ||
-        dokument.shiftY !== szene.versatzY);
-    if (dokument.name === szene.name && hintergrund === szene.hintergrund && !vermessen) {
-      continue;
-    }
+    const abweichung = szene.karte
+      ? szenenAbweichung(szenenStand(dokument.toObject(), artVon), szene.karte)
+      : undefined;
 
-    await dokument.update({
-      name: szene.name,
-      ...(szene.versatzX !== undefined ? { shiftX: szene.versatzX } : {}),
-      ...(szene.versatzY !== undefined ? { shiftY: szene.versatzY } : {}),
-      ...(szene.gitter !== undefined ? { grid: { size: szene.gitter, alpha: 0 } } : {}),
-      width: Math.round(szene.breite * (szene.skalierung ?? 1)),
-      height: Math.round(szene.hoehe * (szene.skalierung ?? 1)),
-      folder: szenarioId,
-      flags,
-    });
-    await schreibeEbene(dokument, szene.hintergrund);
+    const groesse = leinwand(szene);
+    if (
+      dokument.name !== szene.name ||
+      dokument.width !== groesse.width ||
+      dokument.height !== groesse.height ||
+      abweichung?.szene
+    ) {
+      await dokument.update(
+        tiefMischen(
+          { name: szene.name, ...leinwand(szene), folder: szenarioId, flags },
+          szene.karte?.szene ?? {},
+        ),
+      );
+    }
+    if (hintergrund !== szene.hintergrund || abweichung?.ebene) {
+      await schreibeEbene(dokument, szene.hintergrund, szene.karte?.ebene);
+    }
   }
 
-  // Waende zuletzt, fuer neue wie vorhandene Szenen gleichermassen — und
-  // unabhaengig davon, ob sich oben an der Szene etwas geaendert hat.
+  // Eingebettetes zuletzt, fuer neue wie vorhandene Szenen gleichermassen —
+  // und unabhaengig davon, ob sich oben an der Szene etwas geaendert hat.
   for (const szene of szenen) {
     const dokument = game.scenes?.get(szene.id);
-    if (dokument) await gleicheWaendeAb(dokument, szene.waende);
+    if (dokument && szene.karte) await gleicheEingebettetesAb(dokument, szene.karte, journale);
+  }
+}
+
+/** Die Umkehrung der Journal-Kennungen: Kennung → Art. */
+function journalArtVon(journale: Journalkennungen): (id: string) => JournalArt | undefined {
+  const arten = new Map<string, JournalArt>();
+  for (const [art, id] of Object.entries(journale) as [JournalArt, string | undefined][]) {
+    if (id) arten.set(id, art);
+  }
+  return (id) => arten.get(id);
+}
+
+/**
+ * Die eingebetteten Sammlungen einer Szene, in der Reihenfolge, in der sie
+ * geschrieben werden. `keepId` nur bei Regionen: Ihre Verhalten verweisen
+ * ueber Kennungen aufeinander (etwa ein Teleporter auf seine Zielregion), und
+ * die Kennung der Szene ist in jeder Welt dieselbe.
+ */
+const SAMMLUNGEN = [
+  { teil: 'waende', typ: 'Wall', feld: 'walls', keepId: false },
+  { teil: 'lichter', typ: 'AmbientLight', feld: 'lights', keepId: false },
+  { teil: 'regionen', typ: 'Region', feld: 'regions', keepId: true },
+  { teil: 'notizen', typ: 'Note', feld: 'notes', keepId: false },
+  { teil: 'zeichnungen', typ: 'Drawing', feld: 'drawings', keepId: false },
+] as const;
+
+/**
+ * Ersetzt Waende, Lichter, Regionen, Notizen und Zeichnungen einer Szene
+ * durch die aus der Kartendatei — je Sammlung nur, wenn die Datei sie nennt,
+ * und nur bei Abweichung. Was die Datei nicht nennt, bleibt unberuehrt; dort
+ * darf Handgezeichnetes weiterleben. Nennt sie es, ist das Repo die Quelle:
+ * von Hand Nachgezogenes wird beim naechsten Lauf ersetzt, dafuer gibt es
+ * den Export.
+ */
+async function gleicheEingebettetesAb(
+  dokument: FoundryScene,
+  karte: Kartendaten,
+  journale: Journalkennungen,
+): Promise<void> {
+  const abweichung = szenenAbweichung(
+    szenenStand(dokument.toObject(), journalArtVon(journale)),
+    karte,
+  );
+
+  for (const { teil, typ, feld, keepId } of SAMMLUNGEN) {
+    const soll = karte[teil];
+    if (!soll || !abweichung[teil]) continue;
+
+    const daten =
+      teil === 'notizen'
+        ? soll.map((notiz) => notizAusDatei(notiz, journale))
+        : soll.map((eintrag) => ({ ...eintrag }));
+
+    // `deleteAll` statt einer Id-Liste: Am 13.08.2026 verdoppelten sich
+    // Waende, weil die Sammlung hier leer aussah, obwohl die Szene welche
+    // hatte — die Id-Liste loeschte dann nichts, und die neuen kamen
+    // obendrauf. `deleteAll` raeumt serverseitig ab und haengt nicht an
+    // dieser Sicht.
+    await dokument.deleteEmbeddedDocuments(typ, [], { deleteAll: true });
+    if (daten.length > 0) {
+      await dokument.createEmbeddedDocuments(typ, daten, keepId ? { keepId: true } : undefined);
+    }
+
+    // Zuruecklesen statt vertrauen: Stimmt die Zahl danach nicht, soll das im
+    // Protokoll stehen und nicht erst am Spieltisch auffallen.
+    const danach = ((dokument.toObject()[feld] as unknown[] | undefined) ?? []).length;
+    if (danach !== daten.length) {
+      console.warn(
+        `${MODULE_ID} | Szene „${dokument.name}": ${daten.length} × ${typ} geschrieben, ` +
+          `aber ${danach} zurueckgelesen.`,
+      );
+    }
   }
 }
 
 /**
- * Ersetzt die Waende einer Szene durch die exportierten aus dem Repo — nur
- * wenn es fuer die Karte ueberhaupt eine Wanddatei gibt, und nur bei
- * Abweichung. Karten ohne Wanddatei bleiben unberuehrt; dort duerfen
- * handgezeichnete Waende weiterleben. Liegt eine Datei vor, ist das Repo
- * die Quelle: von Hand nachgezogene Waende werden beim naechsten Lauf
- * ersetzt, dafuer gibt es den Export (`tools/exportiere-waende.mjs`).
+ * Setzt Bild und Grund auf die erste Ebene der Szene, dazu die Ebenenfelder
+ * der Kartendatei.
  */
-async function gleicheWaendeAb(dokument: FoundryScene, waende?: Wand[]): Promise<void> {
-  if (!waende) return;
-  const vorhanden = dokument.walls?.contents ?? [];
-  if (vorhanden.length > 0 && wandSignaturen(vorhanden) === wandSignaturen(waende)) return;
-
-  // `deleteAll` statt einer Id-Liste: Am 13.08.2026 verdoppelten sich
-  // Waende, weil die Sammlung hier leer aussah, obwohl die Szene welche
-  // hatte — die Id-Liste loeschte dann nichts, und die neuen kamen obendrauf.
-  // `deleteAll` raeumt serverseitig ab und haengt nicht an dieser Sicht.
-  await dokument.deleteEmbeddedDocuments('Wall', [], { deleteAll: true });
-  if (waende.length > 0) {
-    await dokument.createEmbeddedDocuments('Wall', waende);
-  }
-
-  // Zuruecklesen statt vertrauen: Stimmt die Zahl danach nicht, soll das im
-  // Protokoll stehen und nicht erst am Spieltisch auffallen.
-  const danach = dokument.walls?.contents?.length ?? 0;
-  if (danach !== waende.length) {
-    console.warn(
-      `${MODULE_ID} | Szene „${dokument.name}": ${waende.length} Waende geschrieben, ` +
-        `aber ${danach} zurueckgelesen.`,
-    );
-  }
-}
-
-/** Setzt Bild und schwarzen Grund auf die erste Ebene der Szene. */
-async function schreibeEbene(dokument: FoundryScene, hintergrund: string): Promise<void> {
+async function schreibeEbene(
+  dokument: FoundryScene,
+  hintergrund: string,
+  ebenenFelder?: Record<string, unknown>,
+): Promise<void> {
   const ebene = dokument.levels?.contents?.[0];
   if (!ebene) return;
   await dokument.updateEmbeddedDocuments('Level', [
-    // Der Rand um die Karte soll nicht leuchten — daher Schwarz statt des
-    // Foundry-Graus.
-    { _id: ebene.id, background: { src: hintergrund, color: '#000000' } },
+    tiefMischen(
+      // Der Rand um die Karte soll nicht leuchten — daher Schwarz statt des
+      // Foundry-Graus, solange die Kartendatei nichts anderes sagt. Das Bild
+      // steht zuletzt: Es gehoert dieser Welt, nicht der Datei.
+      tiefMischen({ _id: ebene.id, background: { color: '#000000' } }, ebenenFelder ?? {}),
+      { background: { src: hintergrund } },
+    ),
   ]);
 
   // Das Vorschaubild entsteht nicht von selbst: Foundry erneuert es nur beim

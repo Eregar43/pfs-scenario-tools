@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { MODULE_ID } from '../src/world/flags.ts';
 import { planeImport, type Weltabbild, type Wunsch } from '../src/world/plan.ts';
-import { wandSignaturen } from '../src/world/waende.ts';
+import type { SzenenStand } from '../src/world/kartenabgleich.ts';
 
 const LEER: Weltabbild = { ordner: [], journale: [] };
 
@@ -22,6 +22,12 @@ function wunsch(ueberschreibungen: Partial<Wunsch> = {}): Wunsch {
 
 function flag(werte: Record<string, unknown>): { flags: Record<string, Record<string, unknown>> } {
   return { flags: { [MODULE_ID]: werte } };
+}
+
+
+/** Ein Vergleichsstand, wie `szenenStand` ihn aus `toObject()` baut. */
+function stand(szene: Record<string, unknown>, teile: Partial<SzenenStand> = {}): SzenenStand {
+  return { szene, waende: [], lichter: [], regionen: [], notizen: [], zeichnungen: [], ...teile };
 }
 
 describe('planeImport — leere Welt', () => {
@@ -425,13 +431,15 @@ describe('planeImport — Szenen', () => {
       ...flag({ kind: 'scene', scenario: '08-01', season: 8 }),
     };
     const gewuenscht = mitSzenen();
-    gewuenscht.szenen = [{ ...gewuenscht.szenen![0]!, waende: [wand] }];
+    const erste = gewuenscht.szenen![0]!;
+    gewuenscht.szenen = [{ ...erste, karte: { waende: [wand] } }];
+    const groesse = { width: erste.breite, height: erste.hoehe };
 
     // Welt ohne Waende: die Szene braucht ein Update.
     const ohne: Weltabbild = {
       ordner: [],
       journale: [],
-      szenen: [{ ...szeneInWelt, waendeSignatur: wandSignaturen([]) }],
+      szenen: [{ ...szeneInWelt, stand: stand(groesse) }],
     };
     expect(planeImport(ohne, gewuenscht).szenen?.szenen.aktualisiert).toEqual(['The Laboratory']);
 
@@ -439,12 +447,12 @@ describe('planeImport — Szenen', () => {
     const gleich: Weltabbild = {
       ordner: [],
       journale: [],
-      szenen: [{ ...szeneInWelt, waendeSignatur: wandSignaturen([wand]) }],
+      szenen: [{ ...szeneInWelt, stand: stand(groesse, { waende: [wand] }) }],
     };
     expect(planeImport(gleich, gewuenscht).szenen?.szenen.unveraendert).toEqual(['The Laboratory']);
 
-    // Kennt das Weltabbild keine Signatur (alte Aufrufer), gilt: kein Urteil,
-    // keine Aktualisierung — wie bei den Messwerten unvermessener Karten.
+    // Kennt das Weltabbild keinen Stand (fremde Szene), gilt: kein Urteil,
+    // keine Aktualisierung — wie bei unvermessenen Karten.
     const unbekannt: Weltabbild = { ordner: [], journale: [], szenen: [szeneInWelt] };
     expect(planeImport(unbekannt, gewuenscht).szenen?.szenen.unveraendert).toEqual([
       'The Laboratory',
@@ -481,9 +489,7 @@ describe('planeImport — vermessene Karten', () => {
           hintergrund: 'pfs/pfs_s08_01/karten/the-laboratory.webp',
           breite: 1325,
           hoehe: 1065,
-          gitter: 43,
-          versatzX: -25,
-          versatzY: -27,
+          karte: { szene: { grid: { size: 43 }, shiftX: -25, shiftY: -27 } },
         },
       ],
     });
@@ -498,9 +504,7 @@ describe('planeImport — vermessene Karten', () => {
           name: 'The Laboratory',
           ordnerId: null,
           hintergrund: 'pfs/pfs_s08_01/karten/the-laboratory.webp',
-          gitter: 100,
-          versatzX: 0,
-          versatzY: 0,
+          stand: stand({ width: 1325, height: 1065, grid: { size: 100 }, shiftX: 0, shiftY: 0 }),
           ...flag({ kind: 'scene', scenario: '08-01', season: 8 }),
         },
       ],
@@ -512,7 +516,7 @@ describe('planeImport — vermessene Karten', () => {
   });
 
   it('laesst eine unvermessene Karte die Spielleiter-Werte nicht anfechten', () => {
-    // Ohne Eintrag in der Tabelle zaehlen Gitter und Versatz nicht als
+    // Ohne Kartendatei zaehlen Gitter und Versatz nicht als
     // unsere Felder — was der Spielleiter eingestellt hat, bleibt.
     const welt: Weltabbild = {
       ordner: [],
@@ -523,9 +527,7 @@ describe('planeImport — vermessene Karten', () => {
           name: 'The Laboratory',
           ordnerId: null,
           hintergrund: 'pfs/pfs_s08_01/karten/the-laboratory.webp',
-          gitter: 77,
-          versatzX: 5,
-          versatzY: 5,
+          stand: stand({ width: 1325, height: 1065, grid: { size: 77 }, shiftX: 5, shiftY: 5 }),
           ...flag({ kind: 'scene', scenario: '08-01', season: 8 }),
         },
       ],

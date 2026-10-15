@@ -116,8 +116,8 @@ declare global {
      *
      * Nicht die Felder des Dokuments: `threshold` und `animation` sind dort
      * Teilmodelle, und `JSON.stringify` darauf ist nicht dasselbe wie der in
-     * der Welt gespeicherte Wert. `tools/exportiere-waende.mjs` liest die
-     * Quelldaten, also muss der Weg von innen es auch tun.
+     * der Welt gespeicherte Wert. In die Kartendatei gehoeren die
+     * Quelldaten.
      */
     toObject(): Record<string, unknown>;
     /** Die uebrigen Vergleichsfelder (move, sight, door, ds, …). */
@@ -145,7 +145,16 @@ declare global {
     levels?: FoundryCollection<FoundryLevel> & Iterable<FoundryLevel>;
     walls?: FoundryCollection<FoundryWall> & Iterable<FoundryWall>;
     update(daten: Record<string, unknown>): Promise<unknown>;
-    createEmbeddedDocuments(typ: string, daten: Record<string, unknown>[]): Promise<unknown>;
+    /**
+     * Die Quelldaten samt eingebetteter Sammlungen (`levels`, `walls`,
+     * `lights`, `regions`, `notes`, `drawings` …) als schlichte Objekte.
+     */
+    toObject(): Record<string, unknown>;
+    createEmbeddedDocuments(
+      typ: string,
+      daten: Record<string, unknown>[],
+      optionen?: { keepId?: boolean },
+    ): Promise<unknown>;
     updateEmbeddedDocuments(typ: string, daten: Record<string, unknown>[]): Promise<unknown>;
     /** `deleteAll: true` loescht alle eingebetteten Dokumente des Typs, die Id-Liste ist dann leer. */
     deleteEmbeddedDocuments(
