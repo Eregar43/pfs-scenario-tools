@@ -114,7 +114,10 @@ Inhalte einsammelt.
 - **Szenen** — je Schlachtkarte eine, mit schwarzem Rand und ausgeblendetem
   Foundry-Gitter (das Raster ist ja aufgedruckt). Für vermessene Karten sitzen
   Gittergröße und Versatz sofort richtig, und **Wände samt Türen** stehen
-  bereits (siehe unten).
+  bereits (siehe unten). Was das Heft auf die Karte druckt, kommt mit:
+  **Raumkennungen** (A1, A2 …) als Notizen, die die Journalseite des Raums
+  öffnen, und **Fallenbereiche, Startfelder und Beschriftungen** als
+  Zeichnungen, die nur der Spielleiter sieht.
 - **Kreaturen** als Welt-Actors, kopiert aus den Kompendien: direkte Treffer,
   Elite-/Weak-Fassungen über die Anpassung des PF2e-Systems, und **Varianten**
   über die Quellenzeile des Statblocks („Variant pirate …") — der Actor heißt

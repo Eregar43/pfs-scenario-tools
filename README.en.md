@@ -110,7 +110,10 @@ contents.
 - **Scenes** — one per battle map, with a black border and Foundry's grid
   hidden (the grid is printed on the map already). For measured maps, grid
   size and offset sit right immediately, and **walls including doors** are
-  already in place (see below).
+  already in place (see below). What the booklet prints on the map comes
+  along: **room labels** (A1, A2 …) as notes that open the room's journal
+  page, and **trap areas, starting positions and labels** as drawings only
+  the GM can see.
 - **Creatures** as world actors, copied from the compendia: direct matches,
   elite and weak versions via the PF2e system's adjustment, and **variants**
   via the stat block's source line ("Variant pirate …") — the actor is then
