@@ -31,6 +31,10 @@ describe('bildPfad', () => {
     );
   });
 
+  it('schreibt den Dateinamen klein, die gewaehlte Bildwurzel aber nicht', () => {
+    expect(bildPfad('Assets/PFS', '08-01', 'Danbry', 'WEBP')).toBe('Assets/PFS/pfs_s08_01/danbry.webp');
+  });
+
   it('vertraegt eine Wurzel mit Schlusstrich', () => {
     // Der FilePicker liefert den Pfad mal mit, mal ohne Schlusstrich.
     expect(bildPfad('assets/pfs/', '08-01', 'locust-dagger', 'png')).toBe(
