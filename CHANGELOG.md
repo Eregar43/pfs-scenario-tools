@@ -3,7 +3,7 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
-## Unveröffentlicht
+## 1.5.1 — 2026-10-21
 
 - **Raumsymbole erscheinen auf jedem Server.** Die Symbole waren SVG-Dateien
   mit großem Anfangsbuchstaben (`A1.svg`). Ein Foundry-Server, der
