@@ -43,5 +43,7 @@
   "manifest": "#{MANIFEST}#",
   "download": "#{DOWNLOAD}#",
   "license": "LICENSE",
-  "readme": "README.md"
+  "readme": "README.md",
+  "changelog": "https://github.com/Eregar43/pfs-scenario-tools/blob/main/CHANGELOG.md",
+  "bugs": "https://github.com/Eregar43/pfs-scenario-tools/issues"
 }
