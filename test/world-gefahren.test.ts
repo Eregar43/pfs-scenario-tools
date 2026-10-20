@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { leseStatblock } from '../src/pdf/statblock.ts';
-import { baueGefahr, leseIwr, leseStealth } from '../src/world/gefahren.ts';
+import { baueGefahr, html, leseIwr, leseStealth } from '../src/world/gefahren.ts';
 
 /**
  * Die Gefahr hier ist **erfunden**; Paizo-Text gehoert nicht ins Repo. Das
@@ -263,5 +263,18 @@ describe('baueGefahr — Quellenangabe', () => {
   it('laesst sie leer, wenn keine mitkommt', () => {
     const system = gefahr().daten.system as { details: { publication: { title: string } } };
     expect(system.details.publication.title).toBe('');
+  });
+});
+
+describe('html', () => {
+  it('setzt selbst formulierte Erfolgsgrade in einen eigenen Absatz', () => {
+    const absaetze = html('Alle wuerfeln. **If 2 or more creatures succeed** Wenig. **If 0 creatures succeed** Viel.')
+      .split('\n');
+    expect(absaetze).toHaveLength(3);
+    expect(absaetze[1]).toMatch(/^<p><strong>If 2 or more creatures succeed<\/strong>/);
+  });
+
+  it('bricht nicht vor einer fetten Raumnummer um', () => {
+    expect(html('Alle in **C3** fallen.').split('\n')).toHaveLength(1);
   });
 });

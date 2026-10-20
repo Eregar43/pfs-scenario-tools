@@ -17,7 +17,7 @@
  * falscher Feldname faellt sonst erst dem Spielleiter am Tisch auf.
  */
 import { foundryId, inlineHtml } from '../pdf/journal.ts';
-import { FORTSETZUNG, type Angriff, type Faehigkeit, type Statblock } from '../pdf/statblock.ts';
+import { FORTSETZUNG, FREIER_ERFOLGSGRAD, type Angriff, type Faehigkeit, type Statblock } from '../pdf/statblock.ts';
 import { normalisiere } from './statblock-abgleich.ts';
 
 /**
@@ -161,7 +161,7 @@ const PLAKETTE: Record<string, { actionType: string; actions: number | null }> =
 const ABSATZ_VOR = new RegExp(
   `(?=\\*\\*(?:${[...FORTSETZUNG]
     .map((wort) => wort.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-    .join('|')})\\*\\*)`,
+    .join('|')}|${FREIER_ERFOLGSGRAD.source.replace(/^\^/, '')}[^*]+)\\*\\*)`,
   'i',
 );
 
