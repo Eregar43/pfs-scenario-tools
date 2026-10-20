@@ -13,6 +13,7 @@ behobene Fehler.
   Hochladen meldet. Bereits importierte Szenen: Szenario neu importieren,
   die Notizen werden dabei ersetzt.
 - Alle hochgeladenen Dateinamen sind jetzt durchgehend kleingeschrieben.
+- Geprüft mit Foundry 14.369 und PF2e 8.6.1.
 
 ## 1.5.0 — 2026-10-21
 
