@@ -8,7 +8,8 @@ import { formenAusStrichen, zeichnungenAusKarte } from '../src/world/kartenzeich
 import {
   markeAusPfad,
   markePfad,
-  markeSvg,
+  markeFarben,
+  markeSchriftAnteil,
   notizenAusMarken,
   seiteZurKennung,
 } from '../src/world/raummarken.ts';
@@ -58,17 +59,17 @@ describe('raummarkenAufKarte', () => {
   });
 });
 
-describe('markeSvg', () => {
-  it('zeichnet die Kennung schwarz auf Weiss', () => {
-    const svg = markeSvg('C3a');
-    expect(svg).toContain('fill="#ffffff"');
-    expect(svg).toContain('>C3a</text>');
+describe('markeSchriftAnteil', () => {
+  it('macht die Schrift bei laengeren Kennungen kleiner', () => {
+    expect(markeSchriftAnteil('C1')).toBeGreaterThan(markeSchriftAnteil('C3a'));
+    expect(markeSchriftAnteil('C3a')).toBeGreaterThan(markeSchriftAnteil('C12a'));
   });
 });
 
 describe('markePfad', () => {
-  it('legt das Markerbild neben die Karte in marker/', () => {
-    expect(markePfad('bilder/pfs_s09_02/die-hoehle.webp', 'C2')).toBe('bilder/pfs_s09_02/marker/C2.svg');
+  it('legt das Markerbild kleingeschrieben neben die Karte in marker/', () => {
+    expect(markePfad('Bilder/pfs_s09_02/die-hoehle.webp', 'C3a')).toBe('Bilder/pfs_s09_02/marker/c3a.webp');
+    expect(markePfad('b/x.webp', 'C2', 'png')).toBe('b/marker/c2.png');
   });
 });
 
@@ -138,16 +139,11 @@ describe('notizenAusMarken', () => {
 
 describe('Aussehen der Raummarker', () => {
   it('nimmt Grund- und Schriftfarbe aus den Einstellungen', () => {
-    const svg = markeSvg('C1', { grund: '#112233', schrift: '#ffeedd' });
-    expect(svg).toContain('fill="#112233"');
-    expect(svg).toContain('stroke="#ffeedd"');
-    expect(svg).toContain('fill="#ffeedd"');
+    expect(markeFarben({ grund: '#112233', schrift: '#ffeedd' })).toEqual({ grund: '#112233', schrift: '#ffeedd' });
   });
 
-  it('laesst nichts als eine Farbe ins Bild', () => {
-    const svg = markeSvg('C1', { grund: '"/><script/>', schrift: 'rot' });
-    expect(svg).not.toContain('script');
-    expect(svg).toContain('fill="#ffffff"');
+  it('laesst nichts als eine Farbe durch', () => {
+    expect(markeFarben({ grund: '"/><script/>', schrift: 'rot' })).toEqual({ grund: '#ffffff', schrift: '#000000' });
   });
 
   it('macht den Marker so gross, wie die Einstellung in Feldern sagt', () => {
@@ -364,21 +360,28 @@ describe('zeichnungenAusKarte', () => {
 describe('Marker in der Kartendatei', () => {
   it('fuehrt einen Marker als Kennung, nicht als Bildpfad', () => {
     const { notiz } = notizInDatei(
-      { _id: 'x', x: 5, y: 6, texture: { src: 'bilder/pfs_s09_02/marker/C3a.svg', fit: 'contain' } },
+      { _id: 'x', x: 5, y: 6, texture: { src: 'bilder/pfs_s09_02/marker/c3a.webp', fit: 'contain' } },
       () => undefined,
     );
     expect(notiz).toMatchObject({ x: 5, y: 6, marke: 'C3a', texture: { fit: 'contain' } });
     expect((notiz.texture as Record<string, unknown>).src).toBeUndefined();
   });
 
-  it('setzt beim Anlegen den Pfad neben der Karte dieser Welt', () => {
-    const notiz = notizAusDatei({ x: 5, marke: 'C1' }, {}, 'meine/pfs_s09_02/hoehle.webp');
-    expect(notiz).toMatchObject({ texture: { src: 'meine/pfs_s09_02/marker/C1.svg' } });
+  it('setzt beim Anlegen den Pfad, den das Hochladen gemeldet hat', () => {
+    const notiz = notizAusDatei({ x: 5, marke: 'C1' }, {}, (marke) => `gemeldet/${marke}.png`);
+    expect(notiz).toMatchObject({ texture: { src: 'gemeldet/C1.png' } });
     expect(notiz.marke).toBeUndefined();
   });
 
-  it('erkennt nur Markerbilder als Marker', () => {
-    expect(markeAusPfad('a/marker/B7.svg')).toBe('B7');
+  it('erkennt nur Markerbilder in heutiger Form als Marker', () => {
+    expect(markeAusPfad('a/marker/b7.webp')).toBe('B7');
+    expect(markeAusPfad('a/marker/a3a.png')).toBe('A3a');
     expect(markeAusPfad('a/portrait.webp')).toBeUndefined();
+  });
+
+  it('haelt eine Notiz auf ein altes SVG fuer abweichend, damit sie ersetzt wird', () => {
+    // Fassung 1.5.0 schrieb `A1.svg`; ein umschreibender Server legte
+    // `a1.webp` ab, und die Notiz blieb ohne Bild.
+    expect(markeAusPfad('a/marker/A1.svg')).toBeUndefined();
   });
 });

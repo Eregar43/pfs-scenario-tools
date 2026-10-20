@@ -20,6 +20,7 @@ import {
   type Journalkennungen,
 } from './kartenabgleich.ts';
 import type { Kartendaten } from './karten.ts';
+import { markePfad } from './raummarken.ts';
 
 /**
  * Fuehrt einen Plan aus.
@@ -54,6 +55,11 @@ export interface AusfuehrOptionen {
    * am Plan vorbei direkt in Foundrys Datenbaum.
    */
   bilder?: number;
+  /**
+   * Erwarteter Pfad eines Markerbilds → Pfad, den der Server beim Hochladen
+   * gemeldet hat. Fehlt ein Eintrag, gilt der erwartete.
+   */
+  markenPfade?: Record<string, string>;
 }
 
 async function ordnerId(
@@ -508,7 +514,11 @@ async function schreibeSzenen(
   for (const szene of szenen) {
     const dokument = game.scenes?.get(szene.id);
     if (dokument && szene.karte) {
-      await gleicheEingebettetesAb(dokument, szene.karte, journale, szene.hintergrund);
+      const bildDerMarke = (marke: string): string => {
+        const erwartet = markePfad(szene.hintergrund, marke);
+        return optionen.markenPfade?.[erwartet] ?? erwartet;
+      };
+      await gleicheEingebettetesAb(dokument, szene.karte, journale, bildDerMarke);
     }
   }
 }
@@ -548,8 +558,8 @@ async function gleicheEingebettetesAb(
   dokument: FoundryScene,
   karte: Kartendaten,
   journale: Journalkennungen,
-  /** Pfad der Karte — neben ihr liegen die Markerbilder. */
-  kartenPfad: string,
+  /** Pfad des Markerbilds zu einer Kennung. */
+  bildDerMarke: (marke: string) => string,
 ): Promise<void> {
   const abweichung = szenenAbweichung(
     szenenStand(dokument.toObject(), journalArtVon(journale)),
@@ -562,7 +572,7 @@ async function gleicheEingebettetesAb(
 
     const daten =
       teil === 'notizen'
-        ? soll.map((notiz) => notizAusDatei(notiz, journale, kartenPfad))
+        ? soll.map((notiz) => notizAusDatei(notiz, journale, bildDerMarke))
         : soll.map((eintrag) => ({ ...eintrag }));
 
     // `deleteAll` statt einer Id-Liste: Am 13.08.2026 verdoppelten sich

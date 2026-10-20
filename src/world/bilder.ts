@@ -60,7 +60,9 @@ export function bildPfad(
   endung: string,
 ): string {
   const stamm = wurzel.replace(/\/+$/, '');
-  return `${stamm}/${szenarioBildOrdner(schluessel)}/${file}.${endung}`;
+  // Dateinamen immer klein: Ein Server kann Namen beim Hochladen umschreiben
+  // (siehe `files.ts::ladeHoch`), und der Pfad hier muss dazu passen.
+  return `${stamm}/${szenarioBildOrdner(schluessel)}/${`${file}.${endung}`.toLowerCase()}`;
 }
 
 /** Der Ordneranteil eines mit `bildPfad` gebauten Pfads. */

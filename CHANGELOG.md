@@ -3,6 +3,18 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
+## Unveröffentlicht
+
+- **Raumsymbole erscheinen auf jedem Server.** Die Symbole waren SVG-Dateien
+  mit großem Anfangsbuchstaben (`A1.svg`). Ein Foundry-Server, der
+  hochgeladene Bilder umwandelt, legte sie als `a1.webp` ab, und die Notizen
+  fanden ihr Bild nicht. Die Symbole sind jetzt WebP-Bilder mit kleinem
+  Namen (`a1.webp`), und die Notiz zeigt auf den Ort, den der Server beim
+  Hochladen meldet. Bereits importierte Szenen: Szenario neu importieren,
+  die Notizen werden dabei ersetzt.
+- Alle hochgeladenen Dateinamen sind jetzt durchgehend kleingeschrieben.
+- Geprüft mit Foundry 14.369 und PF2e 8.6.1.
+
 ## 1.5.0 — 2026-10-21
 
 - **Raumkennungen als Notizen auf der Karte.** Jede Kennung, die das Heft auf

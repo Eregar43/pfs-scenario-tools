@@ -57,10 +57,15 @@ export async function zaehleDateien(pfad: string): Promise<number | undefined> {
  * `upload` meldet Fehlschlaege nicht nur als Ausnahme, sondern auch als
  * `false` — wer die Antwort nicht ansieht, haelt einen stillen Fehlschlag
  * fuer einen Erfolg.
+ *
+ * Der Dateiname geht **immer kleingeschrieben** hinaus. Ein Foundry-Server
+ * kann Hochgeladenes umschreiben: Auf dem Server des Autors (v14, Build 369)
+ * wurde aus `A1.svg` die Datei `a1.webp`, die Notizen zeigten ins Leere. Wer
+ * den tatsaechlichen Ort braucht, nimmt den zurueckgegebenen Pfad.
  */
 export async function ladeHoch(ordner: string, dateiname: string, blob: Blob): Promise<string> {
   const picker = foundry.applications.apps.FilePicker.implementation;
-  const datei = new File([blob], dateiname, { type: blob.type });
+  const datei = new File([blob], dateiname.toLowerCase(), { type: blob.type });
 
   const antwort = (await picker.upload(QUELLE, ordner, datei, {}, { notify: false })) as
     | { path?: string }
