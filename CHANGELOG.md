@@ -3,7 +3,7 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
-## Unveröffentlicht
+## 1.4.1 — 2026-10-20
 
 - **Hazards ohne falsche Aktionen.** Eine fett gesetzte Raumnummer im
   Statblock (etwa „A4") wurde als eigene Aktion gelesen, ebenso
