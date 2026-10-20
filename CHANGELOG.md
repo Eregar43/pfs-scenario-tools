@@ -3,7 +3,7 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
-## Unveröffentlicht
+## 1.5.0 — 2026-10-21
 
 - **Raumkennungen als Notizen auf der Karte.** Jede Kennung, die das Heft auf
   die Karte druckt (etwa A1 bis A7 in 8-06), wird eine Notiz an derselben
