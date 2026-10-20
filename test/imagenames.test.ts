@@ -9,6 +9,7 @@ function image(page: number, box: [number, number, number, number], figur = true
   return {
     page,
     at: { left, bottom, right, top },
+    matrix: [right - left, 0, 0, top - bottom, left, bottom],
     name: 'img',
     width: 100,
     height: 100,

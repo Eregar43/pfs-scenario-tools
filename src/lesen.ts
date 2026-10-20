@@ -2,6 +2,7 @@ import { extractScenario } from './pdf/extract.ts';
 import { readImages, type ExtractedImage } from './pdf/images.ts';
 import { nameImages, paareBildunterschriften, type ImageSort } from './pdf/imagenames.ts';
 import { detectSections } from './pdf/journal.ts';
+import { raummarkenAufKarte, type Raummarke } from './pdf/raummarken.ts';
 import { neueUnresolvedFonts, type UnresolvedFonts } from './pdf/runs.ts';
 import { sha256Hex } from './pdf/sha256.ts';
 import type { Scenario } from './pdf/scenario.ts';
@@ -90,6 +91,8 @@ export interface GelesenesBild {
   /** Masse in Bildpunkten — die Karten geben sie an ihre Szene weiter. */
   breite: number;
   hoehe: number;
+  /** Nur bei Karten: die Raumkennungen, die das Heft darauf druckt. */
+  marken?: Raummarke[];
 }
 
 export interface Bilderlauf {
@@ -188,6 +191,9 @@ export async function bilderAusBytes(
       seite: benannt.image.page,
       breite: benannt.image.width,
       hoehe: benannt.image.height,
+      ...(benannt.sort === 'karte'
+        ? { marken: raummarkenAufKarte(benannt.image, szenario.blocks) }
+        : {}),
     };
   });
 
