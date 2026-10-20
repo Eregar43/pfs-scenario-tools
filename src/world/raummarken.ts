@@ -22,12 +22,6 @@ import type { Kartendaten } from './karten.ts';
  * `apply.ts`.
  */
 
-/** Wo eine Raumkennung im Kartenbild steht und welches Bild sie bekommt. */
-export interface MarkeMitBild extends Raummarke {
-  /** Pfad des hochgeladenen SVG. */
-  pfad: string;
-}
-
 /** Eine Journalseite, wie der Plan sie kennt. */
 export interface SeiteKurz {
   id: string;
@@ -95,23 +89,17 @@ export function seiteZurKennung(
 }
 
 /**
- * Die Notizen einer Karte, in Dateiform (`journal` statt `entryId`, wie
- * `kartenabgleich.ts::notizInDatei`). So laufen sie denselben Weg wie
- * Notizen aus einer Kartendatei.
+ * Bildpunkt der Karte → Punkt auf der Szene.
  *
- * Die Lage rechnet Foundrys `Scene#getDimensions` nach: Das Bild beginnt bei
- * Rand minus Versatz (`sceneX = dimensions.x - shiftX`) und ist um die
- * Skalierung vergroessert. Den Rand setzt der Import auf 0, solange die
- * Kartendatei nichts anderes sagt.
+ * Rechnet Foundrys `Scene#getDimensions` nach: Das Bild beginnt bei Rand
+ * minus Versatz (`sceneX = dimensions.x - shiftX`) und ist um die Skalierung
+ * vergroessert. Den Rand setzt der Import auf 0, solange die Kartendatei
+ * nichts anderes sagt.
  */
-export function notizenAusMarken(
-  marken: readonly MarkeMitBild[],
-  seiten: readonly SeiteKurz[],
+export function bildZuSzene(
   karte: Kartendaten | undefined,
   leinwand: { width: number; height: number },
-  /** Kantenlaenge des Markers in Feldern; 1 ist ein Feld. */
-  groesse = 1,
-): Record<string, unknown>[] {
+): { faktor: number; gitter: number; punkt: (x: number, y: number) => { x: number; y: number } } {
   const szene = karte?.szene ?? {};
   const gitter = Number((szene.grid as { size?: unknown } | undefined)?.size ?? GITTER_VORGABE);
   const rand = Number(szene.padding ?? 0);
@@ -120,16 +108,45 @@ export function notizenAusMarken(
   const nachX = randX - Number(szene.shiftX ?? 0);
   const nachY = randY - Number(szene.shiftY ?? 0);
   const faktor = karte?.skalierung ?? 1;
+  return {
+    faktor,
+    gitter,
+    punkt: (x, y) => ({ x: Math.round(nachX + x * faktor), y: Math.round(nachY + y * faktor) }),
+  };
+}
 
+/**
+ * Die Notizen einer Karte, in Dateiform: `journal` statt `entryId` und
+ * `marke` statt eines Bildpfads (wie `kartenabgleich.ts::notizInDatei`). So
+ * laufen sie denselben Weg wie Notizen aus einer Kartendatei; den Bildpfad
+ * setzt erst `notizAusDatei` beim Schreiben.
+ */
+export function notizenAusMarken(
+  marken: readonly Raummarke[],
+  seiten: readonly SeiteKurz[],
+  karte: Kartendaten | undefined,
+  leinwand: { width: number; height: number },
+  /** Kantenlaenge des Markers in Feldern; 1 ist ein Feld. */
+  groesse = 1,
+): Record<string, unknown>[] {
+  const { gitter, punkt } = bildZuSzene(karte, leinwand);
   return marken.map((marke) => {
     const seite = seiteZurKennung(marke.kennung, seiten);
     return {
-      x: Math.round(nachX + marke.x * faktor),
-      y: Math.round(nachY + marke.y * faktor),
-      texture: { src: marke.pfad },
+      ...punkt(marke.x, marke.y),
+      marke: marke.kennung,
       iconSize: Math.max(KLEINSTES_BILD, Math.round(gitter * groesse)),
       text: seite?.name ?? marke.kennung,
       ...(seite ? { journal: 'journal', pageId: seite.id } : {}),
     };
   });
+}
+
+/**
+ * Die Kennung eines Markerbilds aus seinem Pfad — die Umkehrung von
+ * `markePfad`. Ein anderer Pfad ist kein Marker.
+ */
+export function markeAusPfad(pfad: unknown): string | undefined {
+  if (typeof pfad !== 'string') return undefined;
+  return /\/marker\/([A-Z]\d+[a-z]?)\.svg$/.exec(pfad)?.[1];
 }

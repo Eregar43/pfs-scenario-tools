@@ -294,9 +294,10 @@ export function tokenRingeAn(): boolean {
 }
 
 /**
- * Sollen die Raumkennungen der Karten (`A1` …) als Notizen auf die Szene?
+ * Sollen Raumkennungen (`A1` …) als Notizen und die uebrigen Markierungen der
+ * Karte als Zeichnungen fuer den Spielleiter auf die Szene?
  *
- * Aus entsteht die Szene wie bisher ohne Notizen; Notizen aus einer
+ * Aus entsteht die Szene ohne beides; Notizen und Zeichnungen aus einer
  * Kartendatei kommen trotzdem.
  */
 export function raummarkenAn(): boolean {

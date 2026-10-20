@@ -21,6 +21,7 @@ import { scenarioKey } from '../world/naming.ts';
 import { bildOrdner, bildPfad, type BildFuerSeiten } from '../world/bilder.ts';
 import { ladeHoch, stelleOrdnerSicher } from '../world/files.ts';
 import { markePfad, markeSvg } from '../world/raummarken.ts';
+import { kartenDaten } from '../world/karten.ts';
 import { plane, schreibe } from '../world/journal.ts';
 import { schluesselwerkeAusSystem } from '../world/gefahren.ts';
 import { wirdAlsKreaturGebaut } from '../world/kreaturen.ts';
@@ -203,12 +204,11 @@ export async function zeigeWeltDialog(
       pfad,
       breite: bild.breite,
       hoehe: bild.hoehe,
-      ...(raummarkenAn() && bild.marken && bild.marken.length > 0
+      ...(raummarkenAn()
         ? {
-            marken: bild.marken.map((marke) => ({
-              ...marke,
-              pfad: markePfad(pfad, marke.kennung),
-            })),
+            ...(bild.marken?.length ? { marken: bild.marken } : {}),
+            ...(bild.texte?.length ? { texte: bild.texte } : {}),
+            ...(bild.striche?.length ? { striche: bild.striche } : {}),
           }
         : {}),
     }));
@@ -590,7 +590,7 @@ export async function zeigeWeltDialog(
     // zeigen ihre `<figure>`-Elemente auf die Pfade — die Dateien muessen dann
     // schon liegen.
     await ladeBilderHoch(bilder, pfade);
-    if (raummarkenAn()) await ladeMarkenHoch(bilder, pfade);
+    if (raummarkenAn()) await ladeMarkenHoch(bilder, pfade, vorhaben.wunsch.schluessel);
 
     const geschrieben = await schreibe(vorhaben, version);
     ui.notifications?.info(
@@ -665,13 +665,24 @@ async function sammleBilder(
  * neben die Karte in `marker/`. Ein Bild ist wenige hundert Byte; ein
  * Fortschrittsbalken lohnt dafuer nicht.
  */
-async function ladeMarkenHoch(bilder: GelesenesBild[], pfade: BildFuerSeiten[]): Promise<void> {
+async function ladeMarkenHoch(
+  bilder: GelesenesBild[],
+  pfade: BildFuerSeiten[],
+  schluessel: string,
+): Promise<void> {
   const ziele = new Map<string, string>();
   bilder.forEach((bild, index) => {
     if (bild.sort !== 'karte') return;
-    for (const marke of bild.marken ?? []) {
-      ziele.set(markePfad(pfade[index]!.pfad, marke.kennung), marke.kennung);
-    }
+    const kartenPfad = pfade[index]!.pfad;
+    // Kennungen aus dem Heft und aus einer mitgelieferten Kartendatei — die
+    // Datei kann Marker fuehren, die das Heft so nicht druckt.
+    const kennungen = new Set([
+      ...(bild.marken ?? []).map((marke) => marke.kennung),
+      ...(kartenDaten(schluessel, bild.file)?.notizen ?? [])
+        .map((notiz) => notiz.marke)
+        .filter((marke): marke is string => typeof marke === 'string'),
+    ]);
+    for (const kennung of kennungen) ziele.set(markePfad(kartenPfad, kennung), kennung);
   });
   if (ziele.size === 0) return;
 

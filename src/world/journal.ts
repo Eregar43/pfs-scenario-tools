@@ -17,7 +17,9 @@ import {
   type PersonenBild,
 } from './bilder.ts';
 import { kartenDaten } from './karten.ts';
-import { notizenAusMarken, type MarkeMitBild } from './raummarken.ts';
+import { notizenAusMarken } from './raummarken.ts';
+import { zeichnungenAusKarte } from './kartenzeichnungen.ts';
+import type { Kartenstrich, Kartentext, Raummarke } from '../pdf/raummarken.ts';
 import { szenenStand, type JournalArt } from './kartenabgleich.ts';
 import { lies } from './flags.ts';
 import { journalName, quellenangabe, scenarioFolderName, scenarioKey, seasonFolderName, type JournalNameSchema } from './naming.ts';
@@ -217,8 +219,11 @@ export function plane(
       pfad: string;
       breite: number;
       hoehe: number;
-      /** Raumkennungen auf der Karte, mit Pfad ihres Markerbilds. */
-      marken?: MarkeMitBild[];
+      /** Raumkennungen auf der Karte; nur wenn die Kartenmarkierungen an sind. */
+      marken?: Raummarke[];
+      /** Weitere Beschriftungen und Linien der Karte, ebenso. */
+      texte?: Kartentext[];
+      striche?: Kartenstrich[];
     }[];
     /**
      * Die benannten Personenbilder. Traegt eines den Namen eines Statblocks,
@@ -502,23 +507,25 @@ export function plane(
     const nth = (szenenNamen.get(name) ?? 0) + 1;
     szenenNamen.set(name, nth);
     const gefuehrt = kartenDaten(schluessel, karte.file);
-    // Die Raumkennungen werden Notizen — aber nur, wenn die Kartendatei
-    // keine eigenen fuehrt. Dort hat der Spielleiter sie schon gesetzt, und
-    // seine Lage schlaegt die errechnete.
+    const leinwandMass = {
+      width: Math.round(karte.breite * (gefuehrt?.skalierung ?? 1)),
+      height: Math.round(karte.hoehe * (gefuehrt?.skalierung ?? 1)),
+    };
+    // Was das Heft auf die Karte druckt, wird Notiz und Zeichnung — aber nur,
+    // wenn die Kartendatei keine eigenen fuehrt. Dort hat der Spielleiter sie
+    // schon gesetzt, und seine Lage schlaegt die errechnete.
     const notizen =
       !gefuehrt?.notizen && karte.marken && karte.marken.length > 0
-        ? notizenAusMarken(
-            karte.marken,
-            seiten,
-            gefuehrt,
-            {
-              width: Math.round(karte.breite * (gefuehrt?.skalierung ?? 1)),
-              height: Math.round(karte.hoehe * (gefuehrt?.skalierung ?? 1)),
-            },
-            optionen.markenGroesse,
-          )
+        ? notizenAusMarken(karte.marken, seiten, gefuehrt, leinwandMass, optionen.markenGroesse)
         : undefined;
-    const daten = notizen ? { ...gefuehrt, notizen } : gefuehrt;
+    const zeichnungen =
+      !gefuehrt?.zeichnungen && (karte.texte?.length || karte.striche?.length)
+        ? zeichnungenAusKarte(karte.texte ?? [], karte.striche ?? [], gefuehrt, leinwandMass)
+        : undefined;
+    const daten =
+      notizen || zeichnungen
+        ? { ...gefuehrt, ...(notizen ? { notizen } : {}), ...(zeichnungen ? { zeichnungen } : {}) }
+        : gefuehrt;
     return {
       id: foundryId(`${szenario.title}/szene/${karte.file}`),
       name: nth > 1 ? `${name} (${nth})` : name,

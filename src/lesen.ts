@@ -2,7 +2,15 @@ import { extractScenario } from './pdf/extract.ts';
 import { readImages, type ExtractedImage } from './pdf/images.ts';
 import { nameImages, paareBildunterschriften, type ImageSort } from './pdf/imagenames.ts';
 import { detectSections } from './pdf/journal.ts';
-import { raummarkenAufKarte, type Raummarke } from './pdf/raummarken.ts';
+import { leseKartenlinien } from './pdf/kartenlinien.ts';
+import {
+  kartenstricheAufKarte,
+  kartentexteAufKarte,
+  raummarkenAufKarte,
+  type Kartenstrich,
+  type Kartentext,
+  type Raummarke,
+} from './pdf/raummarken.ts';
 import { neueUnresolvedFonts, type UnresolvedFonts } from './pdf/runs.ts';
 import { sha256Hex } from './pdf/sha256.ts';
 import type { Scenario } from './pdf/scenario.ts';
@@ -93,6 +101,10 @@ export interface GelesenesBild {
   hoehe: number;
   /** Nur bei Karten: die Raumkennungen, die das Heft darauf druckt. */
   marken?: Raummarke[];
+  /** Nur bei Karten: weitere Beschriftungen (`TRAP`, `PCS START HERE`). */
+  texte?: Kartentext[];
+  /** Nur bei Karten: Linien, die das Heft ueber die Karte zeichnet. */
+  striche?: Kartenstrich[];
 }
 
 export interface Bilderlauf {
@@ -176,6 +188,14 @@ export async function bilderAusBytes(
 
   const unterschriften = paareBildunterschriften(gefunden, szenario.blocks);
 
+  // Die Linien ueber den Karten brauchen einen eigenen kurzen Durchgang —
+  // im Bilderlauf stehen sie hinter dem Bild (`pdf/kartenlinien.ts`).
+  const linien = await leseKartenlinien(
+    bytes,
+    gefunden.filter((bild) => bild.role === 'karte').map((bild) => bild.page),
+    dokumentParameter(optionen.variante),
+  );
+
   const bilder = nameImages(gefunden, szenario.blocks, text).map((benannt) => {
     const datei = kodiert.get(benannt.image)!;
     const caption = unterschriften.get(benannt.image);
@@ -192,7 +212,11 @@ export async function bilderAusBytes(
       breite: benannt.image.width,
       hoehe: benannt.image.height,
       ...(benannt.sort === 'karte'
-        ? { marken: raummarkenAufKarte(benannt.image, szenario.blocks) }
+        ? {
+            marken: raummarkenAufKarte(benannt.image, szenario.blocks),
+            texte: kartentexteAufKarte(benannt.image, szenario.blocks),
+            striche: kartenstricheAufKarte(benannt.image, linien),
+          }
         : {}),
     };
   });
