@@ -20,7 +20,8 @@ import { ANACHRONISM_MODUL, anachronismAktiv } from '../world/compendium-index.t
 import { scenarioKey } from '../world/naming.ts';
 import { bildOrdner, bildPfad, type BildFuerSeiten } from '../world/bilder.ts';
 import { ladeHoch, stelleOrdnerSicher } from '../world/files.ts';
-import { markePfad, markeSvg } from '../world/raummarken.ts';
+import { markePfad } from '../world/raummarken.ts';
+import { zeichneMarke } from '../world/marke-bild.ts';
 import { kartenDaten } from '../world/karten.ts';
 import { plane, schreibe } from '../world/journal.ts';
 import { schluesselwerkeAusSystem } from '../world/gefahren.ts';
@@ -590,9 +591,11 @@ export async function zeigeWeltDialog(
     // zeigen ihre `<figure>`-Elemente auf die Pfade — die Dateien muessen dann
     // schon liegen.
     await ladeBilderHoch(bilder, pfade);
-    if (raummarkenAn()) await ladeMarkenHoch(bilder, pfade, vorhaben.wunsch.schluessel);
+    const markenPfade = raummarkenAn()
+      ? await ladeMarkenHoch(bilder, pfade, vorhaben.wunsch.schluessel)
+      : {};
 
-    const geschrieben = await schreibe(vorhaben, version);
+    const geschrieben = await schreibe(vorhaben, version, markenPfade);
     ui.notifications?.info(
       L('Welt.Fertig', {
         name: vorhaben.wunsch.journalName,
@@ -669,7 +672,7 @@ async function ladeMarkenHoch(
   bilder: GelesenesBild[],
   pfade: BildFuerSeiten[],
   schluessel: string,
-): Promise<void> {
+): Promise<Record<string, string>> {
   const ziele = new Map<string, string>();
   bilder.forEach((bild, index) => {
     if (bild.sort !== 'karte') return;
@@ -684,14 +687,22 @@ async function ladeMarkenHoch(
     ]);
     for (const kennung of kennungen) ziele.set(markePfad(kartenPfad, kennung), kennung);
   });
-  if (ziele.size === 0) return;
+  if (ziele.size === 0) return {};
 
-  const { grund, schrift } = raummarkenAussehen();
+  // Erwarteter Pfad → Pfad, den der Server meldet. Weichen sie ab (PNG statt
+  // WebP, ein umschreibender Server), zeigt die Notiz auf den gemeldeten.
+  const tatsaechlich: Record<string, string> = {};
+  const farben = raummarkenAussehen();
   for (const ordner of new Set([...ziele.keys()].map(bildOrdner))) await stelleOrdnerSicher(ordner);
-  for (const [pfad, kennung] of ziele) {
-    const blob = new Blob([markeSvg(kennung, { grund, schrift })], { type: 'image/svg+xml' });
-    await ladeHoch(bildOrdner(pfad), `${kennung}.svg`, blob);
+  for (const [erwartet, kennung] of ziele) {
+    const { blob, endung } = await zeichneMarke(kennung, farben);
+    const gemeldet = await ladeHoch(bildOrdner(erwartet), `${kennung}.${endung}`, blob);
+    tatsaechlich[erwartet] = gemeldet;
+    if (gemeldet !== erwartet) {
+      console.warn(`pfs-scenario-tools | Markerbild liegt unter ${gemeldet}, erwartet war ${erwartet}.`);
+    }
   }
+  return tatsaechlich;
 }
 
 /** Laedt die kodierten Bilder an ihre geplanten Pfade, mit Fortschrittsbalken. */

@@ -595,6 +595,8 @@ export function plane(
 export async function schreibe(
   vorhaben: Vorhaben,
   toolVersion?: string,
+  /** Erwarteter Pfad eines Markerbilds → Pfad, den der Server gemeldet hat. */
+  markenPfade?: Record<string, string>,
 ): Promise<Importergebnis> {
   return fuehreAus(
     vorhaben.plan,
@@ -605,6 +607,7 @@ export async function schreibe(
       ...(vorhaben.sourceHash ? { sourceHash: vorhaben.sourceHash } : {}),
       ...(toolVersion ? { toolVersion } : {}),
       bilder: vorhaben.bilderGesamt,
+      ...(markenPfade ? { markenPfade } : {}),
     },
     vorhaben.wunsch.anhang?.seiten ?? [],
     vorhaben.wunsch.szenen ?? [],

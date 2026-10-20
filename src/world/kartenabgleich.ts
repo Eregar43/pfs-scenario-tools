@@ -1,5 +1,5 @@
 import type { Kartendaten } from './karten.ts';
-import { markeAusPfad, markePfad } from './raummarken.ts';
+import { markeAusPfad } from './raummarken.ts';
 import { wandSignaturen } from './waende.ts';
 
 /**
@@ -167,19 +167,20 @@ export function notizInDatei(
 /**
  * Die Umkehrung von `notizInDatei`, fuer das Anlegen in einer Welt.
  *
- * Aus `marke` wird der Pfad des Markerbilds neben der Karte dieser Welt.
- * Ohne Kartenpfad bleibt die Notiz ohne eigenes Bild.
+ * Aus `marke` wird der Pfad des Markerbilds in dieser Welt; den kennt nur,
+ * wer hochgeladen hat (`bildDerMarke`). Ohne ihn bleibt die Notiz ohne
+ * eigenes Bild.
  */
 export function notizAusDatei(
   notiz: Record<string, unknown>,
   journale: Journalkennungen,
-  kartenPfad?: string,
+  bildDerMarke?: (marke: string) => string,
 ): Record<string, unknown> {
   const { journal, pageId, marke, ...rest } = notiz;
-  if (typeof marke === 'string' && kartenPfad) {
+  if (typeof marke === 'string' && bildDerMarke) {
     rest.texture = {
       ...(istObjekt(rest.texture) ? rest.texture : {}),
-      src: markePfad(kartenPfad, marke),
+      src: bildDerMarke(marke),
     };
   }
   const ziel = typeof journal === 'string' ? journale[journal as JournalArt] : undefined;

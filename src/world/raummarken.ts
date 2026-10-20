@@ -1,4 +1,4 @@
-import type { Raummarke } from '../pdf/raummarken.ts';
+import { alsKennung, type Raummarke } from '../pdf/raummarken.ts';
 import type { Kartendaten } from './karten.ts';
 
 /**
@@ -8,7 +8,8 @@ import type { Kartendaten } from './karten.ts';
  * wird eine Notiz an derselben Stelle. Sie zeigt auf die Journalseite des
  * Raums (`A1.` und der Name des Raums) und traegt ein eigenes Bild mit der Kennung.
  *
- * Das Bild entsteht hier als SVG, nicht als mitgelieferte Datei: Die
+ * Das Bild entsteht beim Import als WebP (`marke-bild.ts`), nicht als
+ * mitgelieferte Datei: Die
  * Kennungen sind je Heft andere (`B7`, `A3a`), und ein Bildpfad gehoert
  * ohnehin der Welt, nicht dem Modul — der Kartenexport laesst fremde
  * Bildpfade weg.
@@ -36,11 +37,15 @@ const KLEINSTES_BILD = 32;
 
 /**
  * Wohin das Markerbild einer Kennung kommt: neben die Karte, in einen
- * Unterordner `marker/`. Abgeleitet vom Pfad der Karte, damit Hochladen und
- * Notiz denselben Pfad bilden, ohne die Bildwurzel zu kennen.
+ * Unterordner `marker/`, kleingeschrieben (`a3a.webp`). Abgeleitet vom Pfad
+ * der Karte, damit Hochladen und Notiz denselben Pfad bilden, ohne die
+ * Bildwurzel zu kennen.
+ *
+ * Das ist der **erwartete** Ort. Wohin der Server die Datei wirklich legt,
+ * sagt erst die Antwort beim Hochladen; `apply.ts` nimmt dann jene.
  */
-export function markePfad(kartenPfad: string, kennung: string): string {
-  return `${kartenPfad.slice(0, kartenPfad.lastIndexOf('/'))}/marker/${kennung}.svg`;
+export function markePfad(kartenPfad: string, kennung: string, endung = 'webp'): string {
+  return `${kartenPfad.slice(0, kartenPfad.lastIndexOf('/'))}/marker/${kennung.toLowerCase()}.${endung}`;
 }
 
 /** Vorgaben fuer die Farben: weisses Feld, schwarze Schrift. */
@@ -48,28 +53,23 @@ export const MARKE_GRUND = '#ffffff';
 export const MARKE_SCHRIFT = '#000000';
 
 /**
- * Das Markerbild: farbiges Feld, Kennung und Rahmen in der Schriftfarbe.
- *
- * Die Schriftgroesse schrumpft mit der Laenge, damit `A12` und `A3a`
- * genauso ins Feld passen wie `A1`.
+ * Schriftgrad der Kennung im Markerbild, als Anteil der Kantenlaenge. Er
+ * schrumpft mit der Laenge, damit `A12` und `A3a` genauso ins Feld passen
+ * wie `A1`.
  */
-export function markeSvg(
-  kennung: string,
-  farben: { grund?: string; schrift?: string } = {},
-): string {
-  const groesse = kennung.length <= 2 ? 56 : kennung.length === 3 ? 44 : 34;
-  const text = kennung.replace(/[<>&"]/g, '');
-  const grund = farbe(farben.grund, MARKE_GRUND);
-  const schrift = farbe(farben.schrift, MARKE_SCHRIFT);
-  return [
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">',
-    `<rect x="3" y="3" width="94" height="94" rx="14" fill="${grund}" stroke="${schrift}" stroke-width="6"/>`,
-    `<text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="${groesse}" fill="${schrift}">${text}</text>`,
-    '</svg>',
-  ].join('');
+export function markeSchriftAnteil(kennung: string): number {
+  return kennung.length <= 2 ? 0.56 : kennung.length === 3 ? 0.44 : 0.34;
 }
 
-/** Nur `#rrggbb` gelangt ins SVG; alles andere faellt auf die Vorgabe. */
+/** Die Farben eines Markers, auf `#rrggbb` geprueft. */
+export function markeFarben(farben: { grund?: string; schrift?: string } = {}): {
+  grund: string;
+  schrift: string;
+} {
+  return { grund: farbe(farben.grund, MARKE_GRUND), schrift: farbe(farben.schrift, MARKE_SCHRIFT) };
+}
+
+/** Nur `#rrggbb` gilt; alles andere faellt auf die Vorgabe. */
 function farbe(wert: string | undefined, vorgabe: string): string {
   return wert && /^#[0-9a-f]{6}$/i.test(wert) ? wert : vorgabe;
 }
@@ -153,5 +153,10 @@ export function notizenAusMarken(
  */
 export function markeAusPfad(pfad: unknown): string | undefined {
   if (typeof pfad !== 'string') return undefined;
-  return /\/marker\/([A-Z]\d+[a-z]?)\.svg$/.exec(pfad)?.[1];
+  // Nur die heutige Form: klein, WebP oder (Firefox) PNG. Eine Notiz auf
+  // `A1.svg` aus Fassung 1.5.0 gilt damit als abweichend und wird beim
+  // naechsten Import ersetzt — sonst bliebe sie auf dem Server des Autors
+  // fuer immer ohne Bild.
+  const treffer = /\/marker\/([a-z]\d+[a-z]?)\.(?:webp|png)$/.exec(pfad)?.[1];
+  return treffer ? alsKennung(treffer) : undefined;
 }
