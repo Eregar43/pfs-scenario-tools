@@ -265,6 +265,29 @@ describe('leseStatblock, Einzelfaelle aus der Eichung', () => {
     expect(gelesen.faehigkeiten.map((f) => f.name)).toEqual(['Einsturz']);
   });
 
+  it('liest eine fette Raumnummer als Text, nicht als Faehigkeit', () => {
+    // Nachgebildet an Rocket Crushers aus 8-06: Die Raumnummer der Karte steht
+    // im Fettsatz mitten in der Faehigkeit.
+    const gelesen = lies(
+      '**Falltuer** [reaction] **Trigger** Jemand betritt Raum **C3** zuerst; ' +
+        '**Effect** Alle in **C3** fallen.',
+    );
+    expect(gelesen.faehigkeiten.map((f) => f.name)).toEqual(['Falltuer']);
+    expect(gelesen.faehigkeiten[0]!.text).toContain('Raum **C3** zuerst');
+    expect(gelesen.faehigkeiten[0]!.text).toContain('**Effect** Alle in **C3** fallen.');
+  });
+
+  it('haengt selbst formulierte Erfolgsgrade an die Faehigkeit davor', () => {
+    const gelesen = lies(
+      '**Falltuer** [reaction] **Effect** Alle wuerfeln. ' +
+        '**If 2 or more creatures succeed** Wenig. **If only 1 creature succeeds** Mehr. ' +
+        '**If 0 creatures succeed** Viel. **Routine** (1 action) Weiter.',
+    );
+    expect(gelesen.faehigkeiten.map((f) => f.name)).toEqual(['Falltuer']);
+    expect(gelesen.faehigkeiten[0]!.text).toContain('**If 0 creatures succeed** Viel.');
+    expect(gelesen.routine).toBe('(1 action) Weiter.');
+  });
+
   it('legt ein unbekanntes Etikett als Faehigkeit ab, statt es zu verlieren', () => {
     expect(lies('**Voellig Neues Feld** 3').faehigkeiten.map((f) => f.name)).toEqual([
       'Voellig Neues Feld',

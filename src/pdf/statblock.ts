@@ -186,6 +186,31 @@ export const FORTSETZUNG = new Set(
 );
 
 /**
+ * Erfolgsgrade, die das Heft selbst formuliert: `**If 2 or more creatures
+ * succeed**`. Sie stehen dort, wo sonst `Success` und `Failure` stehen, und
+ * sind wie diese eine Fortsetzung, keine eigene Faehigkeit (Rocket Crushers in
+ * 8-06). Eine Faehigkeit, deren Name mit `If` beginnt, gibt es nicht.
+ */
+export const FREIER_ERFOLGSGRAD = /^if\s/i;
+
+/**
+ * Eine Raumnummer der Karte: `A4`, `B12`, `A3a`. Das Heft setzt sie auch im
+ * Statblock fett (`remain in area **A4** for`), sie ist aber nie ein
+ * Etikett. Als Etikett gelesen, zerfiel Rocket Crushers in 8-06 in mehrere
+ * Faehigkeiten namens `A4`.
+ */
+const RAUMNUMMER = /^[A-Z]\d+[a-z]?$/;
+
+/** Gehoert dieses Etikett zum Eintrag davor, statt einen neuen zu beginnen? */
+export function istFortsetzung(etikett: string): boolean {
+  return (
+    FORTSETZUNG.has(etikett.toLowerCase()) ||
+    FREIER_ERFOLGSGRAD.test(etikett) ||
+    ZAUBERGRAD.test(etikett)
+  );
+}
+
+/**
  * Zauberlisten gliedern sich in Grade (`**1st**`, `**Cantrips (1st)**`). Auch
  * das sind Fortsetzungen der Zauberzeile, keine eigenen Faehigkeiten.
  */
@@ -272,6 +297,8 @@ export function zerlegeAbschnitte(text: string): Abschnitt[] {
   let treffer: RegExpExecArray | null;
 
   while ((treffer = marke.exec(text)) !== null) {
+    // Eine Raumnummer bleibt im Fettsatz stehen und mitten im Text.
+    if (RAUMNUMMER.test(treffer[1]!.trim())) continue;
     abschnitte.push({ etikett, text: text.slice(zuletzt, treffer.index).trim() });
     etikett = treffer[1]!.replace(/^[\s;,:]+/, '').replace(/[\s;,:]+$/, '');
     zuletzt = marke.lastIndex;
@@ -609,7 +636,7 @@ export function leseStatblock(
     // Faehigkeit oder ein Feld war: Auch die `Routine` einer Gefahr hat ihre
     // Erfolgsgrade. Ein Statblock hat keine Faehigkeit namens `Success`, also
     // ist das Etikett allein schon der Beweis.
-    if (FORTSETZUNG.has(schluessel) || ZAUBERGRAD.test(abschnitt.etikett)) {
+    if (istFortsetzung(abschnitt.etikett)) {
       offenerText?.(abschnitt.etikett, wert);
       continue;
     }

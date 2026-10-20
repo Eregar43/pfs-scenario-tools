@@ -3,6 +3,16 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
+## Unveröffentlicht
+
+- **Hazards ohne falsche Aktionen.** Eine fett gesetzte Raumnummer im
+  Statblock (etwa „A4") wurde als eigene Aktion gelesen, ebenso
+  Erfolgsstufen wie „If 2 or more creatures succeed". Rocket Crushers aus
+  8-06 hatte deshalb sechs unsinnige Aktionen. Jetzt steht alles als Text in
+  der richtigen Aktion. Betroffen waren auch Bluster and Bravado (8-05) und
+  Quoton-4 (8-06). Bereits importierte Actors ändern sich nicht von selbst:
+  löschen und neu importieren.
+
 ## 1.4.0 — 2026-10-15
 
 - **Neues Fenster „Karte exportieren".** Ein Knopf im Verwaltungsfenster
