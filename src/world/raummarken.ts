@@ -6,7 +6,7 @@ import type { Kartendaten } from './karten.ts';
  *
  * Jede Kennung, die das Heft auf die Karte druckt (`A1` … `A7` in 8-06),
  * wird eine Notiz an derselben Stelle. Sie zeigt auf die Journalseite des
- * Raums (`A1. Lift Platform`) und traegt ein eigenes Bild mit der Kennung.
+ * Raums (`A1.` und der Name des Raums) und traegt ein eigenes Bild mit der Kennung.
  *
  * Das Bild entsteht hier als SVG, nicht als mitgelieferte Datei: Die
  * Kennungen sind je Heft andere (`B7`, `A3a`), und ein Bildpfad gehoert
@@ -76,7 +76,7 @@ function farbe(wert: string | undefined, vorgabe: string): string {
 
 /**
  * Die Journalseite eines Raums: ihr Name beginnt mit der Kennung und einem
- * Punkt (`A1. Lift Platform`).
+ * Punkt (`A1.` und der Name des Raums).
  */
 export function seiteZurKennung(
   kennung: string,
@@ -88,7 +88,7 @@ export function seiteZurKennung(
   });
   if (genau) return genau;
   // Ein Teilraum ohne eigene Seite gehoert zum Raum davor: `A3a` in 8-08
-  // steht auf der Karte, im Text nur unter `A3. Lab Space`.
+  // steht auf der Karte, im Text nur unter `A3`.
   const raum = /^([A-Z]\d+)[a-z]$/.exec(kennung)?.[1];
   return raum ? seiteZurKennung(raum, seiten) : undefined;
 }

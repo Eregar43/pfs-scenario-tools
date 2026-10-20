@@ -5,7 +5,7 @@ import { bildZuSzene } from './raummarken.ts';
 /**
  * Was das Heft ueber die Karte zeichnet, als Zeichnungen fuer den
  * Spielleiter: Linien (in 8-06 rote Trennlinien und die gestrichelte Flaeche
- * der Falle) und Beschriftungen (`TRAP`, `PCS START HERE`).
+ * der Falle) und Beschriftungen (`TRAP`, Startfelder).
  *
  * Alle Zeichnungen sind **verborgen** (`hidden: true`) — Foundry zeigt sie
  * nur dem Spielleiter. Sie verraten Fallen und Startpunkte, die die Spieler

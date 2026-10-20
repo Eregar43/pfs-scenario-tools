@@ -12,8 +12,8 @@ behobene Fehler.
   öffnet die Seite seines Raums. Größe, Hintergrund- und Schriftfarbe der
   Symbole lassen sich in den Einstellungen wählen.
 - **Weitere Kartenmarkierungen für den Spielleiter.** Fallenbereiche,
-  Startfelder, Trennlinien und Beschriftungen wie „TRAP" oder „PCS START
-  HERE" werden Zeichnungen auf der Szene. Spieler sehen sie nicht. Foundry
+  Startfelder, Trennlinien und Beschriftungen wie „TRAP" werden
+  Zeichnungen auf der Szene. Spieler sehen sie nicht. Foundry
   kennt keine gestrichelten Linien; gestrichelte Rahmen erscheinen
   durchgezogen und halb durchsichtig.
 - Beides lässt sich mit dem Schalter „Kartenmarkierungen übernehmen"

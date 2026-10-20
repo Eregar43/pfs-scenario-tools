@@ -101,7 +101,7 @@ export interface GelesenesBild {
   hoehe: number;
   /** Nur bei Karten: die Raumkennungen, die das Heft darauf druckt. */
   marken?: Raummarke[];
-  /** Nur bei Karten: weitere Beschriftungen (`TRAP`, `PCS START HERE`). */
+  /** Nur bei Karten: weitere Beschriftungen (`TRAP`, Startfelder). */
   texte?: Kartentext[];
   /** Nur bei Karten: Linien, die das Heft ueber die Karte zeichnet. */
   striche?: Kartenstrich[];

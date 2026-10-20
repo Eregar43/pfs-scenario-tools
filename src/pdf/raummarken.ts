@@ -109,7 +109,7 @@ export function raummarkenAufKarte(lage: KartenLage, blocks: readonly Block[]): 
   return marken;
 }
 
-/** Eine weitere Beschriftung auf der Karte (`TRAP`, `PCS START HERE`). */
+/** Eine weitere Beschriftung auf der Karte (`TRAP`, Startfelder). */
 export interface Kartentext {
   text: string;
   /** Mitte, in Bildpunkten. */
@@ -173,7 +173,7 @@ export function kartentexteAufKarte(lage: KartenLage, blocks: readonly Block[]):
 /**
  * Teilt die Zeilen eines Blocks in Gruppen, die auf der Karte beieinander
  * stehen. `PCS` / `START` / `HERE` liegen Zeile an Zeile und bleiben ein
- * Text; `BODYGUARD`, `CAPTAIN` und `RIGGER` in 8-04 stehen an drei Stellen
+ * Text; die drei Gegnernamen der zweiten Karte in 8-04 stehen an drei Stellen
  * der Karte, landen aber im selben Block.
  */
 function nachNaehe(zeilen: readonly Line[]): Line[][] {
