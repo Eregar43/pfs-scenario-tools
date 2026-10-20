@@ -17,6 +17,9 @@ import {
   type PersonenBild,
 } from './bilder.ts';
 import { kartenDaten } from './karten.ts';
+import { notizenAusMarken } from './raummarken.ts';
+import { zeichnungenAusKarte } from './kartenzeichnungen.ts';
+import type { Kartenstrich, Kartentext, Raummarke } from '../pdf/raummarken.ts';
 import { szenenStand, type JournalArt } from './kartenabgleich.ts';
 import { lies } from './flags.ts';
 import { journalName, quellenangabe, scenarioFolderName, scenarioKey, seasonFolderName, type JournalNameSchema } from './naming.ts';
@@ -210,7 +213,18 @@ export function plane(
     /** Das Spielhilfen-Journal: Titel und die Bilder seiner Bildseiten. */
     anhang?: { titel: string; bilder: { file: string; name?: string; pfad: string }[] };
     /** Die Karten, aus denen Szenen werden sollen. */
-    karten?: { file: string; name?: string; pfad: string; breite: number; hoehe: number }[];
+    karten?: {
+      file: string;
+      name?: string;
+      pfad: string;
+      breite: number;
+      hoehe: number;
+      /** Raumkennungen auf der Karte; nur wenn die Kartenmarkierungen an sind. */
+      marken?: Raummarke[];
+      /** Weitere Beschriftungen und Linien der Karte, ebenso. */
+      texte?: Kartentext[];
+      striche?: Kartenstrich[];
+    }[];
     /**
      * Die benannten Personenbilder. Traegt eines den Namen eines Statblocks,
      * wird es das Bild des Actors; die uebrigen aus dem Anhang koennen zu
@@ -223,6 +237,8 @@ export function plane(
      * Aus bleiben sie ein Bild im Spielhilfen-Journal, wie bisher.
      */
     nscActors?: boolean;
+    /** Kantenlaenge der Raummarker in Feldern (Einstellung). */
+    markenGroesse?: number;
     /**
      * Sollen Actors mit Portraet einen dynamischen Token-Ring bekommen?
      *
@@ -490,7 +506,26 @@ export function plane(
     const name = karte.name ?? karte.file;
     const nth = (szenenNamen.get(name) ?? 0) + 1;
     szenenNamen.set(name, nth);
-    const daten = kartenDaten(schluessel, karte.file);
+    const gefuehrt = kartenDaten(schluessel, karte.file);
+    const leinwandMass = {
+      width: Math.round(karte.breite * (gefuehrt?.skalierung ?? 1)),
+      height: Math.round(karte.hoehe * (gefuehrt?.skalierung ?? 1)),
+    };
+    // Was das Heft auf die Karte druckt, wird Notiz und Zeichnung — aber nur,
+    // wenn die Kartendatei keine eigenen fuehrt. Dort hat der Spielleiter sie
+    // schon gesetzt, und seine Lage schlaegt die errechnete.
+    const notizen =
+      !gefuehrt?.notizen && karte.marken && karte.marken.length > 0
+        ? notizenAusMarken(karte.marken, seiten, gefuehrt, leinwandMass, optionen.markenGroesse)
+        : undefined;
+    const zeichnungen =
+      !gefuehrt?.zeichnungen && (karte.texte?.length || karte.striche?.length)
+        ? zeichnungenAusKarte(karte.texte ?? [], karte.striche ?? [], gefuehrt, leinwandMass)
+        : undefined;
+    const daten =
+      notizen || zeichnungen
+        ? { ...gefuehrt, ...(notizen ? { notizen } : {}), ...(zeichnungen ? { zeichnungen } : {}) }
+        : gefuehrt;
     return {
       id: foundryId(`${szenario.title}/szene/${karte.file}`),
       name: nth > 1 ? `${name} (${nth})` : name,

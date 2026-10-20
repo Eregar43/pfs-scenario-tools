@@ -1,4 +1,5 @@
 import type { Kartendaten } from './karten.ts';
+import { markeAusPfad, markePfad } from './raummarken.ts';
 import { wandSignaturen } from './waende.ts';
 
 /**
@@ -136,6 +137,9 @@ export function ohneWeltfelder(
  * ist in jeder Welt dieselbe. Die Kennung des Journals dagegen nicht. Zeigt
  * die Notiz auf ein Journal, das nicht vom Modul stammt, verliert sie den
  * Verweis und behaelt nur ihren Text; `verweisEntfernt` sagt das an.
+ *
+ * Ein Raummarker des Moduls (`…/marker/A1.svg`) wird zu `marke: "A1"`. Der
+ * Bildpfad haengt am Bildordner dieser Welt; die Kennung gilt in jeder.
  */
 export function notizInDatei(
   notiz: Record<string, unknown>,
@@ -144,21 +148,40 @@ export function notizInDatei(
   const { entryId, pageId, ...rest } = ohneWeltfelder(notiz);
   const art = typeof entryId === 'string' ? artVon(entryId) : undefined;
   const mitVerweis = art !== undefined;
+  const textur = istObjekt(rest.texture) ? rest.texture : undefined;
+  const marke = markeAusPfad(textur?.src);
+  if (marke && textur) {
+    const { src: _pfad, ...ohnePfad } = textur;
+    rest.texture = ohnePfad;
+  }
   return {
     notiz: {
       ...rest,
+      ...(marke ? { marke } : {}),
       ...(mitVerweis ? { journal: art, pageId: pageId ?? null } : {}),
     },
     verweisEntfernt: typeof entryId === 'string' && entryId !== '' && !mitVerweis,
   };
 }
 
-/** Die Umkehrung von `notizInDatei`, fuer das Anlegen in einer Welt. */
+/**
+ * Die Umkehrung von `notizInDatei`, fuer das Anlegen in einer Welt.
+ *
+ * Aus `marke` wird der Pfad des Markerbilds neben der Karte dieser Welt.
+ * Ohne Kartenpfad bleibt die Notiz ohne eigenes Bild.
+ */
 export function notizAusDatei(
   notiz: Record<string, unknown>,
   journale: Journalkennungen,
+  kartenPfad?: string,
 ): Record<string, unknown> {
-  const { journal, pageId, ...rest } = notiz;
+  const { journal, pageId, marke, ...rest } = notiz;
+  if (typeof marke === 'string' && kartenPfad) {
+    rest.texture = {
+      ...(istObjekt(rest.texture) ? rest.texture : {}),
+      src: markePfad(kartenPfad, marke),
+    };
+  }
   const ziel = typeof journal === 'string' ? journale[journal as JournalArt] : undefined;
   return ziel ? { ...rest, entryId: ziel, pageId: pageId ?? null } : { ...rest, entryId: null, pageId: null };
 }

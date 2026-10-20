@@ -152,6 +152,12 @@ export interface ExtractedImage {
   page: number;
   /** Lage auf der Seite; mehrfach gezeichnet zaehlt das erste Vorkommen. */
   at: Placement;
+  /**
+   * Die volle Bildmatrix dieses Vorkommens. `at` ist nur das umschliessende
+   * Rechteck; wer einen Seitenpunkt in einen Bildpunkt umrechnet, braucht
+   * auch Drehung und Spiegelung (`pdf/raummarken.ts`).
+   */
+  matrix: readonly number[];
   /** Name des Bildobjekts im PDF — nur fuer die Fehlersuche. */
   name: string;
   width: number;
@@ -455,6 +461,7 @@ export async function* readImages(
       yield {
         page: pageNumber,
         at,
+        matrix: [...matrix],
         name,
         width: image.width,
         height: image.height,

@@ -362,6 +362,15 @@ declare global {
   }
 
   const foundry: {
+    data: {
+      fields: {
+        ColorField: new (optionen?: {
+          required?: boolean;
+          nullable?: boolean;
+          initial?: string;
+        }) => unknown;
+      };
+    };
     utils: {
       getRoute(path: string): string;
       fromUuid(uuid: string): Promise<unknown>;

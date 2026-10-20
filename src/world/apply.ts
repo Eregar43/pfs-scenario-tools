@@ -507,7 +507,9 @@ async function schreibeSzenen(
   // und unabhaengig davon, ob sich oben an der Szene etwas geaendert hat.
   for (const szene of szenen) {
     const dokument = game.scenes?.get(szene.id);
-    if (dokument && szene.karte) await gleicheEingebettetesAb(dokument, szene.karte, journale);
+    if (dokument && szene.karte) {
+      await gleicheEingebettetesAb(dokument, szene.karte, journale, szene.hintergrund);
+    }
   }
 }
 
@@ -546,6 +548,8 @@ async function gleicheEingebettetesAb(
   dokument: FoundryScene,
   karte: Kartendaten,
   journale: Journalkennungen,
+  /** Pfad der Karte — neben ihr liegen die Markerbilder. */
+  kartenPfad: string,
 ): Promise<void> {
   const abweichung = szenenAbweichung(
     szenenStand(dokument.toObject(), journalArtVon(journale)),
@@ -558,7 +562,7 @@ async function gleicheEingebettetesAb(
 
     const daten =
       teil === 'notizen'
-        ? soll.map((notiz) => notizAusDatei(notiz, journale))
+        ? soll.map((notiz) => notizAusDatei(notiz, journale, kartenPfad))
         : soll.map((eintrag) => ({ ...eintrag }));
 
     // `deleteAll` statt einer Id-Liste: Am 13.08.2026 verdoppelten sich
