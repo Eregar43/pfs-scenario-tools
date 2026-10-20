@@ -17,6 +17,7 @@ import {
   type PersonenBild,
 } from './bilder.ts';
 import { kartenDaten } from './karten.ts';
+import { notizenAusMarken, type MarkeMitBild } from './raummarken.ts';
 import { szenenStand, type JournalArt } from './kartenabgleich.ts';
 import { lies } from './flags.ts';
 import { journalName, quellenangabe, scenarioFolderName, scenarioKey, seasonFolderName, type JournalNameSchema } from './naming.ts';
@@ -210,7 +211,15 @@ export function plane(
     /** Das Spielhilfen-Journal: Titel und die Bilder seiner Bildseiten. */
     anhang?: { titel: string; bilder: { file: string; name?: string; pfad: string }[] };
     /** Die Karten, aus denen Szenen werden sollen. */
-    karten?: { file: string; name?: string; pfad: string; breite: number; hoehe: number }[];
+    karten?: {
+      file: string;
+      name?: string;
+      pfad: string;
+      breite: number;
+      hoehe: number;
+      /** Raumkennungen auf der Karte, mit Pfad ihres Markerbilds. */
+      marken?: MarkeMitBild[];
+    }[];
     /**
      * Die benannten Personenbilder. Traegt eines den Namen eines Statblocks,
      * wird es das Bild des Actors; die uebrigen aus dem Anhang koennen zu
@@ -490,7 +499,18 @@ export function plane(
     const name = karte.name ?? karte.file;
     const nth = (szenenNamen.get(name) ?? 0) + 1;
     szenenNamen.set(name, nth);
-    const daten = kartenDaten(schluessel, karte.file);
+    const gefuehrt = kartenDaten(schluessel, karte.file);
+    // Die Raumkennungen werden Notizen — aber nur, wenn die Kartendatei
+    // keine eigenen fuehrt. Dort hat der Spielleiter sie schon gesetzt, und
+    // seine Lage schlaegt die errechnete.
+    const notizen =
+      !gefuehrt?.notizen && karte.marken && karte.marken.length > 0
+        ? notizenAusMarken(karte.marken, seiten, gefuehrt, {
+            width: Math.round(karte.breite * (gefuehrt?.skalierung ?? 1)),
+            height: Math.round(karte.hoehe * (gefuehrt?.skalierung ?? 1)),
+          })
+        : undefined;
+    const daten = notizen ? { ...gefuehrt, notizen } : gefuehrt;
     return {
       id: foundryId(`${szenario.title}/szene/${karte.file}`),
       name: nth > 1 ? `${name} (${nth})` : name,

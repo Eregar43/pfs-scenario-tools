@@ -9,6 +9,7 @@ import {
   kreaturVerweise,
   nscActorsAn,
   tokenRingeAn,
+  raummarkenAn,
   effekteAn,
 } from '../settings.ts';
 import { reichereAn } from '../world/anreichern.ts';
@@ -18,6 +19,7 @@ import { ANACHRONISM_MODUL, anachronismAktiv } from '../world/compendium-index.t
 import { scenarioKey } from '../world/naming.ts';
 import { bildOrdner, bildPfad, type BildFuerSeiten } from '../world/bilder.ts';
 import { ladeHoch, stelleOrdnerSicher } from '../world/files.ts';
+import { markePfad, markeSvg } from '../world/raummarken.ts';
 import { plane, schreibe } from '../world/journal.ts';
 import { schluesselwerkeAusSystem } from '../world/gefahren.ts';
 import { wirdAlsKreaturGebaut } from '../world/kreaturen.ts';
@@ -200,6 +202,14 @@ export async function zeigeWeltDialog(
       pfad,
       breite: bild.breite,
       hoehe: bild.hoehe,
+      ...(raummarkenAn() && bild.marken && bild.marken.length > 0
+        ? {
+            marken: bild.marken.map((marke) => ({
+              ...marke,
+              pfad: markePfad(pfad, marke.kennung),
+            })),
+          }
+        : {}),
     }));
 
   // Personenbilder mit Namen: Traegt eines den Namen eines Statblocks, wird es
@@ -578,6 +588,7 @@ export async function zeigeWeltDialog(
     // zeigen ihre `<figure>`-Elemente auf die Pfade — die Dateien muessen dann
     // schon liegen.
     await ladeBilderHoch(bilder, pfade);
+    if (raummarkenAn()) await ladeMarkenHoch(bilder, pfade);
 
     const geschrieben = await schreibe(vorhaben, version);
     ui.notifications?.info(
@@ -644,6 +655,28 @@ async function sammleBilder(
       permanent: true,
     });
     return { bilder: [], pfade: [] };
+  }
+}
+
+/**
+ * Laedt die Markerbilder der Raumkennungen hoch — je Karte und Kennung eines,
+ * neben die Karte in `marker/`. Ein Bild ist wenige hundert Byte; ein
+ * Fortschrittsbalken lohnt dafuer nicht.
+ */
+async function ladeMarkenHoch(bilder: GelesenesBild[], pfade: BildFuerSeiten[]): Promise<void> {
+  const ziele = new Map<string, string>();
+  bilder.forEach((bild, index) => {
+    if (bild.sort !== 'karte') return;
+    for (const marke of bild.marken ?? []) {
+      ziele.set(markePfad(pfade[index]!.pfad, marke.kennung), marke.kennung);
+    }
+  });
+  if (ziele.size === 0) return;
+
+  for (const ordner of new Set([...ziele.keys()].map(bildOrdner))) await stelleOrdnerSicher(ordner);
+  for (const [pfad, kennung] of ziele) {
+    const blob = new Blob([markeSvg(kennung)], { type: 'image/svg+xml' });
+    await ladeHoch(bildOrdner(pfad), `${kennung}.svg`, blob);
   }
 }
 

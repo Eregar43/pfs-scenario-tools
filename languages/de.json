@@ -153,6 +153,8 @@
   "PFSST.Verwaltung.Veraltet": "importiert mit Fassung {alt}, jetzt läuft {neu} — ein neuer Import bringt die seither dazugekommenen Teile",
   "PFSST.Einstellungen.TokenRinge.Name": "Dynamische Token-Ringe verwenden",
   "PFSST.Einstellungen.TokenRinge.Hinweis": "Gibt Actors, die ein Bild aus dem Heft bekommen, einen dynamischen Ring um das Token. Der Ring schneidet das hochformatige Porträt rund zu. Das Porträt wird auch ohne Ring zum Token — es ersetzt dabei ein unpassendes Token der Kompendium-Vorlage. Hazards bekommen nie einen Ring. Standardmäßig an, wirkt nur auf neu angelegte Actors.",
+  "PFSST.Einstellungen.Raummarken.Name": "Raumkennungen als Notizen auf die Karte",
+  "PFSST.Einstellungen.Raummarken.Hinweis": "Setzt für jede Raumkennung, die das Heft auf die Karte druckt (etwa A1 bis A7), eine Notiz an dieselbe Stelle der Szene. Das Symbol zeigt die Kennung, ein Klick öffnet die Journalseite des Raums. Führt das Modul für eine Karte eigene Notizen, gelten diese. Standardmäßig an, wirkt beim nächsten Import.",
   "PFSST.Verwaltung.Teil.Effekte": "Effekte",
   "PFSST.Einstellungen.Effekte.Name": "Effekte aus dem Heft anlegen",
   "PFSST.Einstellungen.Effekte.Hinweis": "Legt für jede Zusage des Hefts einen Effekt-Gegenstand an, etwa +1 auf Initiative im Kampf gegen den Kapitän. Der Spielleiter zieht ihn zur passenden Begegnung auf die Charaktere. Die Effekte sind in der Seitenleiste für Spieler unsichtbar und auf dem Charakterblatt maskiert. Im Journal steht ein Verweis an der Fundstelle. Standardmäßig an.",

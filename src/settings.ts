@@ -14,6 +14,7 @@ export const SETTING_LESEBERICHT = 'lesebericht';
 export const SETTING_NSCACTORS = 'nscActors';
 export const SETTING_TOKENRINGE = 'tokenRinge';
 export const SETTING_EFFEKTE = 'szenarioEffekte';
+export const SETTING_RAUMMARKEN = 'raummarken';
 export const SETTING_WILLKOMMEN = 'willkommenGezeigt';
 const MENU_BILDWURZEL = 'bildwurzelMenu';
 
@@ -116,6 +117,15 @@ export function registriereEinstellungen(): void {
   registriere(SETTING_TOKENRINGE, {
     name: L('Einstellungen.TokenRinge.Name'),
     hint: L('Einstellungen.TokenRinge.Hinweis'),
+    scope: 'world',
+    config: true,
+    type: Boolean,
+    default: true,
+  });
+
+  registriere(SETTING_RAUMMARKEN, {
+    name: L('Einstellungen.Raummarken.Name'),
+    hint: L('Einstellungen.Raummarken.Hinweis'),
     scope: 'world',
     config: true,
     type: Boolean,
@@ -246,6 +256,16 @@ export function nscActorsAn(): boolean {
  */
 export function tokenRingeAn(): boolean {
   return game.settings.get(MODULE_ID, SETTING_TOKENRINGE) !== false;
+}
+
+/**
+ * Sollen die Raumkennungen der Karten (`A1` …) als Notizen auf die Szene?
+ *
+ * Aus entsteht die Szene wie bisher ohne Notizen; Notizen aus einer
+ * Kartendatei kommen trotzdem.
+ */
+export function raummarkenAn(): boolean {
+  return game.settings.get(MODULE_ID, SETTING_RAUMMARKEN) !== false;
 }
 
 /**
