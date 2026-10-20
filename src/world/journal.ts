@@ -232,6 +232,8 @@ export function plane(
      * Aus bleiben sie ein Bild im Spielhilfen-Journal, wie bisher.
      */
     nscActors?: boolean;
+    /** Kantenlaenge der Raummarker in Feldern (Einstellung). */
+    markenGroesse?: number;
     /**
      * Sollen Actors mit Portraet einen dynamischen Token-Ring bekommen?
      *
@@ -505,10 +507,16 @@ export function plane(
     // seine Lage schlaegt die errechnete.
     const notizen =
       !gefuehrt?.notizen && karte.marken && karte.marken.length > 0
-        ? notizenAusMarken(karte.marken, seiten, gefuehrt, {
-            width: Math.round(karte.breite * (gefuehrt?.skalierung ?? 1)),
-            height: Math.round(karte.hoehe * (gefuehrt?.skalierung ?? 1)),
-          })
+        ? notizenAusMarken(
+            karte.marken,
+            seiten,
+            gefuehrt,
+            {
+              width: Math.round(karte.breite * (gefuehrt?.skalierung ?? 1)),
+              height: Math.round(karte.hoehe * (gefuehrt?.skalierung ?? 1)),
+            },
+            optionen.markenGroesse,
+          )
         : undefined;
     const daten = notizen ? { ...gefuehrt, notizen } : gefuehrt;
     return {

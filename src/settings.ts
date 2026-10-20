@@ -1,3 +1,4 @@
+import { MARKE_GRUND, MARKE_SCHRIFT } from './world/raummarken.ts';
 import { L } from './i18n.ts';
 import { PfsEinstellungenApp } from './ui/einstellungen-app.ts';
 
@@ -15,6 +16,9 @@ export const SETTING_NSCACTORS = 'nscActors';
 export const SETTING_TOKENRINGE = 'tokenRinge';
 export const SETTING_EFFEKTE = 'szenarioEffekte';
 export const SETTING_RAUMMARKEN = 'raummarken';
+export const SETTING_RAUMMARKEN_GROESSE = 'raummarkenGroesse';
+export const SETTING_RAUMMARKEN_GRUND = 'raummarkenGrund';
+export const SETTING_RAUMMARKEN_SCHRIFT = 'raummarkenSchrift';
 export const SETTING_WILLKOMMEN = 'willkommenGezeigt';
 const MENU_BILDWURZEL = 'bildwurzelMenu';
 
@@ -130,6 +134,37 @@ export function registriereEinstellungen(): void {
     config: true,
     type: Boolean,
     default: true,
+  });
+
+  registriere(SETTING_RAUMMARKEN_GROESSE, {
+    name: L('Einstellungen.RaummarkenGroesse.Name'),
+    hint: L('Einstellungen.RaummarkenGroesse.Hinweis'),
+    scope: 'world',
+    config: true,
+    type: Number,
+    range: { min: 0.5, max: 2, step: 0.25 },
+    default: 1,
+  });
+
+  // Farbfelder als `ColorField`: `SettingsConfig` zeigt dann den Farbwaehler
+  // (in `foundry.mjs` der Testinstanz nachgelesen, Zweig `setting.type
+  // instanceof fields.DataField`).
+  registriere(SETTING_RAUMMARKEN_GRUND, {
+    name: L('Einstellungen.RaummarkenGrund.Name'),
+    hint: L('Einstellungen.RaummarkenGrund.Hinweis'),
+    scope: 'world',
+    config: true,
+    type: new foundry.data.fields.ColorField({ required: true, nullable: false, initial: MARKE_GRUND }),
+    default: MARKE_GRUND,
+  });
+
+  registriere(SETTING_RAUMMARKEN_SCHRIFT, {
+    name: L('Einstellungen.RaummarkenSchrift.Name'),
+    hint: L('Einstellungen.RaummarkenSchrift.Hinweis'),
+    scope: 'world',
+    config: true,
+    type: new foundry.data.fields.ColorField({ required: true, nullable: false, initial: MARKE_SCHRIFT }),
+    default: MARKE_SCHRIFT,
   });
 
   registriere(SETTING_EFFEKTE, {
@@ -266,6 +301,26 @@ export function tokenRingeAn(): boolean {
  */
 export function raummarkenAn(): boolean {
   return game.settings.get(MODULE_ID, SETTING_RAUMMARKEN) !== false;
+}
+
+/**
+ * Wie die Raummarker aussehen: Groesse in Feldern, Grund- und Schriftfarbe.
+ *
+ * Ein Farbfeld kann als `Color`-Objekt zurueckkommen statt als Zeichenkette
+ * (wie `Folder#color`); `String()` macht daraus in beiden Faellen `#rrggbb`.
+ * Was danach nicht so aussieht, faellt auf die Vorgabe zurueck.
+ */
+export function raummarkenAussehen(): { groesse: number; grund: string; schrift: string } {
+  const farbe = (schluessel: string, vorgabe: string): string => {
+    const wert = String(game.settings.get(MODULE_ID, schluessel) ?? '');
+    return /^#[0-9a-f]{6}$/i.test(wert) ? wert : vorgabe;
+  };
+  const groesse = Number(game.settings.get(MODULE_ID, SETTING_RAUMMARKEN_GROESSE));
+  return {
+    groesse: Number.isFinite(groesse) && groesse > 0 ? groesse : 1,
+    grund: farbe(SETTING_RAUMMARKEN_GRUND, MARKE_GRUND),
+    schrift: farbe(SETTING_RAUMMARKEN_SCHRIFT, MARKE_SCHRIFT),
+  };
 }
 
 /**

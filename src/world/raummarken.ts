@@ -49,21 +49,35 @@ export function markePfad(kartenPfad: string, kennung: string): string {
   return `${kartenPfad.slice(0, kartenPfad.lastIndexOf('/'))}/marker/${kennung}.svg`;
 }
 
+/** Vorgaben fuer die Farben: weisses Feld, schwarze Schrift. */
+export const MARKE_GRUND = '#ffffff';
+export const MARKE_SCHRIFT = '#000000';
+
 /**
- * Das Markerbild: weisses Feld, schwarze Kennung.
+ * Das Markerbild: farbiges Feld, Kennung und Rahmen in der Schriftfarbe.
  *
  * Die Schriftgroesse schrumpft mit der Laenge, damit `A12` und `A3a`
  * genauso ins Feld passen wie `A1`.
  */
-export function markeSvg(kennung: string): string {
+export function markeSvg(
+  kennung: string,
+  farben: { grund?: string; schrift?: string } = {},
+): string {
   const groesse = kennung.length <= 2 ? 56 : kennung.length === 3 ? 44 : 34;
   const text = kennung.replace(/[<>&"]/g, '');
+  const grund = farbe(farben.grund, MARKE_GRUND);
+  const schrift = farbe(farben.schrift, MARKE_SCHRIFT);
   return [
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">',
-    '<rect x="3" y="3" width="94" height="94" rx="14" fill="#ffffff" stroke="#000000" stroke-width="6"/>',
-    `<text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="${groesse}" fill="#000000">${text}</text>`,
+    `<rect x="3" y="3" width="94" height="94" rx="14" fill="${grund}" stroke="${schrift}" stroke-width="6"/>`,
+    `<text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="${groesse}" fill="${schrift}">${text}</text>`,
     '</svg>',
   ].join('');
+}
+
+/** Nur `#rrggbb` gelangt ins SVG; alles andere faellt auf die Vorgabe. */
+function farbe(wert: string | undefined, vorgabe: string): string {
+  return wert && /^#[0-9a-f]{6}$/i.test(wert) ? wert : vorgabe;
 }
 
 /**
@@ -95,6 +109,8 @@ export function notizenAusMarken(
   seiten: readonly SeiteKurz[],
   karte: Kartendaten | undefined,
   leinwand: { width: number; height: number },
+  /** Kantenlaenge des Markers in Feldern; 1 ist ein Feld. */
+  groesse = 1,
 ): Record<string, unknown>[] {
   const szene = karte?.szene ?? {};
   const gitter = Number((szene.grid as { size?: unknown } | undefined)?.size ?? GITTER_VORGABE);
@@ -111,7 +127,7 @@ export function notizenAusMarken(
       x: Math.round(nachX + marke.x * faktor),
       y: Math.round(nachY + marke.y * faktor),
       texture: { src: marke.pfad },
-      iconSize: Math.max(KLEINSTES_BILD, Math.round(gitter)),
+      iconSize: Math.max(KLEINSTES_BILD, Math.round(gitter * groesse)),
       text: seite?.name ?? marke.kennung,
       ...(seite ? { journal: 'journal', pageId: seite.id } : {}),
     };

@@ -121,3 +121,29 @@ describe('notizenAusMarken', () => {
     expect(notiz).toEqual({ x: 0, y: 0, texture: { src: 'p' }, iconSize: 100, text: 'C9' });
   });
 });
+
+describe('Aussehen der Raummarker', () => {
+  it('nimmt Grund- und Schriftfarbe aus den Einstellungen', () => {
+    const svg = markeSvg('C1', { grund: '#112233', schrift: '#ffeedd' });
+    expect(svg).toContain('fill="#112233"');
+    expect(svg).toContain('stroke="#ffeedd"');
+    expect(svg).toContain('fill="#ffeedd"');
+  });
+
+  it('laesst nichts als eine Farbe ins Bild', () => {
+    const svg = markeSvg('C1', { grund: '"/><script/>', schrift: 'rot' });
+    expect(svg).not.toContain('script');
+    expect(svg).toContain('fill="#ffffff"');
+  });
+
+  it('macht den Marker so gross, wie die Einstellung in Feldern sagt', () => {
+    const [notiz] = notizenAusMarken(
+      [{ kennung: 'C1', x: 0, y: 0, pfad: 'p' }],
+      [],
+      { szene: { grid: { size: 80 } } },
+      { width: 10, height: 10 },
+      1.5,
+    );
+    expect(notiz).toMatchObject({ iconSize: 120 });
+  });
+});

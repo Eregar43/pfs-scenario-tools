@@ -10,6 +10,7 @@ import {
   nscActorsAn,
   tokenRingeAn,
   raummarkenAn,
+  raummarkenAussehen,
   effekteAn,
 } from '../settings.ts';
 import { reichereAn } from '../world/anreichern.ts';
@@ -251,6 +252,7 @@ export async function zeigeWeltDialog(
     karten,
     ...(personen.length > 0 ? { personen } : {}),
     nscActors: nscActorsAn(),
+    markenGroesse: raummarkenAussehen().groesse,
     tokenRinge: tokenRingeAn(),
     effekte: effekteAn(),
     ...(fund.kreaturen.length > 0 ? { kreaturen: fund.kreaturen } : {}),
@@ -673,9 +675,10 @@ async function ladeMarkenHoch(bilder: GelesenesBild[], pfade: BildFuerSeiten[]):
   });
   if (ziele.size === 0) return;
 
+  const { grund, schrift } = raummarkenAussehen();
   for (const ordner of new Set([...ziele.keys()].map(bildOrdner))) await stelleOrdnerSicher(ordner);
   for (const [pfad, kennung] of ziele) {
-    const blob = new Blob([markeSvg(kennung)], { type: 'image/svg+xml' });
+    const blob = new Blob([markeSvg(kennung, { grund, schrift })], { type: 'image/svg+xml' });
     await ladeHoch(bildOrdner(pfad), `${kennung}.svg`, blob);
   }
 }
