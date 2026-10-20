@@ -3,6 +3,26 @@
 Hier steht, was ein **Anwender** merkt — neue Knöpfe, geändertes Verhalten,
 behobene Fehler.
 
+## Unveröffentlicht
+
+- **Raumkennungen als Notizen auf der Karte.** Jede Kennung, die das Heft auf
+  die Karte druckt (etwa A1 bis A7 in 8-06), wird eine Notiz an derselben
+  Stelle der Szene. Das Symbol zeigt die Kennung, ein Klick öffnet die
+  Journalseite des Raums. Ein Teilraum ohne eigene Seite (A3a in 8-08)
+  öffnet die Seite seines Raums. Größe, Hintergrund- und Schriftfarbe der
+  Symbole lassen sich in den Einstellungen wählen.
+- **Weitere Kartenmarkierungen für den Spielleiter.** Fallenbereiche,
+  Startfelder, Trennlinien und Beschriftungen wie „TRAP" oder „PCS START
+  HERE" werden Zeichnungen auf der Szene. Spieler sehen sie nicht. Foundry
+  kennt keine gestrichelten Linien; gestrichelte Rahmen erscheinen
+  durchgezogen und halb durchsichtig.
+- Beides lässt sich mit dem Schalter „Kartenmarkierungen übernehmen"
+  abschalten. Es wirkt beim nächsten Import einer Szene. Führt das Modul für
+  eine Karte eigene Notizen oder Zeichnungen, gelten diese.
+- **„Karte exportieren" behält die Raumsymbole.** Statt des Bildpfads steht
+  die Kennung in der Datei; beim Import entsteht das Symbol im Bildordner des
+  jeweiligen Spielleiters neu.
+
 ## 1.4.1 — 2026-10-20
 
 - **Hazards ohne falsche Aktionen.** Eine fett gesetzte Raumnummer im
