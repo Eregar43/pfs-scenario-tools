@@ -157,35 +157,80 @@ export function kartentexteAufKarte(lage: KartenLage, blocks: readonly Block[]):
     if (block.page !== lage.page || block.role !== 'map-label') continue;
     // Zeilen, die selbst eine Raumkennung sind, stehen schon als Marker auf
     // der Karte (`A4` und `A6` als ein Block in 8-03).
-    const zeilen = block.lines.filter(
+    const uebrig = block.lines.filter(
       (zeile) =>
         zeile.runs.length > 0 &&
         !alsKennung(zeile.runs.map((lauf) => lauf.text).join('').replace(/\*/g, '').trim()),
     );
-    const text = zeilen
-      .map((zeile) => zeile.runs.map((lauf) => lauf.text).join(''))
-      .join(' ')
-      .replace(/\*/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    if (text === '' || RANDTEXT.test(text)) continue;
-    const grad = Math.max(...zeilen.flatMap((zeile) => zeile.runs.map((lauf) => lauf.size)));
-    if (grad > 14) continue;
-
-    const mitten = zeilen
-      .map(mitte)
-      .filter((punkt): punkt is { x: number; y: number } => punkt !== undefined)
-      .map((punkt) => seiteZuBild(lage, punkt));
-    if (mitten.length === 0 || mitten.some((punkt) => punkt === undefined)) continue;
-    const imBild = mitten as Array<{ x: number; y: number }>;
-    texte.push({
-      text,
-      x: Math.round(imBild.reduce((summe, punkt) => summe + punkt.x, 0) / imBild.length),
-      y: Math.round(imBild.reduce((summe, punkt) => summe + punkt.y, 0) / imBild.length),
-      groesse: Math.round(grad * faktor),
-    });
+    for (const zeilen of nachNaehe(uebrig)) {
+      const text = kartentext(lage, zeilen, faktor);
+      if (text) texte.push(text);
+    }
   }
   return texte;
+}
+
+/**
+ * Teilt die Zeilen eines Blocks in Gruppen, die auf der Karte beieinander
+ * stehen. `PCS` / `START` / `HERE` liegen Zeile an Zeile und bleiben ein
+ * Text; `BODYGUARD`, `CAPTAIN` und `RIGGER` in 8-04 stehen an drei Stellen
+ * der Karte, landen aber im selben Block.
+ */
+function nachNaehe(zeilen: readonly Line[]): Line[][] {
+  const gruppen: Line[][] = [];
+  for (const zeile of zeilen) {
+    const hier = mitte(zeile);
+    const grad = Math.max(...zeile.runs.map((lauf) => lauf.size));
+    const gruppe = gruppen.find((kandidaten) =>
+      kandidaten.some((andere) => {
+        const dort = mitte(andere);
+        return hier && dort && Math.hypot(hier.x - dort.x, hier.y - dort.y) <= grad * 2;
+      }),
+    );
+    if (gruppe) gruppe.push(zeile);
+    else gruppen.push([zeile]);
+  }
+  return gruppen;
+}
+
+/** Eine Gruppe von Zeilen als ein Kartentext — oder nichts, wenn sie nicht zaehlt. */
+function kartentext(lage: KartenLage, zeilen: readonly Line[], faktor: number): Kartentext | undefined {
+  const text = zeilen
+    .map((zeile) => zeile.runs.map((lauf) => lauf.text).join(''))
+    .join(' ')
+    .replace(/\*/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (text === '' || RANDTEXT.test(text)) return undefined;
+  const grad = Math.max(...zeilen.flatMap((zeile) => zeile.runs.map((lauf) => lauf.size)));
+  if (grad > 14) return undefined;
+
+  const mitten = zeilen
+    .map(mitte)
+    .filter((punkt): punkt is { x: number; y: number } => punkt !== undefined)
+    .map((punkt) => seiteZuBild(lage, punkt));
+  if (mitten.length === 0 || mitten.some((punkt) => punkt === undefined)) return undefined;
+  const imBild = mitten as Array<{ x: number; y: number }>;
+  return {
+    text,
+    x: Math.round(imBild.reduce((summe, punkt) => summe + punkt.x, 0) / imBild.length),
+    y: Math.round(imBild.reduce((summe, punkt) => summe + punkt.y, 0) / imBild.length),
+    groesse: Math.round(grad * faktor),
+  };
+}
+
+/**
+ * Dasselbe Bildobjekt, auch wenn pdf.js es anders nennt.
+ *
+ * Ein Bild, das pdf.js im Dokument schon einmal gesehen hat, wandert in den
+ * gemeinsamen Speicher und heisst dann `g_d2_img_p8_1` statt `img_p8_1`. Der
+ * Bilderlauf und der Linienlauf besuchen verschiedene Seiten und sehen
+ * deshalb verschiedene Namen — in 8-04 fielen so alle Kaesten der zweiten
+ * Karte heraus.
+ */
+function gleichesBild(a: string, b: string): boolean {
+  const kern = (name: string): string => name.replace(/^g_d\d+_/, '');
+  return kern(a) === kern(b);
 }
 
 /** Die Linien, die ganz auf dem Kartenbild liegen, umgerechnet in Bildpunkte. */
@@ -197,7 +242,9 @@ export function kartenstricheAufKarte(
   const striche: Kartenstrich[] = [];
   for (const linie of linien) {
     if (linie.page !== lage.page) continue;
-    if (lage.name !== undefined && !linie.ueber.includes(lage.name)) continue;
+    if (lage.name !== undefined && !linie.ueber.some((name) => gleichesBild(name, lage.name!))) {
+      continue;
+    }
     const punkte = linie.punkte.map((punkt) => seiteZuBild(lage, punkt));
     if (punkte.some((punkt) => punkt === undefined)) continue;
     striche.push({

@@ -76,16 +76,21 @@ function farbe(wert: string | undefined, vorgabe: string): string {
 
 /**
  * Die Journalseite eines Raums: ihr Name beginnt mit der Kennung und einem
- * Punkt (`A1. Lift Platform`). Groß und klein zaehlt — `A3a` ist nicht `A3A`.
+ * Punkt (`A1. Lift Platform`).
  */
 export function seiteZurKennung(
   kennung: string,
   seiten: readonly SeiteKurz[],
 ): SeiteKurz | undefined {
-  return seiten.find((seite) => {
+  const genau = seiten.find((seite) => {
     const name = seite.name.trim();
     return name.startsWith(kennung) && /^[.:]?\s/.test(name.slice(kennung.length));
   });
+  if (genau) return genau;
+  // Ein Teilraum ohne eigene Seite gehoert zum Raum davor: `A3a` in 8-08
+  // steht auf der Karte, im Text nur unter `A3. Lab Space`.
+  const raum = /^([A-Z]\d+)[a-z]$/.exec(kennung)?.[1];
+  return raum ? seiteZurKennung(raum, seiten) : undefined;
 }
 
 /**

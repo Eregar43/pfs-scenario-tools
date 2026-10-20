@@ -40,14 +40,47 @@ function kastenVon(punkte: ReadonlyArray<{ x: number; y: number }>): Kasten {
   };
 }
 
-function beruehren(a: Kasten, b: Kasten, abstand: number): boolean {
-  return (
-    a.links - abstand <= b.rechts &&
-    b.links - abstand <= a.rechts &&
-    a.oben - abstand <= b.unten &&
-    b.oben - abstand <= a.unten
+/**
+ * Setzt ein Linienzug den anderen fort? Verglichen werden nur Anfangs- und
+ * Endpunkte, und die Luecke muss in Richtung beider Enden liegen.
+ *
+ * Nur die Enden: Ein Rahmen, der ganz in einem anderen liegt (die zwei
+ * Startfelder in 8-07), beruehrt dessen Umriss nicht. Nur in Laufrichtung:
+ * Zwei Kaesten, die 4 Bildpunkte uebereinander stehen (`T` in 8-02), haben
+ * nahe Ecken — aber die Luecke dazwischen laeuft quer zu beiden Strichen.
+ */
+function setztFort(a: Kartenstrich, b: Kartenstrich, abstand: number): boolean {
+  const enden = (strich: Kartenstrich) => {
+    const p = strich.punkte;
+    return [
+      { punkt: p[0]!, nachbar: p[1]! },
+      { punkt: p[p.length - 1]!, nachbar: p[p.length - 2]! },
+    ];
+  };
+  /**
+   * Liegt der Weg `weg` auf der Verlaengerung des Endes — auf der Linie und
+   * nach aussen? Ohne das zweite verbaenden sich zwei uebereinander stehende
+   * Kaesten ueber ihre gemeinsame Seitenlinie.
+   */
+  const inRichtung = (ende: { punkt: Punkt; nachbar: Punkt }, weg: Punkt): boolean => {
+    const dx = ende.punkt.x - ende.nachbar.x;
+    const dy = ende.punkt.y - ende.nachbar.y;
+    const laenge = Math.hypot(dx, dy);
+    if (laenge === 0) return true;
+    return Math.abs(dx * weg.y - dy * weg.x) / laenge <= 1.5 && dx * weg.x + dy * weg.y > 0;
+  };
+  return enden(a).some((p) =>
+    enden(b).some((q) => {
+      const weg = { x: q.punkt.x - p.punkt.x, y: q.punkt.y - p.punkt.y };
+      const luecke = Math.hypot(weg.x, weg.y);
+      if (luecke > abstand) return false;
+      const zurueck = { x: -weg.x, y: -weg.y };
+      return luecke <= 1.5 || (inRichtung(p, weg) && inRichtung(q, zurueck));
+    }),
   );
 }
+
+type Punkt = { x: number; y: number };
 
 /** Liegt jeder Punkt auf dem Rand des Kastens? Dann ist es ein Rahmen. */
 function liegtAufRand(punkte: ReadonlyArray<{ x: number; y: number }>, kasten: Kasten): boolean {
@@ -79,13 +112,12 @@ interface Form {
 export function formenAusStrichen(striche: readonly Kartenstrich[]): Form[] {
   const gruppen: Kartenstrich[][] = [];
   for (const strich of striche) {
-    const kasten = kastenVon(strich.punkte);
     const passend = gruppen.filter(
       (gruppe) =>
         gruppe[0]!.farbe === strich.farbe &&
         // Strichelung und Ecken lassen Luecken von etwa zwei Strichstaerken
         // (8 Bildpunkte in 8-06); der Spielraum waechst deshalb mit.
-        beruehren(kastenVon(gruppe.flatMap((s) => s.punkte)), kasten, NAEHE + 2 * strich.breite),
+        gruppe.some((andere) => setztFort(andere, strich, NAEHE + 2 * strich.breite)),
     );
     const vereint = [...passend.flat(), strich];
     for (const gruppe of passend) gruppen.splice(gruppen.indexOf(gruppe), 1);
@@ -123,17 +155,21 @@ export function zeichnungenAusKarte(
   const { faktor, punkt } = bildZuSzene(karte, leinwand);
   const formen = formenAusStrichen(striche);
 
+  // Der kleinste Rahmen zuerst: In 8-07 liegt das Startfeld der Gruppe im
+  // Startfeld der Gegner, und jede Beschriftung gehoert zum engsten Rahmen,
+  // der sie umschliesst.
+  const flaeche = (form: Form): number =>
+    (form.kasten.rechts - form.kasten.links) * (form.kasten.unten - form.kasten.oben);
+  const nachGroesse = formen.filter((form) => form.rahmen).sort((a, b) => flaeche(a) - flaeche(b));
+  const umschliesst = (form: Form, text: Kartentext): boolean =>
+    text.x >= form.kasten.links &&
+    text.x <= form.kasten.rechts &&
+    text.y >= form.kasten.oben &&
+    text.y <= form.kasten.unten;
+
   const freieTexte: Kartentext[] = [];
   for (const text of texte) {
-    const rahmen = formen.find(
-      (form) =>
-        form.rahmen &&
-        !form.text &&
-        text.x >= form.kasten.links &&
-        text.x <= form.kasten.rechts &&
-        text.y >= form.kasten.oben &&
-        text.y <= form.kasten.unten,
-    );
+    const rahmen = nachGroesse.find((form) => !form.text && umschliesst(form, text));
     if (rahmen) rahmen.text = text;
     else freieTexte.push(text);
   }

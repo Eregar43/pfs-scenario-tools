@@ -86,6 +86,10 @@ describe('seiteZurKennung', () => {
     expect(seiteZurKennung('C3a', seiten)?.id).toBe('s4');
   });
 
+  it('fuehrt einen Teilraum ohne eigene Seite zu seinem Raum', () => {
+    expect(seiteZurKennung('C12b', seiten)?.id).toBe('s3');
+  });
+
   it('verwechselt C1 nicht mit C12 und kennt keine fehlende Seite', () => {
     expect(seiteZurKennung('C1', [seiten[2]!])).toBeUndefined();
   });
@@ -221,6 +225,16 @@ describe('linienAusOperatoren', () => {
   });
 });
 
+describe('kartentexteAufKarte, verstreute Zeilen', () => {
+  it('trennt Zeilen eines Blocks, die an verschiedenen Stellen stehen', () => {
+    const verstreut: Block = {
+      ...beschriftung(4, 120, 380, 'WACHE'),
+      lines: [...beschriftung(4, 120, 380, 'WACHE').lines, ...beschriftung(4, 250, 320, 'KOCH').lines],
+    };
+    expect(kartentexteAufKarte(AUFRECHT, [verstreut]).map((text) => text.text)).toEqual(['WACHE', 'KOCH']);
+  });
+});
+
 describe('kartenstricheAufKarte', () => {
   const linie = (ueber: string[]): Kartenlinie => ({
     page: 4,
@@ -235,6 +249,11 @@ describe('kartenstricheAufKarte', () => {
   it('nimmt nur Linien, die nach dem Kartenbild gezeichnet sind', () => {
     const lage = { ...AUFRECHT, name: 'karte' };
     expect(kartenstricheAufKarte(lage, [linie(['karte']), linie([])])).toHaveLength(1);
+  });
+
+  it('erkennt das Kartenbild auch unter seinem Namen im gemeinsamen Speicher', () => {
+    const lage = { ...AUFRECHT, name: 'img_p8_1' };
+    expect(kartenstricheAufKarte(lage, [linie(['g_d2_img_p8_1'])])).toHaveLength(1);
   });
 });
 
@@ -260,6 +279,39 @@ describe('formenAusStrichen', () => {
     ]);
     expect(formen).toHaveLength(1);
     expect(formen[0]).toMatchObject({ rahmen: true, kasten: { links: 0, oben: 0, rechts: 100, unten: 50 } });
+  });
+
+  it('trennt zwei Kaesten, die dicht uebereinander stehen', () => {
+    // Je ein Feld, 4 Bildpunkte Abstand: Kanten gestrichelt, Ecken durchgezogen.
+    const kasten = (o: number) => [
+      strich([[10, o], [30, o]], true),
+      strich([[40, o + 10], [40, o + 30]], true),
+      strich([[30, o + 40], [10, o + 40]], true),
+      strich([[0, o + 30], [0, o + 10]], true),
+      strich([[35, o], [40, o], [40, o + 5]]),
+      strich([[40, o + 35], [40, o + 40], [35, o + 40]]),
+      strich([[5, o + 40], [0, o + 40], [0, o + 35]]),
+      strich([[0, o + 5], [0, o], [5, o]]),
+    ];
+    const formen = formenAusStrichen([...kasten(0), ...kasten(44)]);
+    expect(formen.map((form) => [form.rahmen, form.kasten.oben])).toEqual([
+      [true, 0],
+      [true, 44],
+    ]);
+  });
+
+  it('trennt einen Rahmen, der in einem anderen liegt', () => {
+    const rahmen = (l: number, o: number, r: number, u: number) => [
+      strich([[l, o], [r, o]]),
+      strich([[r, o], [r, u]]),
+      strich([[r, u], [l, u]]),
+      strich([[l, u], [l, o]]),
+    ];
+    const formen = formenAusStrichen([...rahmen(0, 0, 200, 200), ...rahmen(50, 50, 150, 150)]);
+    expect(formen.map((form) => [form.rahmen, form.kasten.links])).toEqual([
+      [true, 0],
+      [true, 50],
+    ]);
   });
 
   it('laesst einzelne Linien einzeln', () => {
