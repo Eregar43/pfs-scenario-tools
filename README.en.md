@@ -106,7 +106,9 @@ contents.
   stays with the GM.
 - **Images** as WebP below the chosen image folder
   (`<image folder>/pfs_s08_01/…`). Figures with a caption also appear in the
-  journal text, the Golarion overview map inside its sidebar.
+  journal text, the Golarion overview map inside its sidebar. The room label
+  icons sit next to them in `marker/` (`a1.webp`, `a2.webp` …). All file names
+  are lower case.
 - **Scenes** — one per battle map, with a black border and Foundry's grid
   hidden (the grid is printed on the map already). For measured maps, grid
   size and offset sit right immediately, and **walls including doors** are
@@ -211,6 +213,10 @@ names the folder so you can reach for the file browser.
 | **Use dynamic token rings** | Gives actors with an image from the scenario a dynamic ring around the token. The portrait becomes the token even without a ring. Hazards never get one. On by default, applies to newly created actors only. |
 | **Create NPC actors without values** | Creates a lean NPC for every person in the game aids appendix without a stat block. Off, they remain just an image in the journal. On by default, applies to newly created actors only. |
 | **Adjust stat blocks to the scenario** | Transfers the scenario's deviations onto the compendium copy. Off, the copy stays as the compendium keeps it; the preview names the deviations either way. On by default, applies to newly created creatures only. |
+| **Import map markings** | Room labels on the map (A1, A2 …) become notes that open the room's journal page; trap areas, starting positions, lines and labels become drawings only the GM can see. On by default, takes effect on the next import. |
+| **Room marker size** | Edge length of an icon in map squares, 0.5 to 2. 1 by default. |
+| **Room marker background colour** | Fill colour behind the label. White by default. |
+| **Room marker text colour** | Colour of the label and its border. Black by default. The browser shows new colours only after a hard reload (Ctrl+Shift+R). |
 | **Show reading report after import** | Shows the window with key figures and the button to download `journal.json`. The report always goes to the console. **Off** by default, applies to the whole world. |
 | **Verbose logging** | For troubleshooting only. |
 
@@ -259,7 +265,12 @@ A map file can carry:
 Image paths stay out (the background image is created anew from the PDF in
 every world), as do the initial view and everything that only applies to one
 world. Notes point to the scenario's journal by its kind (main journal, Game
-Aids, Handouts), not by its ID — that is different in every world.
+Aids, Handouts), not by its ID — that is different in every world. A room
+icon is stored as its label (`"marke": "A1"`); the import creates the image
+in each world's image folder.
+
+If the file carries no notes or drawings, the import places those from the
+booklet (see "Import map markings").
 
 If the file names a part, **the repository is the source**: on a mismatch the
 import replaces it. If you touch things up at the table, export the new state
@@ -283,7 +294,8 @@ That is how you notice when you drew against an older version by accident.
 The export deliberately leaves three things out and reports them: region
 behaviors that run a script or macro; image paths on notes and drawings that
 do not belong to Foundry itself; and note links to journals that do not come
-from this module.
+from this module. The module's own room icons are not lost: they become their
+label.
 
 The downloaded file is exactly the content of a pull request for that map.
 Carrying it into the repository stays manual work: the module runs in the

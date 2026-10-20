@@ -110,7 +110,9 @@ Inhalte einsammelt.
   freigibt. Das Hauptjournal bleibt beim Spielleiter.
 - **Bilder** als WebP unterhalb des gewählten Bildordners
   (`<Bildordner>/pfs_s08_01/…`). Figuren mit Bildunterschrift stehen zusätzlich
-  im Journaltext, die Golarion-Übersichtskarte in ihrem Kasten.
+  im Journaltext, die Golarion-Übersichtskarte in ihrem Kasten. Die Symbole
+  der Raumkennungen liegen daneben in `marker/` (`a1.webp`, `a2.webp` …).
+  Alle Dateinamen sind kleingeschrieben.
 - **Szenen** — je Schlachtkarte eine, mit schwarzem Rand und ausgeblendetem
   Foundry-Gitter (das Raster ist ja aufgedruckt). Für vermessene Karten sitzen
   Gittergröße und Versatz sofort richtig, und **Wände samt Türen** stehen
@@ -217,6 +219,10 @@ löschen; der Dialog nennt den Ordner für den Griff zum Dateibrowser.
 | **Dynamische Token-Ringe verwenden** | Gibt Actors mit einem Bild aus dem Heft einen dynamischen Ring um das Token. Das Porträt wird auch ohne Ring zum Token. Hazards bekommen nie einen Ring. Standardmäßig an, wirkt nur auf neu angelegte Actors. |
 | **NPC-Actors ohne Werte anlegen** | Legt für jede Person aus dem Spielhilfen-Anhang ohne Statblock einen schlanken NPC an. Aus, bleiben sie nur ein Bild im Journal. Standardmäßig an, wirkt nur auf neu angelegte Actors. |
 | **Statblöcke an das Heft angleichen** | Überträgt die Abweichungen des Hefts auf die Kompendium-Kopie. Aus, bleibt die Kopie so, wie das Kompendium sie führt; die Vorschau nennt die Abweichungen trotzdem. Standardmäßig an, wirkt nur auf neu angelegte Kreaturen. |
+| **Kartenmarkierungen übernehmen** | Raumkennungen der Karte (A1, A2 …) werden Notizen, die die Journalseite des Raums öffnen; Fallenbereiche, Startfelder, Linien und Beschriftungen werden Zeichnungen, die nur der Spielleiter sieht. Standardmäßig an, wirkt beim nächsten Import. |
+| **Größe der Raummarker** | Kantenlänge eines Symbols in Feldern der Karte, 0,5 bis 2. Standardmäßig 1. |
+| **Hintergrundfarbe der Raummarker** | Füllfarbe hinter der Kennung. Standardmäßig Weiß. |
+| **Schriftfarbe der Raummarker** | Farbe der Kennung und des Rahmens. Standardmäßig Schwarz. Neue Farben zeigt der Browser erst nach Neuladen ohne Zwischenspeicher (Strg+Umschalt+R). |
 | **Lesebericht nach dem Import zeigen** | Zeigt das Fenster mit Kennzahlen und dem Knopf zum Herunterladen der `journal.json`. In die Konsole wird der Bericht immer geschrieben. Standardmäßig **aus**, gilt für die ganze Welt. |
 | **Ausführliche Protokollausgabe** | Nur zur Fehlersuche. |
 
@@ -268,7 +274,12 @@ Nicht hinein gehören Bildpfade (das Hintergrundbild entsteht in jeder Welt
 neu aus dem PDF), die Startansicht und alles, was nur in einer Welt gilt.
 Notizen verweisen auf das Journal des Szenarios über dessen Art
 (Hauptjournal, Game Aids, Handouts), nicht über seine Kennung — die ist in
-jeder Welt eine andere.
+jeder Welt eine andere. Ein Raumsymbol steht als Kennung in der Datei
+(`"marke": "A1"`); das Bild dazu erzeugt der Import im Bildordner der
+jeweiligen Welt.
+
+Führt die Datei keine Notizen oder Zeichnungen, setzt der Import die aus dem
+Heft (siehe „Kartenmarkierungen übernehmen").
 
 Nennt die Datei einen Teil, ist **das Repo die Quelle**: Der Import ersetzt
 ihn bei Abweichung. Wer am Tisch nachbessert, exportiert den neuen Stand
@@ -293,7 +304,8 @@ fällt auf, wenn versehentlich gegen eine ältere Fassung gezeichnet wurde.
 Drei Dinge lässt der Export bewusst aus und meldet sie: Regionsverhalten,
 die ein Skript oder Makro ausführen; Bildpfade an Notizen und Zeichnungen,
 die nicht zu Foundry selbst gehören; und Verweise von Notizen auf Journale,
-die nicht von diesem Modul stammen.
+die nicht von diesem Modul stammen. Raumsymbole des Moduls gehen nicht
+verloren: Sie werden zur Kennung.
 
 Die heruntergeladene Datei ist genau der Inhalt eines Pull Requests für diese
 Karte. Das Übertragen ins Repo bleibt Handarbeit — das Modul läuft im Browser
